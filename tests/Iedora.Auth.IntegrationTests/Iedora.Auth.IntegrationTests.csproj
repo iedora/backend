@@ -1,23 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="MSTest.Sdk">
 
   <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Iedora.Auth.IntegrationTests</RootNamespace>
-    <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
-    <!-- xUnit v3 runs on the Microsoft Testing Platform (standalone test executable). -->
-    <OutputType>Exe</OutputType>
-    <!-- xUnit1051: prefer passing TestContext.Current.CancellationToken. Our tests are fast and
-         go through HttpClient helpers; mid-flight cancellation adds noise for no benefit here. -->
-    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="xunit.v3" />
-    <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="Respawn" />
+    <PackageReference Include="Npgsql" />
   </ItemGroup>
 
   <ItemGroup>

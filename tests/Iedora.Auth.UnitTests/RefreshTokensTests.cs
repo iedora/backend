@@ -1,29 +1,30 @@
 using Iedora.Auth.Security;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Iedora.Auth.UnitTests;
 
+[TestClass]
 public sealed class RefreshTokensTests
 {
-    [Fact]
+    [TestMethod]
     public void New_returns_a_token_whose_hash_matches_Hash()
     {
         var (token, hash) = RefreshTokens.New();
-        Assert.Equal(hash, RefreshTokens.Hash(token)); // the stored digest verifies the raw token
+        Assert.IsTrue(hash.SequenceEqual(RefreshTokens.Hash(token))); // the stored digest verifies the raw token
     }
 
-    [Fact]
+    [TestMethod]
     public void New_produces_unique_tokens()
     {
         var tokens = Enumerable.Range(0, 100).Select(_ => RefreshTokens.New().token).ToHashSet();
-        Assert.Equal(100, tokens.Count);
+        Assert.HasCount(100, tokens);
     }
 
-    [Fact]
+    [TestMethod]
     public void Hash_is_deterministic_and_32_bytes_sha256()
     {
-        Assert.Equal(RefreshTokens.Hash("abc"), RefreshTokens.Hash("abc"));
-        Assert.NotEqual(RefreshTokens.Hash("abc"), RefreshTokens.Hash("abd"));
-        Assert.Equal(32, RefreshTokens.Hash("abc").Length);
+        Assert.IsTrue(RefreshTokens.Hash("abc").SequenceEqual(RefreshTokens.Hash("abc")));
+        Assert.IsFalse(RefreshTokens.Hash("abc").SequenceEqual(RefreshTokens.Hash("abd")));
+        Assert.HasCount(32, RefreshTokens.Hash("abc"));
     }
 }

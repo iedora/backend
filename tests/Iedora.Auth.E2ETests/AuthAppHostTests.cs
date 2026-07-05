@@ -1,7 +1,6 @@
 using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Iedora.Auth.E2ETests;
 
@@ -10,21 +9,26 @@ namespace Iedora.Auth.E2ETests;
 // service connects, applies EF migrations, and reports healthy. This is the tip of the test
 // diamond: HTTP behavior (register/login/refresh/...) is covered exhaustively by the
 // integration suite against a real database; here we prove the AppHost wiring itself works.
+[TestClass]
 public sealed class AuthAppHostTests
 {
-    [Fact]
+    public TestContext TestContext { get; set; } = null!;
+
+    [TestMethod]
     public async Task AppHost_boots_postgres_and_a_healthy_auth_service()
     {
+        var ct = TestContext.CancellationTokenSource.Token;
+
         var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.Iedora_AppHost>();
-        await using var app = await builder.BuildAsync();
-        await app.StartAsync();
+        await using var app = await builder.BuildAsync(ct);
+        await app.StartAsync(ct);
 
         // The auth service only reaches Healthy after it has connected to Postgres and its
         // hosted migration step has completed — so this single wait exercises the whole chain.
         var healthy = await app.ResourceNotifications
-            .WaitForResourceHealthyAsync("auth")
-            .WaitAsync(TimeSpan.FromMinutes(3));
+            .WaitForResourceHealthyAsync("auth", ct)
+            .WaitAsync(TimeSpan.FromMinutes(3), ct);
 
-        Assert.Equal("auth", healthy.Resource.Name);
+        Assert.AreEqual("auth", healthy.Resource.Name);
     }
 }
