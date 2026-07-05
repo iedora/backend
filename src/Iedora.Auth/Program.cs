@@ -2,10 +2,13 @@ using System.Reflection;
 using Iedora.Auth.Data;
 using Iedora.Auth.Features.Jwks;
 using Iedora.Auth.Features.Login;
+using Iedora.Auth.Features.Logout;
+using Iedora.Auth.Features.Refresh;
 using Iedora.Auth.Features.Register;
 using Iedora.Auth.Features.WhoAmI;
 using Iedora.Auth.Observability;
 using Iedora.Auth.Security;
+using Iedora.Auth.Sessions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Hosting;
@@ -16,7 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 // HttpClient resilience — batteries-included observability, pointed at the collector.
 builder.AddServiceDefaults();
 
-// Extend OTel with our own business ActivitySource + Meter (auth.login span, tokens_issued).
+// Extend OTel with our own business ActivitySource + Meter (auth.login span, session metrics).
 builder.Services.AddOpenTelemetry()
     .WithTracing(tracing => tracing.AddSource(Telemetry.ActivitySourceName))
     .WithMetrics(metrics => metrics.AddMeter(Telemetry.MeterName));
@@ -34,28 +37,38 @@ builder.Services.AddIdentityCore<AppUser>(options =>
     .AddRoles<IdentityRole<Guid>>()
     .AddEntityFrameworkStores<AuthDbContext>();
 
-// Built-in JwtBearer validation, using the SAME ES256 key the token service signs with.
-var jwt = new JwtTokenService(builder.Configuration);
-builder.Services.AddSingleton(jwt);
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+// Testable clock (FakeTimeProvider in tests) — drives token expiry + session TTLs.
+builder.Services.AddSingleton(TimeProvider.System);
+
+// Refresh-session lifecycle: cookie settings (env-overridable), the cookie reader/writer,
+// and the session service (rotation + reuse detection).
+builder.Services.Configure<SessionSettings>(builder.Configuration.GetSection("Session"));
+builder.Services.AddSingleton<RefreshCookie>();
+builder.Services.AddScoped<SessionService>();
+
+// ES256 JWT issuer/validator, DI-managed so it picks up TimeProvider. JwtBearer is configured
+// from the same instance (deferred to post-build so DI is available).
+builder.Services.AddSingleton<JwtTokenService>();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
+builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    .Configure<JwtTokenService>((options, jwt) =>
     {
-        // Keep the raw JWT claim names ("sub", "email", "roles") instead of remapping
-        // them to the legacy XML-schema URIs.
+        // Keep the raw JWT claim names ("sub", "email", "roles") instead of the legacy URIs.
         options.MapInboundClaims = false;
         options.TokenValidationParameters = jwt.ValidationParameters();
     });
 builder.Services.AddAuthorization();
+
+// Built-in minimal-API request validation (.NET 10) — DataAnnotations on the request records.
+builder.Services.AddValidation();
 builder.Services.AddProblemDetails();
 
 // OpenAPI document — the source of truth for the generated frontend client. Emitted at
 // build time (see the .csproj) and also served at /openapi/v1.json for live tooling.
 builder.Services.AddOpenApi();
 
-// Build the Identity schema on boot (greenfield; EF migrations are a follow-up). Skipped
-// under the build-time OpenAPI generator (GetDocument.Insider runs the host but has no
-// database) — the DbContext is otherwise only resolved per-request, so doc generation
-// needs no Postgres.
+// Apply EF migrations on boot. Skipped under the build-time OpenAPI generator
+// (GetDocument.Insider runs the host but has no database).
 var generatingOpenApiDoc = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
 if (!generatingOpenApiDoc)
     builder.Services.AddHostedService<SchemaInitializer>();
@@ -73,6 +86,8 @@ app.UseAuthorization();
 var auth = app.MapGroup("/auth");
 auth.MapRegister();
 auth.MapLogin();
+auth.MapRefresh();
+auth.MapLogout();
 auth.MapWhoAmI();
 auth.MapJwks();
 

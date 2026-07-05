@@ -2,6 +2,11 @@
   <Folder Name="/src/">
     <Project Path="src/Iedora.Auth/Iedora.Auth.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Iedora.Auth.E2ETests/Iedora.Auth.E2ETests.csproj" />
+    <Project Path="tests/Iedora.Auth.IntegrationTests/Iedora.Auth.IntegrationTests.csproj" />
+    <Project Path="tests/Iedora.Auth.UnitTests/Iedora.Auth.UnitTests.csproj" />
+  </Folder>
   <Project Path="Iedora.AppHost/Iedora.AppHost.csproj" />
   <Project Path="Iedora.ServiceDefaults/Iedora.ServiceDefaults.csproj" />
 </Solution>

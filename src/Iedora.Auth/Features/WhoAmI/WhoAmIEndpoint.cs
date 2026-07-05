@@ -1,20 +1,38 @@
 using System.Security.Claims;
+using Iedora.Auth.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 
 namespace Iedora.Auth.Features.WhoAmI;
 
-public sealed record WhoAmIResponse(string? Sub, string? Email, string[] Roles);
+public sealed record WhoAmIResponse(
+    string UserId, string? TenantId, string[] Roles, string? Email, bool? MustChangePassword);
 
-// GET /auth/whoami — protected by the built-in JwtBearer handler via RequireAuthorization().
-// Echoes the identity the framework resolved from the ES256 access token.
+// GET /auth/whoami — the identity behind the bearer access token. `mustChangePassword` is read
+// LIVE from the DB (not the token) so the client's guard stops redirecting the instant the user
+// completes a forced change, without waiting for the token to expire.
 public static class WhoAmIEndpoint
 {
     public static void MapWhoAmI(this RouteGroupBuilder group) =>
-        group.MapGet("/whoami", Ok<WhoAmIResponse> (ClaimsPrincipal user) => TypedResults.Ok(
-            new WhoAmIResponse(
-                user.FindFirstValue("sub"),
-                user.FindFirstValue("email"),
-                user.FindAll("roles").Select(c => c.Value).ToArray())))
+        group.MapGet("/whoami",
+            async Task<Results<Ok<WhoAmIResponse>, ProblemHttpResult>> (
+                ClaimsPrincipal principal, AuthDbContext db, CancellationToken ct) =>
+        {
+            if (!Guid.TryParse(principal.FindFirstValue("sub"), out var userId))
+                return TypedResults.Problem(statusCode: StatusCodes.Status401Unauthorized);
+
+            var mustChange = await db.Users
+                .Where(u => u.Id == userId)
+                .Select(u => u.MustChangePassword)
+                .FirstOrDefaultAsync(ct);
+
+            return TypedResults.Ok(new WhoAmIResponse(
+                userId.ToString(),
+                principal.FindFirstValue("tid"),
+                principal.FindAll("roles").Select(c => c.Value).ToArray(),
+                principal.FindFirstValue("email"),
+                mustChange ? true : null));
+        })
         .RequireAuthorization()
         .WithName("WhoAmI")
         .WithSummary("Return the identity resolved from the bearer access token.");

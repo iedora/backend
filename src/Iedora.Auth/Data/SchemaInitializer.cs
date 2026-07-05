@@ -2,10 +2,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Iedora.Auth.Data;
 
-// Builds the Identity schema on startup (greenfield; EF migrations are a follow-up).
-// Runs as a hosted service — i.e. ONLY when the server actually starts — so the
-// build-time OpenAPI generator (which builds the host but never runs it) never
-// reaches for Postgres. Retries: Postgres may still be finishing startup.
+// Applies EF Core migrations on startup. Runs as a hosted service — i.e. ONLY when the server
+// actually starts — so the build-time OpenAPI generator (which builds the host but never runs
+// it) never reaches for Postgres. Retries: Postgres may still be finishing startup.
 public sealed class SchemaInitializer(IServiceProvider services, ILogger<SchemaInitializer> logger)
     : IHostedService
 {
@@ -17,7 +16,7 @@ public sealed class SchemaInitializer(IServiceProvider services, ILogger<SchemaI
         {
             try
             {
-                await db.Database.EnsureCreatedAsync(cancellationToken);
+                await db.Database.MigrateAsync(cancellationToken);
                 return;
             }
             catch (Exception ex) when (attempt < 12)

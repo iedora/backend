@@ -13,6 +13,18 @@
     <PackageVersion Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.9" />
     <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.9" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9" />
+
+    <!-- Test diamond: WebApplicationFactory + Testcontainers (integration base),
+         xUnit v3, Respawn (state reset), Aspire.Hosting.Testing (e2e), fake clock. -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.9" />
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.13.0" />
+    <PackageVersion Include="Respawn" Version="7.0.0" />
+    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.4.6" />
+    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.7.0" />
     <!-- Direct override for the vulnerable transitive Microsoft.OpenApi 2.0.0 that
          AspNetCore.OpenApi drags in (GHSA-v5pm-xwqc-g5wc, patched 2.7.5). Latest 2.x. -->
     <PackageVersion Include="Microsoft.OpenApi" Version="2.9.0" />

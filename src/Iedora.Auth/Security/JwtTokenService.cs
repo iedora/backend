@@ -18,14 +18,16 @@ public sealed class JwtTokenService
 {
     private readonly ECDsa _ecdsa;
     private readonly ECDsaSecurityKey _key;
+    private readonly TimeProvider _clock;
     private readonly string _issuer;
     private readonly string _audience;
     private readonly TimeSpan _ttl;
 
     public string Kid { get; }
 
-    public JwtTokenService(IConfiguration cfg)
+    public JwtTokenService(IConfiguration cfg, TimeProvider clock)
     {
+        _clock = clock;
         _issuer = cfg["API_JWT_ISSUER"] ?? "https://api.iedora.com";
         _audience = cfg["API_JWT_AUDIENCE"] ?? "iedora-api";
         _ttl = TimeSpan.FromMinutes(int.Parse(cfg["API_ACCESS_TTL_MIN"] ?? "15"));
@@ -37,24 +39,35 @@ public sealed class JwtTokenService
         _key = new ECDsaSecurityKey(_ecdsa) { KeyId = Kid };
     }
 
-    /// <summary>Mints an access token for a signed-in user. Claims: sub, email, name, roles.</summary>
-    public (string token, DateTimeOffset expiresAt) Issue(AppUser user, IEnumerable<string> roles)
+    /// <summary>
+    /// Mints an access token bound to a session. Claims match the wire contract the frontend
+    /// decodes: <c>sub</c>, <c>email</c>, <c>roles</c>, <c>typ=access</c>, <c>sid</c> (session
+    /// family id), and optionally <c>tid</c> (tenant) / <c>mcp</c> (must-change-password).
+    /// Time comes from <see cref="TimeProvider"/> so token expiry is deterministic in tests.
+    /// </summary>
+    public (string token, DateTimeOffset expiresAt) Issue(
+        AppUser user, IEnumerable<string> roles, Guid sessionId, Guid? tenantId, bool mustChangePassword)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = _clock.GetUtcNow();
         var expiresAt = now.Add(_ttl);
+        var claims = new Dictionary<string, object>
+        {
+            ["sub"] = user.Id.ToString(),
+            ["email"] = user.Email ?? "",
+            ["roles"] = roles.ToArray(),
+            ["typ"] = "access",
+            ["sid"] = sessionId.ToString(),
+        };
+        if (tenantId is { } tid) claims["tid"] = tid.ToString();
+        if (mustChangePassword) claims["mcp"] = true;
+
         var token = new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
         {
             Issuer = _issuer,
             Audience = _audience,
             IssuedAt = now.UtcDateTime,
             Expires = expiresAt.UtcDateTime,
-            Claims = new Dictionary<string, object>
-            {
-                ["sub"] = user.Id.ToString(),
-                ["email"] = user.Email ?? "",
-                ["name"] = user.DisplayName ?? "",
-                ["roles"] = roles.ToArray(),
-            },
+            Claims = claims,
             SigningCredentials = new SigningCredentials(_key, SecurityAlgorithms.EcdsaSha256),
         });
         return (token, expiresAt);
