@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Emit the OpenAPI document at build time (no running server / DB needed), so the
+         frontend's TypeScript client is generated + drift-checked from a committed
+         artifact. Lands in app/openapi/ next to the other cross-cutting contracts. -->
+    <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/../../openapi</OpenApiDocumentsDirectory>
+    <OpenApiGenerateDocumentsOnBuild>true</OpenApiGenerateDocumentsOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Iedora.ServiceDefaults\Iedora.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Built-in OpenAPI document generation (net10) + the build-time emitter tool.
+         Versions are centralized in dotnet/Directory.Packages.props. -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <!-- Direct override for the vulnerable transitive Microsoft.OpenApi 2.0.0 that
+         AspNetCore.OpenApi pulls in (GHSA-v5pm-xwqc-g5wc). -->
+    <PackageReference Include="Microsoft.OpenApi" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+
+    <!-- Full ASP.NET Core Identity over EF Core / Postgres, wired through the Aspire
+         Npgsql integration (adds the DbContext + health checks + DB telemetry). Access
+         tokens are ES256 JWTs validated by the built-in JwtBearer handler. -->
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+  </ItemGroup>
+
+</Project>

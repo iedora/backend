@@ -1,0 +1,376 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Iedora.Auth | v1",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "Iedora.Auth"
+        ],
+        "summary": "Create a new account.",
+        "operationId": "Register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisteredResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Iedora.Auth"
+        ],
+        "summary": "Authenticate with email + password and receive an ES256 access token.",
+        "operationId": "Login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/whoami": {
+      "get": {
+        "tags": [
+          "Iedora.Auth"
+        ],
+        "summary": "Return the identity resolved from the bearer access token.",
+        "operationId": "WhoAmI",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhoAmIResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/.well-known/jwks.json": {
+      "get": {
+        "tags": [
+          "Iedora.Auth"
+        ],
+        "summary": "EC public keys (JWKS) for verifying access tokens offline.",
+        "operationId": "Jwks",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JwksDocument"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HttpValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "Jwk": {
+        "required": [
+          "kty",
+          "crv",
+          "use",
+          "alg",
+          "kid",
+          "x",
+          "y"
+        ],
+        "type": "object",
+        "properties": {
+          "kty": {
+            "type": "string"
+          },
+          "crv": {
+            "type": "string"
+          },
+          "use": {
+            "type": "string"
+          },
+          "alg": {
+            "type": "string"
+          },
+          "kid": {
+            "type": "string"
+          },
+          "x": {
+            "type": "string"
+          },
+          "y": {
+            "type": "string"
+          }
+        }
+      },
+      "JwksDocument": {
+        "required": [
+          "keys"
+        ],
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Jwk"
+            }
+          }
+        }
+      },
+      "LoginRequest": {
+        "required": [
+          "email",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginResponse": {
+        "required": [
+          "accessToken",
+          "expiresAt",
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RegisteredResponse": {
+        "required": [
+          "id",
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "RegisterRequest": {
+        "required": [
+          "email",
+          "password",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "WhoAmIResponse": {
+        "required": [
+          "sub",
+          "email",
+          "roles"
+        ],
+        "type": "object",
+        "properties": {
+          "sub": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Iedora.Auth"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Iedora.Auth/Iedora.Auth.csproj" />
+  </Folder>
+  <Project Path="Iedora.AppHost/Iedora.AppHost.csproj" />
+  <Project Path="Iedora.ServiceDefaults/Iedora.ServiceDefaults.csproj" />
+</Solution>
