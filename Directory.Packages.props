@@ -5,6 +5,9 @@
        single file to update. https://learn.microsoft.com/nuget/consume-packages/central-package-management -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- Pin transitive packages to the central versions too — the idiomatic way to fix a
+         vulnerable transitive (e.g. Microsoft.OpenApi) without a placeholder direct reference. -->
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +17,7 @@
     <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.9" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
 
     <!-- Test diamond: MSTest (via the MSTest.Sdk project SDK, pinned in global.json) +
          WebApplicationFactory + Testcontainers (integration base), Respawn (state reset),

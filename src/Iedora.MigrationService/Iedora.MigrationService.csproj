@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Iedora.MigrationService</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Iedora.ServiceDefaults\Iedora.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Iedora.Auth.Data\Iedora.Auth.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Aspire Npgsql integration for AddNpgsqlDbContext (connection string + retry strategy). -->
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+
+</Project>

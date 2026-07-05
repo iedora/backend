@@ -1,6 +1,8 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Iedora.Auth.Data/Iedora.Auth.Data.csproj" />
     <Project Path="src/Iedora.Auth/Iedora.Auth.csproj" />
+    <Project Path="src/Iedora.MigrationService/Iedora.MigrationService.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Iedora.Auth.E2ETests/Iedora.Auth.E2ETests.csproj" />

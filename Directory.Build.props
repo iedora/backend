@@ -3,19 +3,17 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>latest</LangVersion>
+    <!-- LangVersion omitted: net10.0 defaults to C# 14. -->
     <!-- Relaxed during the Aspire+Identity rebuild; the scaffolded AppHost/ServiceDefaults
          template code isn't warning-clean under strict mode. Re-enable for our own code later. -->
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <!-- Telemetry contract: match the Bun services so this is a drop-in replacement. -->
     <RootNamespace Condition="'$(RootNamespace)' == ''">Iedora.Auth</RootNamespace>
 
-    <!-- Vulnerability auditing: scan direct AND transitive packages on restore, and promote
-         every advisory (NU1901 low → NU1904 critical) to a build ERROR. This is what fails
-         the build on the next NU1903-style transitive vuln instead of relying on a human
-         spotting a warning. Set <NuGetAuditMode>direct</NuGetAuditMode> per-project to relax. -->
-    <NuGetAudit>true</NuGetAudit>
-    <NuGetAuditMode>all</NuGetAuditMode>
+    <!-- Vulnerability auditing runs transitive-wide by default on net10 (NuGetAuditMode=all).
+         We only add the non-default part: promote every advisory (NU1901 low → NU1904 critical)
+         to a build ERROR, so the next NU1903-style transitive vuln fails the build instead of
+         scrolling past as a warning. Set <NuGetAuditMode>direct</NuGetAuditMode> per-project to relax. -->
     <WarningsAsErrors>$(WarningsAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsAsErrors>
   </PropertyGroup>
 </Project>

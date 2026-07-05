@@ -6,37 +6,32 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- Emit the OpenAPI document at build time (no running server / DB needed), so the
          frontend's TypeScript client is generated + drift-checked from a committed
-         artifact. Lands in app/openapi/ next to the other cross-cutting contracts. -->
+         artifact. Lands in backend/openapi/ next to the other cross-cutting contracts. -->
     <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/../../openapi</OpenApiDocumentsDirectory>
     <OpenApiGenerateDocumentsOnBuild>true</OpenApiGenerateDocumentsOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Iedora.ServiceDefaults\Iedora.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Iedora.Auth.Data\Iedora.Auth.Data.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Built-in OpenAPI document generation (net10) + the build-time emitter tool.
-         Versions are centralized in dotnet/Directory.Packages.props. -->
+    <!-- Built-in OpenAPI document generation (net10) + the build-time emitter tool. Versions
+         are centralized in Directory.Packages.props; the vulnerable transitive Microsoft.OpenApi
+         2.0.0 (GHSA-v5pm-xwqc-g5wc) is pinned to 2.9.0 there via transitive pinning. -->
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-    <!-- Direct override for the vulnerable transitive Microsoft.OpenApi 2.0.0 that
-         AspNetCore.OpenApi pulls in (GHSA-v5pm-xwqc-g5wc). -->
-    <PackageReference Include="Microsoft.OpenApi" />
     <PackageReference Include="Microsoft.Extensions.ApiDescription.Server">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
 
-    <!-- Full ASP.NET Core Identity over EF Core / Postgres, wired through the Aspire
-         Npgsql integration (adds the DbContext + health checks + DB telemetry). Access
-         tokens are ES256 JWTs validated by the built-in JwtBearer handler. -->
+    <!-- ASP.NET Core Identity stores + the Aspire Npgsql integration (DbContext + health checks
+         + DB telemetry). Access tokens are ES256 JWTs validated by the JwtBearer handler. The
+         EF model + migrations live in Iedora.Auth.Data. -->
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
-    <!-- EF Core migrations tooling + design-time factory (dev-only; doesn't flow to consumers). -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
   </ItemGroup>
 
 </Project>

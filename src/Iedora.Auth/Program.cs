@@ -1,4 +1,3 @@
-using System.Reflection;
 using Iedora.Auth.Data;
 using Iedora.Auth.Features.Jwks;
 using Iedora.Auth.Features.Login;
@@ -67,11 +66,8 @@ builder.Services.AddProblemDetails();
 // build time (see the .csproj) and also served at /openapi/v1.json for live tooling.
 builder.Services.AddOpenApi();
 
-// Apply EF migrations on boot. Skipped under the build-time OpenAPI generator
-// (GetDocument.Insider runs the host but has no database).
-var generatingOpenApiDoc = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
-if (!generatingOpenApiDoc)
-    builder.Services.AddHostedService<SchemaInitializer>();
+// NOTE: schema is applied by the Iedora.MigrationService worker (the AppHost gates this API
+// on its completion), so the API never migrates on startup — no DB access before serving.
 
 var app = builder.Build();
 

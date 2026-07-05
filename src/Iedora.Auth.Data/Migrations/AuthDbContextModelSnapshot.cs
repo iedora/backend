@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Iedora.Auth.Migrations
+namespace Iedora.Auth.Data.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
     partial class AuthDbContextModelSnapshot : ModelSnapshot

@@ -7,8 +7,10 @@
 | Project | Purpose |
 |---|---|
 | `src/Iedora.Auth` | Auth service — ASP.NET Core Identity over EF Core/Postgres, ES256 (ECDSA P-256) JWTs, JWKS, minimal-API vertical slices (`Features/*`). |
+| `src/Iedora.Auth.Data` | The EF Core model (Identity + refresh sessions) + migrations, shared by the auth service and the migration worker. |
+| `src/Iedora.MigrationService` | Worker that applies EF migrations on startup then exits; the AppHost gates the auth service on its completion (`WaitForCompletion`). |
 | `Iedora.ServiceDefaults` | Shared Aspire defaults — OpenTelemetry (traces/metrics/logs), health checks, HTTP resilience, service discovery. |
-| `Iedora.AppHost` | Aspire orchestration — spins up Postgres + the auth service for local dev and wires telemetry to the OTLP collector. |
+| `Iedora.AppHost` | Aspire orchestration — Postgres + migration worker + the auth service for local dev, wiring telemetry to the OTLP collector. |
 
 ## Prerequisites
 
@@ -18,13 +20,18 @@
 ## Run
 
 ```bash
-# Full Aspire orchestration (Postgres + auth service)
+# Full Aspire orchestration (Postgres + migration worker + auth service)
 dotnet run --project Iedora.AppHost
 
-# …or just the auth service against your own Postgres:
-ConnectionStrings__authdb='Host=localhost;Port=5432;Database=authdb;Username=postgres;Password=…' \
-  dotnet run --project src/Iedora.Auth
+# …or run against your own Postgres: apply migrations, then start the service.
+# (The service does NOT self-migrate — the migration worker owns the schema.)
+export ConnectionStrings__authdb='Host=localhost;Port=5432;Database=authdb;Username=postgres;Password=…'
+dotnet run --project src/Iedora.MigrationService   # applies migrations, then exits
+dotnet run --project src/Iedora.Auth
 ```
+
+Migrations live in `src/Iedora.Auth.Data`; add one with
+`dotnet ef migrations add <Name> --project src/Iedora.Auth.Data`.
 
 ## Auth endpoints
 

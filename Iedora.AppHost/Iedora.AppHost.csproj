@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\src\Iedora.Auth\Iedora.Auth.csproj" />
+    <ProjectReference Include="..\src\Iedora.MigrationService\Iedora.MigrationService.csproj" />
   </ItemGroup>
 
   <ItemGroup>
