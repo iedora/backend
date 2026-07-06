@@ -1,12 +1,12 @@
-namespace Iedora.Contracts;
+namespace Iedora.Api.Identity.Contracts;
 
 /// <summary>A minimal projection of a user, for other modules to hydrate references held by id.</summary>
 public sealed record UserSummary(Guid Id, string Email, string? Name);
 
 /// <summary>
-/// The <b>Identity</b> module's public cross-module API. Other modules depend on THIS contract, not
-/// on the Identity module — implemented inside Identity, resolved via DI. Tenancy's admin reads use
-/// it to resolve owner users without touching identity tables.
+/// The <b>Identity</b> module's public API for other modules. Everything under this module's
+/// <c>Contracts</c> namespace is external-use by definition: a module may import another module's
+/// <c>.Contracts</c>, and NOTHING else of it. Implemented internally, resolved via DI.
 /// </summary>
 public interface IIdentityApi
 {

@@ -1,5 +1,5 @@
 using Iedora.Api.Identity;
-using Iedora.Contracts;
+using Iedora.Api.Identity.Contracts;
 using Iedora.Api.Features.ChangePassword;
 using Iedora.Api.Features.ForgotPassword;
 using Iedora.Api.Features.Jwks;
