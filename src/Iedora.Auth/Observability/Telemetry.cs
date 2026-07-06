@@ -26,4 +26,13 @@ public static class Telemetry
     /// <summary>Tokens issued, by grant type + result — a business metric.</summary>
     public static readonly Counter<long> TokensIssued = Meter.CreateCounter<long>(
         "iedora.auth.tokens_issued", unit: "{token}", description: "Access/service tokens issued");
+
+    /// <summary>Refresh-token rotations (successful session renewals).</summary>
+    public static readonly Counter<long> SessionsRotated = Meter.CreateCounter<long>(
+        "iedora.auth.sessions_rotated", unit: "{session}", description: "Refresh-token rotations");
+
+    /// <summary>Reuse detections — a spent/rotated refresh token was presented, burning the
+    /// whole family. A spike here is a token-theft signal worth alarming on.</summary>
+    public static readonly Counter<long> ReuseDetected = Meter.CreateCounter<long>(
+        "iedora.auth.reuse_detected", unit: "{event}", description: "Refresh-token reuse detections (family burned)");
 }

@@ -1,6 +1,28 @@
 <Solution>
+  <Folder Name="/framework/" />
+  <Folder Name="/framework/Inbox/">
+    <Project Path="framework/Inbox/Framework.Inbox.Tests/Framework.Inbox.Tests.csproj" />
+    <Project Path="framework/Inbox/Framework.Inbox/Framework.Inbox.csproj" />
+  </Folder>
+  <Folder Name="/framework/Outbox/">
+    <Project Path="framework/Outbox/Framework.Outbox.Tests/Framework.Outbox.Tests.csproj" />
+    <Project Path="framework/Outbox/Framework.Outbox/Framework.Outbox.csproj" />
+  </Folder>
+  <Folder Name="/framework/Web/">
+    <Project Path="framework/Web/Framework.Web.Tests/Framework.Web.Tests.csproj" />
+    <Project Path="framework/Web/Framework.Web/Framework.Web.csproj" />
+  </Folder>
   <Folder Name="/src/">
+    <Project Path="src/Iedora.Auth.Data/Iedora.Auth.Data.csproj" />
+    <Project Path="src/Iedora.Auth.Messaging/Iedora.Auth.Messaging.csproj" />
     <Project Path="src/Iedora.Auth/Iedora.Auth.csproj" />
+    <Project Path="src/Iedora.MigrationService/Iedora.MigrationService.csproj" />
+    <Project Path="src/Iedora.Worker/Iedora.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Iedora.Auth.E2ETests/Iedora.Auth.E2ETests.csproj" />
+    <Project Path="tests/Iedora.Auth.IntegrationTests/Iedora.Auth.IntegrationTests.csproj" />
+    <Project Path="tests/Iedora.Auth.UnitTests/Iedora.Auth.UnitTests.csproj" />
   </Folder>
   <Project Path="Iedora.AppHost/Iedora.AppHost.csproj" />
   <Project Path="Iedora.ServiceDefaults/Iedora.ServiceDefaults.csproj" />

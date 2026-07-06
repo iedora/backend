@@ -1,0 +1,20 @@
+<Project Sdk="MSTest.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Framework.Outbox.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Testcontainers Postgres: a real relational DB (matching production), so the library is
+         tested independently of any service. Npgsql provider for the throwaway TestDbContext. -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Framework.Outbox\Framework.Outbox.csproj" />
+  </ItemGroup>
+
+</Project>

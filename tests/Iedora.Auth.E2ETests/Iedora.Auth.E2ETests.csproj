@@ -1,0 +1,17 @@
+<Project Sdk="MSTest.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Iedora.Auth.E2ETests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Reference the AppHost so Aspire generates the Projects.Iedora_AppHost metadata. -->
+    <ProjectReference Include="..\..\Iedora.AppHost\Iedora.AppHost.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+</Project>

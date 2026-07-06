@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Framework.Outbox</RootNamespace>
+
+    <!-- Standalone, generic — structured like a NuGet library (packable). -->
+    <IsPackable>true</IsPackable>
+    <PackageId>Framework.Outbox</PackageId>
+    <Authors>iedora</Authors>
+    <Description>Reusable, broker-free transactional outbox for EF Core services: stage effects in the SAME SaveChangesAsync as the domain change; a background dispatcher routes each to an IOutboxHandler with retry/backoff. Provider-agnostic (relational).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Reusable transactional-outbox infrastructure: an EF entity + a background dispatcher.
+         DbContext-agnostic; consuming services register it with AddOutbox<TContext>() and
+         supply IOutboxHandler implementations. No message broker. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+  </ItemGroup>
+
+</Project>

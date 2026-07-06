@@ -1,23 +1,28 @@
+using System.ComponentModel.DataAnnotations;
+using Framework.Web;
+using Iedora.Auth.Common;
 using Iedora.Auth.Data;
 using Iedora.Auth.Observability;
 using Iedora.Auth.Security;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Iedora.Auth.Sessions;
 using Microsoft.AspNetCore.Identity;
 
 namespace Iedora.Auth.Features.Login;
 
-public sealed record LoginRequest(string Email, string Password);
-public sealed record LoginResponse(string AccessToken, string ExpiresAt, string UserId);
+public sealed record LoginRequest(
+    [property: Required, EmailAddress] string Email,
+    [property: Required] string Password);
 
-// POST /auth/login — verify the password with Identity, mint an ES256 JWT. Typed results
-// so the OpenAPI schema (→ generated frontend client) is exact. Custom business span +
-// counter ride the iedora-auth ActivitySource/Meter (the "proper OTel way").
+// POST /auth/login — verify the password with Identity, open a refresh-session family, set the
+// refresh cookie, and mint a session-bound ES256 access token. Failure is an explicit
+// AuthErrors value mapped to 401 (no exception/null). Custom span + counter ride the
+// iedora-auth ActivitySource/Meter.
 public static class LoginEndpoint
 {
     public static void MapLogin(this RouteGroupBuilder group) =>
-        group.MapPost("/login",
-            async Task<Results<Ok<LoginResponse>, ProblemHttpResult>> (
-                LoginRequest req, UserManager<AppUser> users, JwtTokenService jwt) =>
+        group.MapPost("/login", async (
+                LoginRequest req, HttpContext http, UserManager<AppUser> users,
+                SessionService sessions, JwtTokenService jwt, RefreshCookie cookie, CancellationToken ct) =>
         {
             using var activity = Telemetry.ActivitySource.StartActivity("auth.login");
 
@@ -26,18 +31,20 @@ public static class LoginEndpoint
             {
                 activity?.SetTag("auth.result", "denied");
                 Telemetry.TokensIssued.Add(1, new("grant", "password"), new("result", "denied"));
-                return TypedResults.Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "invalid credentials");
+                return ProblemResults.From(AuthErrors.InvalidCredentials);
             }
 
             var roles = await users.GetRolesAsync(user);
-            var (token, expiresAt) = jwt.Issue(user, roles);
+            var (session, rawToken) = await sessions.CreateAsync(user.Id, tenantId: null, RequestMeta.From(http), ct);
+            var response = AuthTokens.Issue(http.Response, user, roles, session, rawToken, jwt, cookie);
+
             activity?.SetTag("auth.result", "issued");
             activity?.SetTag("user.id", user.Id.ToString());
             Telemetry.TokensIssued.Add(1, new("grant", "password"), new("result", "issued"));
-
-            return TypedResults.Ok(new LoginResponse(token, expiresAt.ToString("o"), user.Id.ToString()));
+            return TypedResults.Ok(response);
         })
         .WithName("Login")
-        .WithSummary("Authenticate with email + password and receive an ES256 access token.")
+        .WithSummary("Authenticate with email + password; opens a session and returns an ES256 access token.")
+        .Produces<TokenResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status401Unauthorized);
 }

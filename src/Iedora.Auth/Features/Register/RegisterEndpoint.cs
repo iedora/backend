@@ -1,14 +1,19 @@
+using System.ComponentModel.DataAnnotations;
 using Iedora.Auth.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 
 namespace Iedora.Auth.Features.Register;
 
-public sealed record RegisterRequest(string Email, string Password, string? DisplayName);
+public sealed record RegisterRequest(
+    [property: Required, EmailAddress] string Email,
+    [property: Required, StringLength(128, MinimumLength = 8)] string Password,
+    string? DisplayName);
 public sealed record RegisteredResponse(Guid Id, string Email);
 
-// POST /auth/register — create an account via Identity's UserManager (its PasswordHasher +
-// validators). Identity's ValidationErrors map straight to an RFC 9457 ValidationProblem.
+// POST /auth/register — shape-validated by the built-in minimal-API validation (AddValidation),
+// then created via Identity's UserManager (its PasswordHasher + policy validators). Identity's
+// domain errors map to an RFC 9457 ValidationProblem.
 public static class RegisterEndpoint
 {
     public static void MapRegister(this RouteGroupBuilder group) =>

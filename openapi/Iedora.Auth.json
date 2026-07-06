@@ -51,7 +51,7 @@
         "tags": [
           "Iedora.Auth"
         ],
-        "summary": "Authenticate with email + password and receive an ES256 access token.",
+        "summary": "Authenticate with email + password; opens a session and returns an ES256 access token.",
         "operationId": "Login",
         "requestBody": {
           "content": {
@@ -69,13 +69,188 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoginResponse"
+                  "$ref": "#/components/schemas/TokenResponse"
                 }
               }
             }
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": [
+          "Iedora.Auth"
+        ],
+        "summary": "Rotate the refresh-token cookie and issue a fresh access token.",
+        "operationId": "Refresh",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "Iedora.Auth"
+        ],
+        "summary": "Revoke this device's session and clear the refresh cookie (idempotent).",
+        "operationId": "Logout",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout-all": {
+      "post": {
+        "tags": [
+          "Iedora.Auth"
+        ],
+        "summary": "Revoke all of the signed-in user's sessions (every device).",
+        "operationId": "LogoutAll",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/change-password": {
+      "post": {
+        "tags": [
+          "Iedora.Auth"
+        ],
+        "summary": "Change the signed-in user's password; revokes the user's other sessions.",
+        "operationId": "ChangePassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "Iedora.Auth"
+        ],
+        "summary": "Request a password-reset email (always 200 — no account enumeration).",
+        "operationId": "ForgotPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "tags": [
+          "Iedora.Auth"
+        ],
+        "summary": "Set a new password using the emailed reset token.",
+        "operationId": "ResetPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -132,6 +307,37 @@
   },
   "components": {
     "schemas": {
+      "ChangePasswordRequest": {
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "newPassword": {
+            "maxLength": 128,
+            "minLength": 8,
+            "type": "string"
+          }
+        }
+      },
+      "ForgotPasswordRequest": {
+        "required": [
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        }
+      },
       "HttpValidationProblemDetails": {
         "type": "object",
         "properties": {
@@ -243,22 +449,14 @@
           }
         }
       },
-      "LoginResponse": {
+      "OkResponse": {
         "required": [
-          "accessToken",
-          "expiresAt",
-          "userId"
+          "ok"
         ],
         "type": "object",
         "properties": {
-          "accessToken": {
-            "type": "string"
-          },
-          "expiresAt": {
-            "type": "string"
-          },
-          "userId": {
-            "type": "string"
+          "ok": {
+            "type": "boolean"
           }
         }
       },
@@ -328,6 +526,8 @@
             "type": "string"
           },
           "password": {
+            "maxLength": 128,
+            "minLength": 8,
             "type": "string"
           },
           "displayName": {
@@ -338,21 +538,74 @@
           }
         }
       },
-      "WhoAmIResponse": {
+      "ResetPasswordRequest": {
         "required": [
-          "sub",
           "email",
-          "roles"
+          "token",
+          "password"
         ],
         "type": "object",
         "properties": {
-          "sub": {
+          "email": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 8,
+            "type": "string"
+          }
+        }
+      },
+      "TokenResponse": {
+        "required": [
+          "accessToken",
+          "expiresAt",
+          "userId",
+          "tenantId",
+          "mustChangePassword"
+        ],
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "tenantId": {
             "type": [
               "null",
               "string"
             ]
           },
-          "email": {
+          "mustChangePassword": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "WhoAmIResponse": {
+        "required": [
+          "userId",
+          "tenantId",
+          "roles",
+          "email",
+          "mustChangePassword"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "tenantId": {
             "type": [
               "null",
               "string"
@@ -363,6 +616,18 @@
             "items": {
               "type": "string"
             }
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "mustChangePassword": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       }

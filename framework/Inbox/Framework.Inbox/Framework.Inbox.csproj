@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Framework.Inbox</RootNamespace>
+
+    <!-- Standalone, generic — structured like a NuGet library (packable). -->
+    <IsPackable>true</IsPackable>
+    <PackageId>Framework.Inbox</PackageId>
+    <Authors>iedora</Authors>
+    <Description>Idempotent-consumer (inbox) for EF Core services: process a received message exactly once. A processed-message ledger + a transactional dedup — record the message id and run the handler in one transaction, so at-least-once redelivery is safe. Transport-agnostic (call it from any consumer). Postgres-targeted (ON CONFLICT).</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+  </ItemGroup>
+
+</Project>

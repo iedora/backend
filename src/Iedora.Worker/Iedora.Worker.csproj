@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Iedora.Worker</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Iedora.ServiceDefaults\Iedora.ServiceDefaults.csproj" />
+    <!-- Generic app worker: it references each service's non-web messaging MODULE (which brings
+         its DbContext, handlers + dispatch registration) — never a service's web project. -->
+    <ProjectReference Include="..\Iedora.Auth.Messaging\Iedora.Auth.Messaging.csproj" />
+  </ItemGroup>
+
+</Project>
