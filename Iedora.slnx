@@ -1,7 +1,8 @@
 <Solution>
-  <Folder Name="/framework/">
-    <Project Path="framework/Iedora.Framework.Outbox.Tests/Iedora.Framework.Outbox.Tests.csproj" />
-    <Project Path="framework/Iedora.Framework.Outbox/Iedora.Framework.Outbox.csproj" />
+  <Folder Name="/framework/" />
+  <Folder Name="/framework/Outbox/">
+    <Project Path="framework/Outbox/Framework.Outbox.Tests/Framework.Outbox.Tests.csproj" />
+    <Project Path="framework/Outbox/Framework.Outbox/Framework.Outbox.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Iedora.Auth.Data/Iedora.Auth.Data.csproj" />

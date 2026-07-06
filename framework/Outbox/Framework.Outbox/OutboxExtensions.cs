@@ -2,7 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Iedora.Framework.Outbox;
+namespace Framework.Outbox;
 
 public static class OutboxExtensions
 {

@@ -1,4 +1,4 @@
-namespace Iedora.Framework.Outbox;
+namespace Framework.Outbox;
 
 /// <summary>
 /// A pending side effect (e.g. an email) persisted in the SAME transaction as the domain change,

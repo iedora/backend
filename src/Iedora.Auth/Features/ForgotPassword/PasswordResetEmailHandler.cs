@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Iedora.Auth.Email;
-using Iedora.Framework.Outbox;
+using Framework.Outbox;
 
 namespace Iedora.Auth.Features.ForgotPassword;
 

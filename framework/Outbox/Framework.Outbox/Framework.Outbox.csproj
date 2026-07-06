@@ -4,11 +4,11 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>Iedora.Framework.Outbox</RootNamespace>
+    <RootNamespace>Framework.Outbox</RootNamespace>
 
     <!-- Standalone, generic — structured like a NuGet library (packable). -->
     <IsPackable>true</IsPackable>
-    <PackageId>Iedora.Framework.Outbox</PackageId>
+    <PackageId>Framework.Outbox</PackageId>
     <Authors>iedora</Authors>
     <Description>Reusable, broker-free transactional outbox for EF Core services: stage effects in the SAME SaveChangesAsync as the domain change; a background dispatcher routes each to an IOutboxHandler with retry/backoff. Provider-agnostic (relational).</Description>
   </PropertyGroup>

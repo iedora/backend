@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>Iedora.Framework.Outbox.Tests</RootNamespace>
+    <RootNamespace>Framework.Outbox.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Iedora.Framework.Outbox\Iedora.Framework.Outbox.csproj" />
+    <ProjectReference Include="..\Framework.Outbox\Framework.Outbox.csproj" />
   </ItemGroup>
 
 </Project>

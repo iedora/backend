@@ -1,4 +1,4 @@
-using Iedora.Framework.Outbox;
+using Framework.Outbox;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +8,7 @@ namespace Iedora.Auth.Data;
 /// <summary>
 /// The Identity store — full ASP.NET Core Identity schema (AspNetUsers, AspNetRoles,
 /// AspNetUserRoles, ...) on Postgres with Guid keys, plus the refresh-token
-/// <see cref="Sessions"/> table and the transactional outbox (from Iedora.Framework.Outbox). Schema is
+/// <see cref="Sessions"/> table and the transactional outbox (from Framework.Outbox). Schema is
 /// applied via EF migrations (see the migration worker).
 /// </summary>
 public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)

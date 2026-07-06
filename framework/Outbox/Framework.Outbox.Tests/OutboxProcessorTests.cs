@@ -5,7 +5,7 @@ using Microsoft.Extensions.Time.Testing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Testcontainers.PostgreSql;
 
-namespace Iedora.Framework.Outbox.Tests;
+namespace Framework.Outbox.Tests;
 
 // A throwaway DbContext that only maps the outbox — proves the library works with ANY DbContext,
 // independent of any service. Backed by a real Postgres (Testcontainers), like production.

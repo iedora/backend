@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Iedora.Framework.Outbox;
+namespace Framework.Outbox;
 
 /// <summary>
 /// Dispatches pending outbox messages: routes each to its <see cref="IOutboxHandler"/>, stamps
