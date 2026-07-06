@@ -14,13 +14,14 @@ narrow in-process interface (e.g. login → `ITenancyApi`).
 | **Identity** (`src/Iedora.Api/Identity`) | `identity` | Users, roles, refresh sessions, password lifecycle, ES256 JWT/JWKS. |
 | **Tenancy** (`src/Iedora.Api/Tenancy`) | `tenancy` | Tenants + memberships; exposes `ITenancyApi` as its cross-module surface. |
 
-Cross-module reads go both ways through public interfaces, never across tables: Identity's login resolves the default tenant via `ITenancyApi`; Tenancy's admin reads resolve owner **users** via `IIdentityApi`.
+Modules never reference each other. Cross-module calls go through the **`Iedora.Contracts`** layer — a dependency-free project holding only the public interfaces + DTOs (`ITenancyApi`, `IIdentityApi`). A module depends on the contract, never on the other module's namespace or internals; the implementation lives in the owning module (internal) and is resolved via DI. Both directions use it: Identity's login resolves the default tenant via `ITenancyApi`; Tenancy's admin reads resolve owner users via `IIdentityApi`.
 
 ## Projects
 
 | Project | Purpose |
 |---|---|
 | `src/Iedora.Api` | The web API — modular monolith. Per-module vertical slices (`<Module>/Features/*`), ES256 JWTs, JWKS. |
+| `src/Iedora.Contracts` | The inter-module contract layer — dependency-free interfaces + DTOs (`ITenancyApi`, `IIdentityApi`) that modules call each other through, so no module references another module. |
 | `src/Iedora.Data` | The per-module EF Core models + migrations (`Identity/` → `identity` schema, `Tenancy/` → `tenancy` schema), shared by the API, migration worker, and outbox worker. Owns DB registration (`AddIdentityDb` / `AddTenancyDb`). |
 | `framework/Outbox/Framework.Outbox` | Reusable transactional-outbox library (entity, dispatcher, `IOutboxHandler`) — reliable message *production*. `FOR UPDATE SKIP LOCKED` claim (multi-replica-safe), schema-aware, retry/backoff, no broker. |
 | `framework/Inbox/Framework.Inbox` | Reusable idempotent-consumer library (`InboxProcessor`, `IInboxHandler`) — reliable message *consumption*: dedup + handler in one transaction, so at-least-once redelivery is safe. Transport-agnostic. |

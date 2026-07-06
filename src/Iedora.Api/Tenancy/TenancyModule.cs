@@ -1,4 +1,5 @@
 using Iedora.Api.Features.Tenants;
+using Iedora.Contracts;
 using Iedora.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

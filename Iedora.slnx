@@ -13,6 +13,7 @@
     <Project Path="framework/Web/Framework.Web/Framework.Web.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/Iedora.Contracts/Iedora.Contracts.csproj" />
     <Project Path="src/Iedora.Data/Iedora.Data.csproj" />
     <Project Path="src/Iedora.Messaging/Iedora.Messaging.csproj" />
     <Project Path="src/Iedora.Api/Iedora.Api.csproj" />
