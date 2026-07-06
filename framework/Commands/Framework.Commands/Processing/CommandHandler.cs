@@ -17,6 +17,7 @@ public abstract class CommandHandler<TContext, TPayload>(TContext db, TimeProvid
     where TContext : DbContext
 {
     protected TContext Db { get; } = db;
+    protected TimeProvider Clock { get; } = clock;
 
     public abstract string Type { get; }
 
@@ -33,11 +34,11 @@ public abstract class CommandHandler<TContext, TPayload>(TContext db, TimeProvid
         if (result.IsError)
         {
             var error = result.Errors[0];
-            command.Fail(error.Code, error.Description, clock.GetUtcNow());
+            command.Fail(error.Code, error.Description, Clock.GetUtcNow());
         }
         else
         {
-            command.Succeed(result.Value, clock.GetUtcNow());
+            command.Succeed(result.Value, Clock.GetUtcNow());
         }
         await Db.SaveChangesAsync(ct);
     }

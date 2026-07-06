@@ -15,7 +15,9 @@
     <ProjectReference Include="..\..\Iedora.ServiceDefaults\Iedora.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Iedora.Data\Iedora.Data.csproj" />
     <ProjectReference Include="..\Iedora.Messaging\Iedora.Messaging.csproj" />
+    <ProjectReference Include="..\Iedora.Tenancy\Iedora.Tenancy.csproj" />
     <ProjectReference Include="..\..\framework\Outbox\Framework.Outbox\Framework.Outbox.csproj" />
+    <ProjectReference Include="..\..\framework\Commands\Framework.Commands\Framework.Commands.csproj" />
     <ProjectReference Include="..\..\framework\Web\Framework.Web\Framework.Web.csproj" />
   </ItemGroup>
 

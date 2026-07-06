@@ -22,15 +22,14 @@ public sealed class TenantAdminTests : IntegrationTestBase
     public async Task Admin_lists_tenants_with_their_owners()
     {
         var owner = await RegisterAndLogin("owner@tasca.pt", "Sup3rSecret!");
-        var created = (await (await PostJson("/tenancy/tenants", new { name = "Tasca do Zé" }, owner.accessToken))
-            .Content.ReadFromJsonAsync<TenantPayload>())!;
+        var createdId = await CreateTenantAsync("Tasca do Zé", owner.accessToken);
 
         var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
         var resp = await Get("/tenancy/admin/tenants", admin.accessToken);
         Assert.AreEqual(HttpStatusCode.OK, resp.StatusCode);
 
         var list = (await resp.Content.ReadFromJsonAsync<TenantListPayload>())!;
-        var tenant = list.tenants.Single(t => t.id == created.id);
+        var tenant = list.tenants.Single(t => t.id == createdId);
         Assert.AreEqual("Tasca do Zé", tenant.name);
         Assert.AreEqual(owner.userId, tenant.owner.id);
         Assert.AreEqual("owner@tasca.pt", tenant.owner.email); // owner user resolved via IIdentityApi
@@ -40,11 +39,10 @@ public sealed class TenantAdminTests : IntegrationTestBase
     public async Task Get_by_id_returns_the_tenant_with_owner()
     {
         var owner = await RegisterAndLogin("owner@bistro.pt", "Sup3rSecret!");
-        var created = (await (await PostJson("/tenancy/tenants", new { name = "Bistro" }, owner.accessToken))
-            .Content.ReadFromJsonAsync<TenantPayload>())!;
+        var createdId = await CreateTenantAsync("Bistro", owner.accessToken);
 
         var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
-        var resp = await Get($"/tenancy/admin/tenants/{created.id}", admin.accessToken);
+        var resp = await Get($"/tenancy/admin/tenants/{createdId}", admin.accessToken);
         Assert.AreEqual(HttpStatusCode.OK, resp.StatusCode);
 
         var tenant = (await resp.Content.ReadFromJsonAsync<TenantOwnerPayload>())!;
@@ -116,11 +114,10 @@ public sealed class TenantAdminTests : IntegrationTestBase
     public async Task Transfer_moves_the_tenant_to_a_brand_new_owner()
     {
         var oldOwner = await RegisterAndLogin("old@tasca.pt", "Sup3rSecret!");
-        var tenant = (await (await PostJson("/tenancy/tenants", new { name = "Tasca" }, oldOwner.accessToken))
-            .Content.ReadFromJsonAsync<TenantPayload>())!;
+        var tenantId = await CreateTenantAsync("Tasca", oldOwner.accessToken);
         var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
 
-        var resp = await PostJson($"/tenancy/admin/tenants/{tenant.id}/transfer",
+        var resp = await PostJson($"/tenancy/admin/tenants/{tenantId}/transfer",
             new { email = "new@owner.pt", name = "New Owner", password = "N3wOwnerPass!" }, admin.accessToken);
         Assert.AreEqual(HttpStatusCode.OK, resp.StatusCode);
         var body = (await resp.Content.ReadFromJsonAsync<TransferPayload>())!;
@@ -130,7 +127,7 @@ public sealed class TenantAdminTests : IntegrationTestBase
         {
             var db = scope.ServiceProvider.GetRequiredService<TenancyDbContext>();
             var owners = await db.Memberships
-                .Where(m => m.TenantId == Guid.Parse(tenant.id) && m.Role == MembershipRole.Owner)
+                .Where(m => m.TenantId == Guid.Parse(tenantId) && m.Role == MembershipRole.Owner)
                 .ToListAsync();
             Assert.HasCount(1, owners);
             Assert.AreEqual(Guid.Parse(body.ownerId), owners[0].UserId);
@@ -139,7 +136,7 @@ public sealed class TenantAdminTests : IntegrationTestBase
 
         // The new owner can log in, and the transferred tenant is their default.
         var (login, _) = await Login("new@owner.pt", "N3wOwnerPass!");
-        Assert.AreEqual(tenant.id, login.tenantId);
+        Assert.AreEqual(tenantId, login.tenantId);
     }
 
     [TestMethod]
@@ -147,11 +144,10 @@ public sealed class TenantAdminTests : IntegrationTestBase
     {
         await Register("taken@owner.pt", "Sup3rSecret!");
         var oldOwner = await RegisterAndLogin("old2@tasca.pt", "Sup3rSecret!");
-        var tenant = (await (await PostJson("/tenancy/tenants", new { name = "Bistro" }, oldOwner.accessToken))
-            .Content.ReadFromJsonAsync<TenantPayload>())!;
+        var tenantId = await CreateTenantAsync("Bistro", oldOwner.accessToken);
         var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
 
-        var resp = await PostJson($"/tenancy/admin/tenants/{tenant.id}/transfer",
+        var resp = await PostJson($"/tenancy/admin/tenants/{tenantId}/transfer",
             new { email = "taken@owner.pt", name = "Nope", password = "N3wOwnerPass!" }, admin.accessToken);
         Assert.AreEqual(HttpStatusCode.Conflict, resp.StatusCode);
     }

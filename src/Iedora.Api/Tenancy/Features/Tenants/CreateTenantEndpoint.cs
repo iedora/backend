@@ -1,19 +1,22 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using Framework.Commands;
 using Framework.Web;
 using Iedora.Api.Shared;
 using Iedora.Data;
+using Iedora.Tenancy;
 
 namespace Iedora.Api.Features.Tenants;
 
 public sealed record CreateTenantRequest([property: Required] string Name);
 
+// Shared with the (still-synchronous) admin-create endpoint until it too moves to the pipeline.
 public sealed record CreateTenantResponse(Guid Id, string Name);
 
-// POST /tenancy/tenants — the signed-in user provisions a tenant and becomes its owner. The tenant
-// row + the owner membership are written in one SaveChanges (a single transaction). The caller's
-// current access token doesn't carry the new tenant; the next login/refresh re-resolves the
-// default tenant from memberships and pins it.
+// POST /tenancy/tenants — the signed-in user provisions a tenant. Validated SYNCHRONOUSLY here,
+// then accepted (202) and executed asynchronously: SubmitCommand stages a Pending command + an
+// outbox message in one transaction; CreateTenantHandler (in the worker) does the write. The client
+// polls the returned status URL for the outcome.
 public static class CreateTenantEndpoint
 {
     public static void MapTenants(this RouteGroupBuilder group) =>
@@ -24,23 +27,15 @@ public static class CreateTenantEndpoint
             if (!principal.TryGetUserId(out var userId))
                 return ProblemResults.From(CommonErrors.Unauthenticated);
 
-            var now = clock.GetUtcNow();
-            var tenant = new Tenant { Id = Guid.CreateVersion7(), Name = req.Name, CreatedAt = now };
-            db.Tenants.Add(tenant);
-            db.Memberships.Add(new Membership
-            {
-                UserId = userId,
-                TenantId = tenant.Id,
-                Role = MembershipRole.Owner,
-                CreatedAt = now,
-            });
-            await db.SaveChangesAsync(ct); // tenant + owner membership atomically
+            var commandId = Guid.CreateVersion7();
+            db.SubmitCommand(commandId, CreateTenantCommand.Type, new CreateTenantCommand(req.Name, userId), clock);
+            await db.SaveChangesAsync(ct); // command + outbox message, one transaction
 
-            return TypedResults.Ok(new CreateTenantResponse(tenant.Id, tenant.Name));
+            return CommandEndpoints.AcceptedCommand(commandId, "/tenancy");
         })
         .RequireAuthorization()
         .WithName("CreateTenant")
-        .WithSummary("Create a tenant owned by the signed-in user.")
-        .Produces<CreateTenantResponse>(StatusCodes.Status200OK)
+        .WithSummary("Provision a tenant owned by the signed-in user (async — poll the status URL).")
+        .Produces<CommandAccepted>(StatusCodes.Status202Accepted)
         .ProducesProblem(StatusCodes.Status401Unauthorized);
 }

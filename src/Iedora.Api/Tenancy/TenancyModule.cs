@@ -1,4 +1,5 @@
 using Iedora.Api.Features.Tenants;
+using Iedora.Api.Shared;
 using Iedora.Api.Tenancy.Contracts;
 using Iedora.Data;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +27,7 @@ public static class TenancyModule
         var group = app.MapGroup("/tenancy");
         group.MapTenants();
         group.MapTenantAdmin();
+        group.MapCommandStatus<TenancyDbContext>(); // GET /tenancy/commands/{id}
         return app;
     }
 }

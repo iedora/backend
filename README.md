@@ -66,7 +66,8 @@ one with `dotnet ef migrations add <Name> --project src/Iedora.Data --context <I
 | `POST` | `/auth/reset-password` | Set a new password from the emailed token; revokes sessions. |
 | `GET`  | `/auth/whoami` | Identity from the bearer token (authorized). |
 | `GET`  | `/auth/.well-known/jwks.json` | Public keys for offline token verification. |
-| `POST` | `/tenancy/tenants` | Create a tenant owned by the caller (authorized); next login pins it. |
+| `POST` | `/tenancy/tenants` | Create a tenant owned by the caller (authorized). **Async** — `202` + a status URL to poll. |
+| `GET`  | `/tenancy/commands/{id}` | Poll an async write's outcome (`Pending`/`Succeeded`/`Failed`). |
 | `GET`  | `/tenancy/admin/tenants` | List all tenants with their owner (**admin** role). |
 | `GET`  | `/tenancy/admin/tenants/{id}` | Get a tenant with its owner (**admin** role). |
 | `POST` | `/tenancy/admin/tenants` | Provision a tenant owned by an existing user (**admin** role). |

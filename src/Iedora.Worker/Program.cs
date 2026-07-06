@@ -1,4 +1,5 @@
 using Iedora.Messaging;
+using Iedora.Tenancy;
 using Microsoft.Extensions.Hosting;
 
 // The single app-wide background worker. It composes each service's outbox-dispatch module — it
@@ -8,5 +9,6 @@ var builder = Host.CreateApplicationBuilder(args);
 
 builder.AddServiceDefaults();
 builder.AddIdentityOutboxDispatch();
+builder.AddTenancyMessaging();
 
 builder.Build().Run();

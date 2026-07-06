@@ -309,7 +309,7 @@
         "tags": [
           "Iedora.Api"
         ],
-        "summary": "Create a tenant owned by the signed-in user.",
+        "summary": "Provision a tenant owned by the signed-in user (async — poll the status URL).",
         "operationId": "CreateTenant",
         "requestBody": {
           "content": {
@@ -322,12 +322,12 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK",
+          "202": {
+            "description": "Accepted",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateTenantResponse"
+                  "$ref": "#/components/schemas/CommandAccepted"
                 }
               }
             }
@@ -341,6 +341,41 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/tenancy/commands/{id}": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Poll an async write's outcome.",
+        "operationId": "TenancyDbContextCommandStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
           }
         }
       }
@@ -538,6 +573,52 @@
             "maxLength": 128,
             "minLength": 8,
             "type": "string"
+          }
+        }
+      },
+      "CommandAccepted": {
+        "required": [
+          "commandId",
+          "statusUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "commandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "statusUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "CommandStatusResponse": {
+        "required": [
+          "id",
+          "status",
+          "errorCode",
+          "resultLocation"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string"
+          },
+          "errorCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "resultLocation": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
