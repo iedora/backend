@@ -1,4 +1,5 @@
 using Iedora.Auth.Common;
+using Framework.Web;
 using Iedora.Auth.Data;
 using Iedora.Auth.Security;
 using Iedora.Auth.Sessions;

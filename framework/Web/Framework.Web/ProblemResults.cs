@@ -1,7 +1,8 @@
 using ErrorOr;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 
-namespace Iedora.Auth.Common;
+namespace Framework.Web;
 
 /// <summary>
 /// Maps <see cref="Error"/> values to RFC 9457 <c>ProblemDetails</c> (rendered by the app's

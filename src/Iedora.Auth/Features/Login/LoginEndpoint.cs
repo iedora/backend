@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Framework.Web;
 using Iedora.Auth.Common;
 using Iedora.Auth.Data;
 using Iedora.Auth.Observability;

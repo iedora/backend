@@ -8,6 +8,10 @@
     <Project Path="framework/Outbox/Framework.Outbox.Tests/Framework.Outbox.Tests.csproj" />
     <Project Path="framework/Outbox/Framework.Outbox/Framework.Outbox.csproj" />
   </Folder>
+  <Folder Name="/framework/Web/">
+    <Project Path="framework/Web/Framework.Web.Tests/Framework.Web.Tests.csproj" />
+    <Project Path="framework/Web/Framework.Web/Framework.Web.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Iedora.Auth.Data/Iedora.Auth.Data.csproj" />
     <Project Path="src/Iedora.Auth.Messaging/Iedora.Auth.Messaging.csproj" />

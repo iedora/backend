@@ -1,6 +1,9 @@
-namespace Iedora.Auth.Sessions;
+using Microsoft.AspNetCore.Http;
 
-/// <summary>Device metadata stamped on sessions for the account/admin device views.</summary>
+namespace Framework.Web;
+
+/// <summary>Client metadata (user-agent + IP) read from the current request — e.g. to stamp on
+/// sessions for account/admin device views.</summary>
 public readonly record struct RequestMeta(string? UserAgent, string? Ip)
 {
     public static RequestMeta From(HttpContext http)
