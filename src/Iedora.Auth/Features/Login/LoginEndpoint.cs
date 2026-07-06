@@ -6,6 +6,7 @@ using Iedora.Auth.Observability;
 using Iedora.Auth.Security;
 using Iedora.Auth.Sessions;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Iedora.Auth.Features.Login;
 
@@ -21,7 +22,7 @@ public static class LoginEndpoint
 {
     public static void MapLogin(this RouteGroupBuilder group) =>
         group.MapPost("/login", async (
-                LoginRequest req, HttpContext http, UserManager<AppUser> users,
+                LoginRequest req, HttpContext http, UserManager<AppUser> users, AuthDbContext db,
                 SessionService sessions, JwtTokenService jwt, RefreshCookie cookie, CancellationToken ct) =>
         {
             using var activity = Telemetry.ActivitySource.StartActivity("auth.login");
@@ -35,7 +36,13 @@ public static class LoginEndpoint
             }
 
             var roles = await users.GetRolesAsync(user);
-            var (session, rawToken) = await sessions.CreateAsync(user.Id, tenantId: null, RequestMeta.From(http), ct);
+            // Pin the user's earliest tenant as the session's default (null until they join/create one).
+            var tenantId = await db.Memberships
+                .Where(m => m.UserId == user.Id)
+                .OrderBy(m => m.CreatedAt)
+                .Select(m => (Guid?)m.TenantId)
+                .FirstOrDefaultAsync(ct);
+            var (session, rawToken) = await sessions.CreateAsync(user.Id, tenantId, RequestMeta.From(http), ct);
             var response = AuthTokens.Issue(http.Response, user, roles, session, rawToken, jwt, cookie);
 
             activity?.SetTag("auth.result", "issued");

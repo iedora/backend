@@ -8,6 +8,7 @@ using Iedora.Auth.Features.Logout;
 using Iedora.Auth.Features.Refresh;
 using Iedora.Auth.Features.Register;
 using Iedora.Auth.Features.ResetPassword;
+using Iedora.Auth.Features.Tenants;
 using Iedora.Auth.Features.WhoAmI;
 using Iedora.Auth.Observability;
 using Iedora.Auth.Security;
@@ -97,6 +98,7 @@ auth.MapLogout();
 auth.MapChangePassword();
 auth.MapForgotPassword();
 auth.MapResetPassword();
+auth.MapTenants();
 auth.MapWhoAmI();
 auth.MapJwks();
 
