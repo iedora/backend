@@ -69,6 +69,7 @@ one with `dotnet ef migrations add <Name> --project src/Iedora.Data --context <I
 | `GET`  | `/tenancy/admin/tenants` | List all tenants with their owner (**admin** role). |
 | `GET`  | `/tenancy/admin/tenants/{id}` | Get a tenant with its owner (**admin** role). |
 | `POST` | `/tenancy/admin/tenants` | Provision a tenant owned by an existing user (**admin** role). |
+| `POST` | `/tenancy/admin/tenants/{id}/transfer` | Transfer a tenant to a brand-new owner user (**admin** role). |
 
 ## OpenAPI contract
 
