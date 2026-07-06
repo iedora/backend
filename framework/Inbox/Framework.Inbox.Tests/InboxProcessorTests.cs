@@ -55,7 +55,7 @@ public sealed class InboxProcessorTests
 
     private static TestDbContext NewDb() => new(_options);
 
-    private static InboxProcessor Processor(TestDbContext db, FakeTimeProvider clock, params IInboxHandler[] handlers) =>
+    private static InboxProcessor<TestDbContext> Processor(TestDbContext db, FakeTimeProvider clock, params IInboxHandler[] handlers) =>
         new(db, handlers, clock);
 
     [TestMethod]

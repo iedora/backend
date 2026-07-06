@@ -12,6 +12,8 @@
        for the command payload types it enqueues. Never references the web project. -->
   <ItemGroup>
     <ProjectReference Include="..\Iedora.Data\Iedora.Data.csproj" />
+    <ProjectReference Include="..\Iedora.Contracts\Iedora.Contracts.csproj" />
+    <ProjectReference Include="..\..\framework\Inbox\Framework.Inbox\Framework.Inbox.csproj" />
     <ProjectReference Include="..\..\framework\Commands\Framework.Commands\Framework.Commands.csproj" />
   </ItemGroup>
 

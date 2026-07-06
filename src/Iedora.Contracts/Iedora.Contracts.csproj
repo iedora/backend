@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Iedora.Contracts</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Cross-module INTEGRATION EVENTS (the messages that travel outbox → inbox between modules).
+       Dependency-free; referenced by every module's non-web lib. Lives here (not in a module) so a
+       publisher and a consumer don't form a reference cycle. -->
+
+</Project>

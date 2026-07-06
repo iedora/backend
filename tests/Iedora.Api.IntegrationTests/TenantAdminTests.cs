@@ -13,7 +13,6 @@ namespace Iedora.Api.IntegrationTests;
 public sealed record OwnerPayload(string id, string email, string? name);
 public sealed record TenantOwnerPayload(string id, string name, OwnerPayload owner);
 public sealed record TenantListPayload(TenantOwnerPayload[] tenants);
-public sealed record TransferPayload(string ownerId);
 
 [TestClass]
 public sealed class TenantAdminTests : IntegrationTestBase
@@ -111,45 +110,55 @@ public sealed class TenantAdminTests : IntegrationTestBase
     }
 
     [TestMethod]
-    public async Task Transfer_moves_the_tenant_to_a_brand_new_owner()
+    public async Task Transfer_saga_moves_the_tenant_to_a_brand_new_owner()
     {
         var oldOwner = await RegisterAndLogin("old@tasca.pt", "Sup3rSecret!");
         var tenantId = await CreateTenantAsync("Tasca", oldOwner.accessToken);
         var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
 
-        var resp = await PostJson($"/tenancy/admin/tenants/{tenantId}/transfer",
-            new { email = "new@owner.pt", name = "New Owner", password = "N3wOwnerPass!" }, admin.accessToken);
-        Assert.AreEqual(HttpStatusCode.OK, resp.StatusCode);
-        var body = (await resp.Content.ReadFromJsonAsync<TransferPayload>())!;
+        var accepted = (await (await PostJson($"/tenancy/admin/tenants/{tenantId}/transfer",
+            new { email = "new@owner.pt", name = "New Owner" }, admin.accessToken))
+            .Content.ReadFromJsonAsync<CommandAcceptedPayload>())!;
 
-        // Sole owner is the new user; the old owner's membership is gone.
-        await using (var scope = TestHost.Factory.Services.CreateAsyncScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<TenancyDbContext>();
-            var owners = await db.Memberships
-                .Where(m => m.TenantId == Guid.Parse(tenantId) && m.Role == MembershipRole.Owner)
-                .ToListAsync();
-            Assert.HasCount(1, owners);
-            Assert.AreEqual(Guid.Parse(body.ownerId), owners[0].UserId);
-            Assert.AreNotEqual(Guid.Parse(oldOwner.userId), owners[0].UserId);
-        }
+        // Hop 1: Tenancy outbox → Identity inbox (creates the user, emits UserProvisioned).
+        await TestHost.DispatchTenancyOutboxAsync();
+        // Hop 2: Identity outbox → Tenancy inbox (reassigns ownership, completes the command).
+        await TestHost.DispatchOutboxAsync();
 
-        // The new owner can log in, and the transferred tenant is their default.
-        var (login, _) = await Login("new@owner.pt", "N3wOwnerPass!");
-        Assert.AreEqual(tenantId, login.tenantId);
+        Assert.AreEqual("Succeeded", (await GetCommandStatus(accepted.statusUrl, admin.accessToken)).status);
+
+        await using var scope = TestHost.Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<TenancyDbContext>();
+        var owners = await db.Memberships
+            .Where(m => m.TenantId == Guid.Parse(tenantId) && m.Role == MembershipRole.Owner)
+            .ToListAsync();
+        Assert.HasCount(1, owners);
+        Assert.AreNotEqual(Guid.Parse(oldOwner.userId), owners[0].UserId);
+
+        // The new owner is a real Identity user, created by the saga's hop-1 inbox handler.
+        var identity = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+        var newUser = await identity.Users.SingleAsync(u => u.Id == owners[0].UserId);
+        Assert.AreEqual("new@owner.pt", newUser.Email);
     }
 
     [TestMethod]
-    public async Task Transfer_to_a_taken_email_returns_409()
+    public async Task Transfer_saga_with_a_taken_email_fails_the_command()
     {
         await Register("taken@owner.pt", "Sup3rSecret!");
         var oldOwner = await RegisterAndLogin("old2@tasca.pt", "Sup3rSecret!");
         var tenantId = await CreateTenantAsync("Bistro", oldOwner.accessToken);
         var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
 
-        var resp = await PostJson($"/tenancy/admin/tenants/{tenantId}/transfer",
-            new { email = "taken@owner.pt", name = "Nope", password = "N3wOwnerPass!" }, admin.accessToken);
-        Assert.AreEqual(HttpStatusCode.Conflict, resp.StatusCode);
+        var accepted = (await (await PostJson($"/tenancy/admin/tenants/{tenantId}/transfer",
+            new { email = "taken@owner.pt", name = "Nope" }, admin.accessToken))
+            .Content.ReadFromJsonAsync<CommandAcceptedPayload>())!;
+
+        await TestHost.DispatchTenancyOutboxAsync(); // Identity: create fails (email taken) → UserProvisioned(error)
+        await TestHost.DispatchOutboxAsync();          // Tenancy: command Failed
+
+        var status = await GetCommandStatus(accepted.statusUrl, admin.accessToken);
+        Assert.AreEqual("Failed", status.status);
+        Assert.AreEqual("auth.email_taken", status.errorCode);
     }
 
     [TestMethod]
@@ -157,7 +166,7 @@ public sealed class TenantAdminTests : IntegrationTestBase
     {
         var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
         var resp = await PostJson($"/tenancy/admin/tenants/{Guid.NewGuid()}/transfer",
-            new { email = "x@owner.pt", name = "X", password = "N3wOwnerPass!" }, admin.accessToken);
+            new { email = "x@owner.pt", name = "X" }, admin.accessToken);
         Assert.AreEqual(HttpStatusCode.NotFound, resp.StatusCode);
     }
 
@@ -166,7 +175,7 @@ public sealed class TenantAdminTests : IntegrationTestBase
     {
         var user = await RegisterAndLogin("plain@tasca.pt", "Sup3rSecret!");
         var resp = await PostJson($"/tenancy/admin/tenants/{Guid.NewGuid()}/transfer",
-            new { email = "x@owner.pt", name = "X", password = "N3wOwnerPass!" }, user.accessToken);
+            new { email = "x@owner.pt", name = "X" }, user.accessToken);
         Assert.AreEqual(HttpStatusCode.Forbidden, resp.StatusCode);
     }
 
