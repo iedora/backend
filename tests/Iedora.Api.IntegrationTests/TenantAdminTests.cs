@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using Iedora.Api.Shared;
 using Iedora.Data;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -71,6 +72,43 @@ public sealed class TenantAdminTests : IntegrationTestBase
         var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
         var resp = await Get($"/tenancy/admin/tenants/{Guid.NewGuid()}", admin.accessToken);
         Assert.AreEqual(HttpStatusCode.NotFound, resp.StatusCode);
+    }
+
+    [TestMethod]
+    public async Task Admin_creates_a_tenant_for_an_existing_user()
+    {
+        var target = await RegisterAndLogin("target@tasca.pt", "Sup3rSecret!");
+        var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
+
+        var resp = await PostJson("/tenancy/admin/tenants",
+            new { name = "Admin's Tasca", ownerUserId = target.userId }, admin.accessToken);
+        Assert.AreEqual(HttpStatusCode.OK, resp.StatusCode);
+        var created = (await resp.Content.ReadFromJsonAsync<TenantPayload>())!;
+
+        // The target user (not the admin) is the owner.
+        await using var scope = TestHost.Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<TenancyDbContext>();
+        var membership = await db.Memberships.SingleAsync(m => m.TenantId == Guid.Parse(created.id));
+        Assert.AreEqual(MembershipRole.Owner, membership.Role);
+        Assert.AreEqual(Guid.Parse(target.userId), membership.UserId);
+    }
+
+    [TestMethod]
+    public async Task Admin_create_with_unknown_owner_returns_400()
+    {
+        var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
+        var resp = await PostJson("/tenancy/admin/tenants",
+            new { name = "Ghost", ownerUserId = Guid.NewGuid() }, admin.accessToken);
+        Assert.AreEqual(HttpStatusCode.BadRequest, resp.StatusCode);
+    }
+
+    [TestMethod]
+    public async Task Non_admin_cannot_create_for_others()
+    {
+        var user = await RegisterAndLogin("plain@tasca.pt", "Sup3rSecret!");
+        var resp = await PostJson("/tenancy/admin/tenants",
+            new { name = "Nope", ownerUserId = user.userId }, user.accessToken);
+        Assert.AreEqual(HttpStatusCode.Forbidden, resp.StatusCode);
     }
 
     /// <summary>Register, grant the admin role (so the JWT carries it), and log in.</summary>

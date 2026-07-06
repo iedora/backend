@@ -69,6 +69,7 @@ one with `dotnet ef migrations add <Name> --project src/Iedora.Data --context <I
 | `POST` | `/tenancy/tenants` | Create a tenant owned by the caller (authorized); next login pins it. |
 | `GET`  | `/tenancy/admin/tenants` | List all tenants with their owner (**admin** role). |
 | `GET`  | `/tenancy/admin/tenants/{id}` | Get a tenant with its owner (**admin** role). |
+| `POST` | `/tenancy/admin/tenants` | Provision a tenant owned by an existing user (**admin** role). |
 
 ## OpenAPI contract
 
