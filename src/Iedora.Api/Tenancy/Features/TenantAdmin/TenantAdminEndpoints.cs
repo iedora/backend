@@ -1,5 +1,8 @@
-using Iedora.Contracts;
+using System.ComponentModel.DataAnnotations;
+using Framework.Web;
 using Iedora.Api.Shared;
+using Iedora.Api.Tenancy;
+using Iedora.Contracts;
 using Iedora.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +12,8 @@ namespace Iedora.Api.Features.Tenants;
 public sealed record OwnerSummary(Guid Id, string Email, string? Name);
 public sealed record TenantWithOwner(Guid Id, string Name, OwnerSummary Owner);
 public sealed record TenantListResponse(IReadOnlyList<TenantWithOwner> Tenants);
+
+public sealed record AdminCreateTenantRequest([property: Required] string Name, Guid OwnerUserId);
 
 // GET /tenancy/admin/tenants[/{id}] — admin-only reads of tenants joined to their owner. The owner
 // is an Identity-module user, so it's resolved through IIdentityApi (never by querying identity
@@ -36,6 +41,35 @@ public static class TenantAdminEndpoints
             })
             .WithName("GetTenant")
             .WithSummary("Get a tenant with its owner (admin).");
+
+        // Admin provisions a tenant owned by an EXISTING user (distinct from the user-facing
+        // POST /tenancy/tenants, which owns it by the caller). The owner must be a real user —
+        // verified through IIdentityApi, since Identity owns users.
+        admin.MapPost("/", async (
+                AdminCreateTenantRequest req, TenancyDbContext db, IIdentityApi identity,
+                TimeProvider clock, CancellationToken ct) =>
+            {
+                var owner = (await identity.GetUsersAsync([req.OwnerUserId], ct)).FirstOrDefault();
+                if (owner is null) return ProblemResults.From(TenancyErrors.UnknownOwner);
+
+                var now = clock.GetUtcNow();
+                var tenant = new Tenant { Id = Guid.CreateVersion7(), Name = req.Name, CreatedAt = now };
+                db.Tenants.Add(tenant);
+                db.Memberships.Add(new Membership
+                {
+                    UserId = req.OwnerUserId,
+                    TenantId = tenant.Id,
+                    Role = MembershipRole.Owner,
+                    CreatedAt = now,
+                });
+                await db.SaveChangesAsync(ct); // tenant + owner membership atomically
+
+                return TypedResults.Ok(new CreateTenantResponse(tenant.Id, tenant.Name));
+            })
+            .WithName("AdminCreateTenant")
+            .WithSummary("Provision a tenant owned by an existing user (admin).")
+            .Produces<CreateTenantResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 
     private sealed record OwnedTenant(Guid Id, string Name, Guid OwnerId);

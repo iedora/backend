@@ -364,6 +364,45 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Provision a tenant owned by an existing user (admin).",
+        "operationId": "AdminCreateTenant",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminCreateTenantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateTenantResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/tenancy/admin/tenants/{id}": {
@@ -404,6 +443,22 @@
   },
   "components": {
     "schemas": {
+      "AdminCreateTenantRequest": {
+        "required": [
+          "name",
+          "ownerUserId"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "ownerUserId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "ChangePasswordRequest": {
         "required": [
           "currentPassword",
