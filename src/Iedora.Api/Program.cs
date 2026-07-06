@@ -1,4 +1,5 @@
 using Iedora.Api.Identity;
+using Iedora.Api.Shared;
 using Iedora.Api.Tenancy;
 using Microsoft.Extensions.Hosting;
 
@@ -15,7 +16,8 @@ builder.AddTenancyModule();
 
 // Host-level cross-cutting.
 builder.Services.AddSingleton(TimeProvider.System); // testable clock (session TTLs, token expiry)
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+    options.AddPolicy(Policies.Admin, policy => policy.RequireRole(Roles.Admin)));
 builder.Services.AddValidation();     // built-in minimal-API DataAnnotations validation (.NET 10)
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();        // build-time source of truth for the generated frontend client

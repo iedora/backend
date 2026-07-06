@@ -344,6 +344,62 @@
           }
         }
       }
+    },
+    "/tenancy/admin/tenants": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "List all tenants with their owner (admin).",
+        "operationId": "ListTenants",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tenancy/admin/tenants/{id}": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Get a tenant with its owner (admin).",
+        "operationId": "GetTenant",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantWithOwner"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -528,6 +584,29 @@
           }
         }
       },
+      "OwnerSummary": {
+        "required": [
+          "id",
+          "email",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -624,6 +703,40 @@
             "maxLength": 128,
             "minLength": 8,
             "type": "string"
+          }
+        }
+      },
+      "TenantListResponse": {
+        "required": [
+          "tenants"
+        ],
+        "type": "object",
+        "properties": {
+          "tenants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TenantWithOwner"
+            }
+          }
+        }
+      },
+      "TenantWithOwner": {
+        "required": [
+          "id",
+          "name",
+          "owner"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/OwnerSummary"
           }
         }
       },
