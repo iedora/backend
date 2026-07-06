@@ -15,12 +15,38 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
     : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>(options)
 {
     public DbSet<Session> Sessions => Set<Session>();
+    public DbSet<Tenant> Tenants => Set<Tenant>();
+    public DbSet<Membership> Memberships => Set<Membership>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
 
         builder.MapOutbox(); // reusable outbox table
+
+        builder.Entity<Tenant>(tenant =>
+        {
+            tenant.ToTable("tenants");
+            tenant.HasKey(t => t.Id);
+            tenant.HasIndex(t => t.Slug).IsUnique(); // nullable ⇒ many NULLs allowed, one row per non-null slug
+            tenant.Property(t => t.Name).IsRequired();
+        });
+
+        builder.Entity<Membership>(membership =>
+        {
+            membership.ToTable("memberships");
+            membership.HasKey(m => new { m.UserId, m.TenantId }); // one row per user per tenant
+            membership.Property(m => m.Role).IsRequired().HasDefaultValue(MembershipRoles.Member);
+
+            membership.HasOne<AppUser>()
+                .WithMany()
+                .HasForeignKey(m => m.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            membership.HasOne<Tenant>()
+                .WithMany()
+                .HasForeignKey(m => m.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
         builder.Entity<Session>(session =>
         {
