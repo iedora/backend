@@ -1,4 +1,4 @@
-using Iedora.Api.Identity; // IIdentityApi/UserSummary — Identity's PUBLIC cross-module surface
+using Iedora.Contracts;
 using Iedora.Api.Shared;
 using Iedora.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
