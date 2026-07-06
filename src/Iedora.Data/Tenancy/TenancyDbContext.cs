@@ -1,3 +1,5 @@
+using Framework.Commands;
+using Framework.Outbox;
 using Microsoft.EntityFrameworkCore;
 
 namespace Iedora.Data;
@@ -19,6 +21,9 @@ public sealed class TenancyDbContext(DbContextOptions<TenancyDbContext> options)
     {
         base.OnModelCreating(builder);
         builder.HasDefaultSchema(Schema);
+
+        builder.MapOutbox();   // async-write pipeline: this module's outbox
+        builder.MapCommands(); // + command-status tracking
 
         builder.Entity<Tenant>(tenant =>
         {

@@ -59,11 +59,18 @@ public class TestHost
     /// <summary>The captured emails (fake sender). Cleared per test by the base class.</summary>
     public static FakeEmailSender EmailSender => Factory.Services.GetRequiredService<FakeEmailSender>();
 
-    /// <summary>Dispatch the outbox once, deterministically (the background poller is parked in tests).</summary>
+    /// <summary>Dispatch the Identity outbox once, deterministically (the poller is parked in tests).</summary>
     public static async Task<int> DispatchOutboxAsync()
     {
         await using var scope = Factory.Services.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<OutboxProcessor<IdentityDbContext>>().DispatchPendingAsync(CancellationToken.None);
+    }
+
+    /// <summary>Dispatch the Tenancy outbox once — runs the async-write command handlers (create-tenant, …).</summary>
+    public static async Task<int> DispatchTenancyOutboxAsync()
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<OutboxProcessor<TenancyDbContext>>().DispatchPendingAsync(CancellationToken.None);
     }
 
     [AssemblyCleanup]

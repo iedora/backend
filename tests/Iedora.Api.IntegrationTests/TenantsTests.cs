@@ -30,21 +30,34 @@ public sealed class TenantsTests : IntegrationTestBase
     }
 
     [TestMethod]
-    public async Task Create_tenant_returns_id_and_name_and_makes_caller_owner()
+    public async Task Create_tenant_is_202_then_status_goes_pending_to_succeeded()
     {
         var login = await RegisterAndLogin("owner@tasca.pt", "Sup3rSecret!");
 
-        var resp = await PostJson("/tenancy/tenants", new { name = "Tasca do Zé" }, login.accessToken);
-        Assert.AreEqual(HttpStatusCode.OK, resp.StatusCode);
+        var accept = await PostJson("/tenancy/tenants", new { name = "Tasca" }, login.accessToken);
+        Assert.AreEqual(HttpStatusCode.Accepted, accept.StatusCode);
+        var accepted = (await accept.Content.ReadFromJsonAsync<CommandAcceptedPayload>())!;
 
-        var tenant = (await resp.Content.ReadFromJsonAsync<TenantPayload>())!;
-        Assert.AreEqual("Tasca do Zé", tenant.name);
-        Assert.IsTrue(Guid.TryParse(tenant.id, out var tenantId));
+        Assert.AreEqual("Pending", (await GetCommandStatus(accepted.statusUrl, login.accessToken)).status);
 
-        // The caller now holds the sole owner membership for the tenant.
+        await TestHost.DispatchTenancyOutboxAsync();
+
+        var done = await GetCommandStatus(accepted.statusUrl, login.accessToken);
+        Assert.AreEqual("Succeeded", done.status);
+        Assert.IsTrue(done.resultLocation!.StartsWith("/tenancy/tenants/"));
+    }
+
+    [TestMethod]
+    public async Task Create_tenant_is_accepted_then_makes_the_caller_owner()
+    {
+        var login = await RegisterAndLogin("owner@tasca.pt", "Sup3rSecret!");
+
+        // 202 → dispatch the handler → status Succeeded (asserted inside the helper); returns the id.
+        var tenantId = await CreateTenantAsync("Tasca do Zé", login.accessToken);
+
         await using var scope = TestHost.Factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<TenancyDbContext>();
-        var membership = await db.Memberships.SingleAsync(m => m.TenantId == tenantId);
+        var membership = await db.Memberships.SingleAsync(m => m.TenantId == Guid.Parse(tenantId));
         Assert.AreEqual(MembershipRole.Owner, membership.Role);
         Assert.AreEqual(Guid.Parse(login.userId), membership.UserId);
     }
@@ -55,11 +68,10 @@ public sealed class TenantsTests : IntegrationTestBase
         var login = await RegisterAndLogin("owner@tasca.pt", "Sup3rSecret!");
         Assert.IsNull(login.tenantId); // no memberships yet
 
-        var created = (await (await PostJson("/tenancy/tenants", new { name = "Bistro" }, login.accessToken))
-            .Content.ReadFromJsonAsync<TenantPayload>())!;
+        var tenantId = await CreateTenantAsync("Bistro", login.accessToken);
 
         // A fresh login re-resolves the default tenant from memberships and pins it on the session/token.
         var (body, _) = await Login("owner@tasca.pt", "Sup3rSecret!");
-        Assert.AreEqual(Guid.Parse(created.id), Guid.Parse(body.tenantId!));
+        Assert.AreEqual(Guid.Parse(tenantId), Guid.Parse(body.tenantId!));
     }
 }

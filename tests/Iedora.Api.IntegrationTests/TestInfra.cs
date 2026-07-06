@@ -7,6 +7,8 @@ namespace Iedora.Api.IntegrationTests;
 // Wire payloads (camelCase, as ASP.NET serializes them).
 public sealed record TokenPayload(string accessToken, string expiresAt, string userId, string? tenantId, bool? mustChangePassword);
 public sealed record WhoAmiPayload(string userId, string? tenantId, string[] roles, string? email, bool? mustChangePassword);
+public sealed record CommandAcceptedPayload(string commandId, string statusUrl);
+public sealed record CommandStatusPayload(string id, string status, string? errorCode, string? resultLocation);
 
 /// <summary>
 /// Base for integration tests: a fresh DB per test (Respawn, via <c>[TestInitialize]</c>) and a
@@ -74,6 +76,28 @@ public abstract class IntegrationTestBase
     {
         Assert.AreEqual(System.Net.HttpStatusCode.Created, (await Register(email, password)).StatusCode);
         return (await Login(email, password)).body;
+    }
+
+    /// <summary>Drive an async write end-to-end: assert 202, dispatch the Tenancy handler, poll the
+    /// status, assert success, and return the resource id from the result location.</summary>
+    protected async Task<string> CreateTenantAsync(string name, string bearer)
+    {
+        var accept = await PostJson("/tenancy/tenants", new { name }, bearer);
+        Assert.AreEqual(System.Net.HttpStatusCode.Accepted, accept.StatusCode);
+        var accepted = (await accept.Content.ReadFromJsonAsync<CommandAcceptedPayload>())!;
+
+        await TestHost.DispatchTenancyOutboxAsync();
+
+        var status = await GetCommandStatus(accepted.statusUrl, bearer);
+        Assert.AreEqual("Succeeded", status.status);
+        return status.resultLocation!.Split('/')[^1]; // /tenancy/tenants/{id}
+    }
+
+    protected async Task<CommandStatusPayload> GetCommandStatus(string statusUrl, string bearer)
+    {
+        var resp = await Get(statusUrl, bearer);
+        Assert.AreEqual(System.Net.HttpStatusCode.OK, resp.StatusCode);
+        return (await resp.Content.ReadFromJsonAsync<CommandStatusPayload>())!;
     }
 
     /// <summary>The refresh token value from a Set-Cookie header, or null if none/cleared.</summary>

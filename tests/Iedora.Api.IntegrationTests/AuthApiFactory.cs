@@ -1,6 +1,7 @@
 using Framework.Outbox;
 using Iedora.Data;
 using Iedora.Messaging;
+using Iedora.Tenancy;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -27,6 +28,7 @@ public sealed class AuthApiFactory(string connectionString) : WebApplicationFact
             services.Configure<OutboxOptions>(o => o.PollSeconds = 3600); // tests dispatch directly
             services.AddOutbox<IdentityDbContext>();
             services.AddScoped<IOutboxHandler, PasswordResetEmailHandler>();
+            services.AddTenancyHandlers(); // Tenancy outbox + command handlers (create-tenant, …)
             services.AddSingleton<FakeEmailSender>();
             services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<FakeEmailSender>());
         });

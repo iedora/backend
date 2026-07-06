@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Iedora.Tenancy</RootNamespace>
+  </PropertyGroup>
+
+  <!-- The Tenancy module's NON-WEB core: command payloads + handlers (the actual writes) + its
+       dispatch registration. The worker drains its outbox through this; the API references it only
+       for the command payload types it enqueues. Never references the web project. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Iedora.Data\Iedora.Data.csproj" />
+    <ProjectReference Include="..\..\framework\Commands\Framework.Commands\Framework.Commands.csproj" />
+  </ItemGroup>
+
+</Project>
