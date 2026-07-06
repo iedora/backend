@@ -1,11 +1,16 @@
 <Solution>
   <Folder Name="/framework/" />
+  <Folder Name="/framework/Inbox/">
+    <Project Path="framework/Inbox/Framework.Inbox.Tests/Framework.Inbox.Tests.csproj" />
+    <Project Path="framework/Inbox/Framework.Inbox/Framework.Inbox.csproj" />
+  </Folder>
   <Folder Name="/framework/Outbox/">
     <Project Path="framework/Outbox/Framework.Outbox.Tests/Framework.Outbox.Tests.csproj" />
     <Project Path="framework/Outbox/Framework.Outbox/Framework.Outbox.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Iedora.Auth.Data/Iedora.Auth.Data.csproj" />
+    <Project Path="src/Iedora.Auth.Worker/Iedora.Auth.Worker.csproj" />
     <Project Path="src/Iedora.Auth/Iedora.Auth.csproj" />
     <Project Path="src/Iedora.MigrationService/Iedora.MigrationService.csproj" />
   </Folder>
