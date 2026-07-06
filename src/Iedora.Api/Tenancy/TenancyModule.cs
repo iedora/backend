@@ -24,6 +24,7 @@ public static class TenancyModule
     {
         var group = app.MapGroup("/tenancy");
         group.MapTenants();
+        group.MapTenantAdmin();
         return app;
     }
 }

@@ -37,6 +37,9 @@ public static class IdentityModule
 
         builder.AddIdentityDb();
 
+        // The module's cross-module surface (other modules resolve users by id through this).
+        builder.Services.AddScoped<IIdentityApi, IdentityApi>();
+
         // Full ASP.NET Core Identity over EF Core (PasswordHasher, validators, roles, tokens).
         builder.Services.AddIdentityCore<AppUser>(options =>
             {

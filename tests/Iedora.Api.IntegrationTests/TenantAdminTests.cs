@@ -1,0 +1,91 @@
+using System.Net;
+using System.Net.Http.Json;
+using Iedora.Api.Shared;
+using Iedora.Data;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Iedora.Api.IntegrationTests;
+
+// Wire shapes of the admin tenant reads (camelCase).
+public sealed record OwnerPayload(string id, string email, string? name);
+public sealed record TenantOwnerPayload(string id, string name, OwnerPayload owner);
+public sealed record TenantListPayload(TenantOwnerPayload[] tenants);
+
+[TestClass]
+public sealed class TenantAdminTests : IntegrationTestBase
+{
+    [TestMethod]
+    public async Task Admin_lists_tenants_with_their_owners()
+    {
+        var owner = await RegisterAndLogin("owner@tasca.pt", "Sup3rSecret!");
+        var created = (await (await PostJson("/tenancy/tenants", new { name = "Tasca do Zé" }, owner.accessToken))
+            .Content.ReadFromJsonAsync<TenantPayload>())!;
+
+        var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
+        var resp = await Get("/tenancy/admin/tenants", admin.accessToken);
+        Assert.AreEqual(HttpStatusCode.OK, resp.StatusCode);
+
+        var list = (await resp.Content.ReadFromJsonAsync<TenantListPayload>())!;
+        var tenant = list.tenants.Single(t => t.id == created.id);
+        Assert.AreEqual("Tasca do Zé", tenant.name);
+        Assert.AreEqual(owner.userId, tenant.owner.id);
+        Assert.AreEqual("owner@tasca.pt", tenant.owner.email); // owner user resolved via IIdentityApi
+    }
+
+    [TestMethod]
+    public async Task Get_by_id_returns_the_tenant_with_owner()
+    {
+        var owner = await RegisterAndLogin("owner@bistro.pt", "Sup3rSecret!");
+        var created = (await (await PostJson("/tenancy/tenants", new { name = "Bistro" }, owner.accessToken))
+            .Content.ReadFromJsonAsync<TenantPayload>())!;
+
+        var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
+        var resp = await Get($"/tenancy/admin/tenants/{created.id}", admin.accessToken);
+        Assert.AreEqual(HttpStatusCode.OK, resp.StatusCode);
+
+        var tenant = (await resp.Content.ReadFromJsonAsync<TenantOwnerPayload>())!;
+        Assert.AreEqual("Bistro", tenant.name);
+        Assert.AreEqual("owner@bistro.pt", tenant.owner.email);
+    }
+
+    [TestMethod]
+    public async Task Non_admin_is_forbidden()
+    {
+        var user = await RegisterAndLogin("plain@tasca.pt", "Sup3rSecret!");
+        var resp = await Get("/tenancy/admin/tenants", user.accessToken);
+        Assert.AreEqual(HttpStatusCode.Forbidden, resp.StatusCode);
+    }
+
+    [TestMethod]
+    public async Task Anonymous_is_unauthorized()
+    {
+        var resp = await Get("/tenancy/admin/tenants");
+        Assert.AreEqual(HttpStatusCode.Unauthorized, resp.StatusCode);
+    }
+
+    [TestMethod]
+    public async Task Get_unknown_tenant_returns_404()
+    {
+        var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
+        var resp = await Get($"/tenancy/admin/tenants/{Guid.NewGuid()}", admin.accessToken);
+        Assert.AreEqual(HttpStatusCode.NotFound, resp.StatusCode);
+    }
+
+    /// <summary>Register, grant the admin role (so the JWT carries it), and log in.</summary>
+    private async Task<TokenPayload> RegisterLoginAsAdmin(string email, string password)
+    {
+        Assert.AreEqual(HttpStatusCode.Created, (await Register(email, password)).StatusCode);
+        await using (var scope = TestHost.Factory.Services.CreateAsyncScope())
+        {
+            var roles = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+            if (!await roles.RoleExistsAsync(Roles.Admin))
+                await roles.CreateAsync(new IdentityRole<Guid>(Roles.Admin));
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+            var user = (await users.FindByEmailAsync(email))!;
+            await users.AddToRoleAsync(user, Roles.Admin);
+        }
+        return (await Login(email, password)).body;
+    }
+}

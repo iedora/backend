@@ -12,7 +12,9 @@ narrow in-process interface (e.g. login → `ITenancyApi`).
 | Module | Schema | Owns |
 |---|---|---|
 | **Identity** (`src/Iedora.Api/Identity`) | `identity` | Users, roles, refresh sessions, password lifecycle, ES256 JWT/JWKS. |
-| **Tenancy** (`src/Iedora.Api/Tenancy`) | `tenancy` | Tenants + memberships; exposes `ITenancyApi` as its only cross-module surface. |
+| **Tenancy** (`src/Iedora.Api/Tenancy`) | `tenancy` | Tenants + memberships; exposes `ITenancyApi` as its cross-module surface. |
+
+Cross-module reads go both ways through public interfaces, never across tables: Identity's login resolves the default tenant via `ITenancyApi`; Tenancy's admin reads resolve owner **users** via `IIdentityApi`.
 
 ## Projects
 
@@ -64,6 +66,8 @@ one with `dotnet ef migrations add <Name> --project src/Iedora.Data --context <I
 | `GET`  | `/auth/whoami` | Identity from the bearer token (authorized). |
 | `GET`  | `/auth/.well-known/jwks.json` | Public keys for offline token verification. |
 | `POST` | `/tenancy/tenants` | Create a tenant owned by the caller (authorized); next login pins it. |
+| `GET`  | `/tenancy/admin/tenants` | List all tenants with their owner (**admin** role). |
+| `GET`  | `/tenancy/admin/tenants/{id}` | Get a tenant with its owner (**admin** role). |
 
 ## OpenAPI contract
 
