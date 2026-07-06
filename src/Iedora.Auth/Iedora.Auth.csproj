@@ -35,6 +35,8 @@
 
     <!-- Result pattern for expected failures (invalid credentials, token reuse, wrong password). -->
     <PackageReference Include="ErrorOr" />
+    <!-- SMTP email sink for the outbox (password-reset mail). -->
+    <PackageReference Include="MailKit" />
   </ItemGroup>
 
 </Project>

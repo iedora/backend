@@ -1,12 +1,17 @@
+using Iedora.Auth.Common;
 using Iedora.Auth.Data;
+using Iedora.Auth.Email;
 using Iedora.Auth.Features.ChangePassword;
+using Iedora.Auth.Features.ForgotPassword;
 using Iedora.Auth.Features.Jwks;
 using Iedora.Auth.Features.Login;
 using Iedora.Auth.Features.Logout;
 using Iedora.Auth.Features.Refresh;
 using Iedora.Auth.Features.Register;
+using Iedora.Auth.Features.ResetPassword;
 using Iedora.Auth.Features.WhoAmI;
 using Iedora.Auth.Observability;
+using Iedora.Auth.Outbox;
 using Iedora.Auth.Security;
 using Iedora.Auth.Sessions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -46,6 +51,15 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.Configure<SessionSettings>(builder.Configuration.GetSection("Session"));
 builder.Services.AddSingleton<RefreshCookie>();
 builder.Services.AddScoped<SessionService>();
+
+// Password-reset email via a transactional outbox: enqueue on the DbContext (same tx as the
+// domain change), a background dispatcher sends it via MailKit SMTP with retry.
+builder.Services.Configure<PasswordResetOptions>(builder.Configuration.GetSection("PasswordReset"));
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
+builder.Services.Configure<OutboxOptions>(builder.Configuration.GetSection("Outbox"));
+builder.Services.AddSingleton<IEmailSender, MailKitEmailSender>();
+builder.Services.AddScoped<OutboxProcessor>();
+builder.Services.AddHostedService<OutboxBackgroundService>();
 
 // ES256 JWT issuer/validator, DI-managed so it picks up TimeProvider. JwtBearer is configured
 // from the same instance (deferred to post-build so DI is available).
@@ -87,6 +101,8 @@ auth.MapLogin();
 auth.MapRefresh();
 auth.MapLogout();
 auth.MapChangePassword();
+auth.MapForgotPassword();
+auth.MapResetPassword();
 auth.MapWhoAmI();
 auth.MapJwks();
 

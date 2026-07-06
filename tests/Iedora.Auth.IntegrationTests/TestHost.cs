@@ -1,4 +1,5 @@
 using Iedora.Auth.Data;
+using Iedora.Auth.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -49,6 +50,16 @@ public class TestHost
 
     /// <summary>Truncate all data (keeps schema + migration history). Runs before each test.</summary>
     public static Task ResetAsync() => _respawner.ResetAsync(_conn);
+
+    /// <summary>The captured emails (fake sender). Cleared per test by the base class.</summary>
+    public static FakeEmailSender EmailSender => Factory.Services.GetRequiredService<FakeEmailSender>();
+
+    /// <summary>Dispatch the outbox once, deterministically (the background poller is parked in tests).</summary>
+    public static async Task<int> DispatchOutboxAsync()
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<OutboxProcessor>().DispatchPendingAsync(CancellationToken.None);
+    }
 
     [AssemblyCleanup]
     public static async Task Cleanup()

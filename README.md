@@ -42,6 +42,8 @@ Migrations live in `src/Iedora.Auth.Data`; add one with
 | `POST` | `/auth/refresh` | Rotate the refresh cookie (reuse detection burns the family). |
 | `POST` | `/auth/logout` / `/auth/logout-all` | Revoke this device's session / all of them. |
 | `POST` | `/auth/change-password` | Change password (authorized); revokes other sessions. |
+| `POST` | `/auth/forgot-password` | Request a reset email (always 200 — no enumeration). |
+| `POST` | `/auth/reset-password` | Set a new password from the emailed token; revokes sessions. |
 | `GET`  | `/auth/whoami` | Identity from the bearer token (authorized). |
 | `GET`  | `/auth/.well-known/jwks.json` | Public keys for offline token verification. |
 
@@ -56,3 +58,4 @@ and served at `/openapi/v1.json` at runtime.
 - **Central Package Management** — all NuGet versions live in [`Directory.Packages.props`](Directory.Packages.props) (with transitive pinning); projects reference packages by name only.
 - **Security auditing** — [`Directory.Build.props`](Directory.Build.props) promotes vulnerability advisories `NU1901`–`NU1904` to build errors (net10 audits transitively by default), so a known-vulnerable package fails the build.
 - **Result pattern** — expected failures are [`ErrorOr`](https://github.com/amantinband/error-or) values from an [error catalog](src/Iedora.Auth/Common/AuthErrors.cs) (no exceptions/null), mapped to RFC 9457 `ProblemDetails` by [`ProblemResults`](src/Iedora.Auth/Common/ProblemResults.cs) — the error `code` rides in the problem body as a machine-readable discriminator.
+- **Transactional outbox** — password-reset email is staged in an [`outbox`](src/Iedora.Auth.Data/OutboxMessage.cs) table in the same `SaveChangesAsync` as the request, then delivered by a background dispatcher via MailKit SMTP with retry/backoff — so a crash after commit can't drop the email. No message broker. Configure `Smtp:*` (and `PasswordReset:ResetUrlBase`) to deliver; a single-instance dispatcher (add `FOR UPDATE SKIP LOCKED` for multiple replicas).

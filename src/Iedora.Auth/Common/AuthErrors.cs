@@ -29,4 +29,7 @@ public static class AuthErrors
 
     public static readonly Error WrongCurrentPassword =
         Error.Forbidden("auth.wrong_current_password", "The current password is incorrect.");
+
+    public static readonly Error InvalidResetToken =
+        Error.Validation("auth.invalid_reset_token", "The reset link is invalid or has expired.");
 }

@@ -7,12 +7,14 @@ namespace Iedora.Auth.Data;
 /// <summary>
 /// The Identity store — full ASP.NET Core Identity schema (AspNetUsers, AspNetRoles,
 /// AspNetUserRoles, ...) on Postgres with Guid keys, plus the refresh-token
-/// <see cref="Sessions"/> table. Schema is applied via EF migrations (see SchemaInitializer).
+/// <see cref="Sessions"/> table and the transactional <see cref="Outbox"/>. Schema is applied
+/// via EF migrations (see the migration worker).
 /// </summary>
 public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
     : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>(options)
 {
     public DbSet<Session> Sessions => Set<Session>();
+    public DbSet<OutboxMessage> Outbox => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -35,6 +37,14 @@ public sealed class AuthDbContext(DbContextOptions<AuthDbContext> options)
                 .WithMany()
                 .HasForeignKey(s => s.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<OutboxMessage>(outbox =>
+        {
+            outbox.ToTable("outbox");
+            outbox.HasKey(o => o.Id);
+            // The dispatcher polls pending rows in creation order — index just the unprocessed ones.
+            outbox.HasIndex(o => o.CreatedAt).HasFilter("\"ProcessedAt\" IS NULL");
         });
     }
 }

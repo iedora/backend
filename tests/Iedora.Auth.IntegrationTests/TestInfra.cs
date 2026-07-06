@@ -24,6 +24,7 @@ public abstract class IntegrationTestBase
     public async Task InitializeTest()
     {
         await TestHost.ResetAsync();
+        TestHost.EmailSender.Clear();
         Client = TestHost.Factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false });
     }
 
