@@ -1,7 +1,7 @@
 <Project Sdk="Aspire.AppHost.Sdk/13.4.6">
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Iedora.Auth\Iedora.Auth.csproj" />
+    <ProjectReference Include="..\src\Iedora.Api\Iedora.Api.csproj" />
     <ProjectReference Include="..\src\Iedora.MigrationService\Iedora.MigrationService.csproj" />
     <ProjectReference Include="..\src\Iedora.Worker\Iedora.Worker.csproj" />
   </ItemGroup>

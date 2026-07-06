@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Iedora.ServiceDefaults\Iedora.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\Iedora.Auth.Data\Iedora.Auth.Data.csproj" />
+    <ProjectReference Include="..\Iedora.Data\Iedora.Data.csproj" />
   </ItemGroup>
 
   <ItemGroup>

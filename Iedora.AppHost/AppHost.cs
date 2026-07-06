@@ -23,13 +23,13 @@ var migrations = builder.AddProject<Projects.Iedora_MigrationService>("migration
     .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf")
     .WithEnvironment("OTEL_SERVICE_NAME", "iedora-migrations");
 
-builder.AddProject<Projects.Iedora_Auth>("auth")
+builder.AddProject<Projects.Iedora_Api>("api")
     .WithReference(authdb)                 // injects ConnectionStrings__authdb
     .WaitForCompletion(migrations)         // don't start serving until the schema is migrated
-    .WithHttpEndpoint(port: 8090, name: "authhttp") // pinned port for the e2e test
+    .WithHttpEndpoint(port: 8090, name: "apihttp") // pinned port for the e2e test
     .WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")
     .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf")
-    .WithEnvironment("OTEL_SERVICE_NAME", "iedora-auth")
+    .WithEnvironment("OTEL_SERVICE_NAME", "iedora-api")
     .WithEnvironment("OTEL_RESOURCE_ATTRIBUTES", "service.namespace=iedora,deployment.environment.name=verify")
     .WithEnvironment("API_JWT_ISSUER", "https://api.iedora.com")
     .WithEnvironment("API_JWT_AUDIENCE", "iedora-api");

@@ -11,7 +11,7 @@
     <ProjectReference Include="..\..\Iedora.ServiceDefaults\Iedora.ServiceDefaults.csproj" />
     <!-- Generic app worker: it references each service's non-web messaging MODULE (which brings
          its DbContext, handlers + dispatch registration) — never a service's web project. -->
-    <ProjectReference Include="..\Iedora.Auth.Messaging\Iedora.Auth.Messaging.csproj" />
+    <ProjectReference Include="..\Iedora.Messaging\Iedora.Messaging.csproj" />
   </ItemGroup>
 
 </Project>
