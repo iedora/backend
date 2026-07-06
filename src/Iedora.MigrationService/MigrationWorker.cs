@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using Iedora.Auth.Data;
+using Iedora.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Iedora.MigrationService;

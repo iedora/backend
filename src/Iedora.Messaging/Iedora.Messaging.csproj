@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Iedora.Messaging</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Non-web module: the auth outbox handlers + email + a self-contained registration, so the
+         generic app worker can run auth's dispatcher WITHOUT referencing the web project. -->
+    <ProjectReference Include="..\Iedora.Data\Iedora.Data.csproj" />
+    <ProjectReference Include="..\..\framework\Outbox\Framework.Outbox\Framework.Outbox.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MailKit" />
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+  </ItemGroup>
+
+</Project>

@@ -13,16 +13,16 @@
     <Project Path="framework/Web/Framework.Web/Framework.Web.csproj" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/Iedora.Auth.Data/Iedora.Auth.Data.csproj" />
-    <Project Path="src/Iedora.Auth.Messaging/Iedora.Auth.Messaging.csproj" />
-    <Project Path="src/Iedora.Auth/Iedora.Auth.csproj" />
+    <Project Path="src/Iedora.Data/Iedora.Data.csproj" />
+    <Project Path="src/Iedora.Messaging/Iedora.Messaging.csproj" />
+    <Project Path="src/Iedora.Api/Iedora.Api.csproj" />
     <Project Path="src/Iedora.MigrationService/Iedora.MigrationService.csproj" />
     <Project Path="src/Iedora.Worker/Iedora.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Iedora.Auth.E2ETests/Iedora.Auth.E2ETests.csproj" />
-    <Project Path="tests/Iedora.Auth.IntegrationTests/Iedora.Auth.IntegrationTests.csproj" />
-    <Project Path="tests/Iedora.Auth.UnitTests/Iedora.Auth.UnitTests.csproj" />
+    <Project Path="tests/Iedora.Api.E2ETests/Iedora.Api.E2ETests.csproj" />
+    <Project Path="tests/Iedora.Api.IntegrationTests/Iedora.Api.IntegrationTests.csproj" />
+    <Project Path="tests/Iedora.Api.UnitTests/Iedora.Api.UnitTests.csproj" />
   </Folder>
   <Project Path="Iedora.AppHost/Iedora.AppHost.csproj" />
   <Project Path="Iedora.ServiceDefaults/Iedora.ServiceDefaults.csproj" />

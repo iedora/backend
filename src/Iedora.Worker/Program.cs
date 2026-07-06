@@ -1,4 +1,4 @@
-using Iedora.Auth.Messaging;
+using Iedora.Messaging;
 using Microsoft.Extensions.Hosting;
 
 // The single app-wide background worker. It composes each service's outbox-dispatch module — it

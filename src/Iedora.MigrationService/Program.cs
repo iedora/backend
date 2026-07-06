@@ -1,4 +1,4 @@
-using Iedora.Auth.Data;
+using Iedora.Data;
 using Iedora.MigrationService;
 using Microsoft.Extensions.Hosting;
 
