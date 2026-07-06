@@ -249,6 +249,11 @@ namespace Iedora.Auth.Data.Migrations
                 filter: "\"ProcessedAt\" IS NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_outbox_ProcessedAt_CreatedAt",
+                table: "outbox",
+                columns: new[] { "ProcessedAt", "CreatedAt" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_sessions_FamilyId",
                 table: "sessions",
                 column: "FamilyId");

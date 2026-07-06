@@ -2,7 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Iedora.Outbox;
+namespace Iedora.Framework.Outbox;
 
 public static class OutboxExtensions
 {
@@ -14,7 +14,9 @@ public static class OutboxExtensions
         {
             outbox.ToTable("outbox");
             outbox.HasKey(o => o.Id);
-            outbox.HasIndex(o => o.CreatedAt).HasFilter("\"ProcessedAt\" IS NULL");
+            // Poll query is WHERE ProcessedAt IS NULL ORDER BY CreatedAt — a composite index
+            // serves it without a provider-specific partial-index filter.
+            outbox.HasIndex(o => new { o.ProcessedAt, o.CreatedAt });
         });
         return builder;
     }

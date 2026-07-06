@@ -146,7 +146,7 @@ namespace Iedora.Auth.Data.Migrations
                     b.ToTable("sessions", (string)null);
                 });
 
-            modelBuilder.Entity("Iedora.Outbox.OutboxMessage", b =>
+            modelBuilder.Entity("Iedora.Framework.Outbox.OutboxMessage", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -179,6 +179,8 @@ namespace Iedora.Auth.Data.Migrations
 
                     b.HasIndex("CreatedAt")
                         .HasFilter("\"ProcessedAt\" IS NULL");
+
+                    b.HasIndex("ProcessedAt", "CreatedAt");
 
                     b.ToTable("outbox", (string)null);
                 });

@@ -3,7 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Iedora.Outbox;
+namespace Iedora.Framework.Outbox;
 
 /// <summary>
 /// Polls the outbox and dispatches pending messages. Single-instance dispatcher — fine for one

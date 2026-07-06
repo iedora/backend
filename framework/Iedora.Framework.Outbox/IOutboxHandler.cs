@@ -1,4 +1,4 @@
-namespace Iedora.Outbox;
+namespace Iedora.Framework.Outbox;
 
 /// <summary>
 /// Handles one outbox message type. Implementations are registered in DI; the dispatcher routes

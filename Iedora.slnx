@@ -1,9 +1,12 @@
 <Solution>
+  <Folder Name="/framework/">
+    <Project Path="framework/Iedora.Framework.Outbox.Tests/Iedora.Framework.Outbox.Tests.csproj" />
+    <Project Path="framework/Iedora.Framework.Outbox/Iedora.Framework.Outbox.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Iedora.Auth.Data/Iedora.Auth.Data.csproj" />
     <Project Path="src/Iedora.Auth/Iedora.Auth.csproj" />
     <Project Path="src/Iedora.MigrationService/Iedora.MigrationService.csproj" />
-    <Project Path="src/Iedora.Outbox/Iedora.Outbox.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Iedora.Auth.E2ETests/Iedora.Auth.E2ETests.csproj" />

@@ -1,0 +1,20 @@
+<Project Sdk="MSTest.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Iedora.Framework.Outbox.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Testcontainers Postgres: a real relational DB (matching production), so the library is
+         tested independently of any service. Npgsql provider for the throwaway TestDbContext. -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Iedora.Framework.Outbox\Iedora.Framework.Outbox.csproj" />
+  </ItemGroup>
+
+</Project>

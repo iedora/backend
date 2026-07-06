@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Iedora.Outbox\Iedora.Outbox.csproj" />
+    <ProjectReference Include="..\..\framework\Iedora.Framework.Outbox\Iedora.Framework.Outbox.csproj" />
   </ItemGroup>
 
   <ItemGroup>

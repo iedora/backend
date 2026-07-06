@@ -13,7 +13,7 @@ using Iedora.Auth.Features.WhoAmI;
 using Iedora.Auth.Observability;
 using Iedora.Auth.Security;
 using Iedora.Auth.Sessions;
-using Iedora.Outbox;
+using Iedora.Framework.Outbox;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Hosting;
