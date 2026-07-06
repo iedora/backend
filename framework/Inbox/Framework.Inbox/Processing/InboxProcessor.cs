@@ -8,7 +8,8 @@ namespace Framework.Inbox;
 /// insert and the handler run in ONE transaction. Duplicate ids are skipped; a handler that
 /// throws rolls the whole thing back (no ledger row), so an at-least-once redelivery retries it.
 /// </summary>
-public sealed class InboxProcessor(DbContext db, IEnumerable<IInboxHandler> handlers, TimeProvider clock)
+public sealed class InboxProcessor<TContext>(TContext db, IEnumerable<IInboxHandler> handlers, TimeProvider clock)
+    where TContext : DbContext
 {
     private readonly Dictionary<string, IInboxHandler> _handlers = handlers.ToDictionary(h => h.Type);
 
@@ -24,13 +25,12 @@ public sealed class InboxProcessor(DbContext db, IEnumerable<IInboxHandler> hand
         {
             await using var tx = await db.Database.BeginTransactionAsync(ct);
 
-            // Claim the message id. ON CONFLICT DO NOTHING → 0 rows means it's a redelivery.
-            var inserted = await db.Database.ExecuteSqlAsync(
-                $"""
-                INSERT INTO inbox ("MessageId", "Type", "Payload", "ReceivedAt")
-                VALUES ({messageId}, {type}, {payload}, {clock.GetUtcNow()})
-                ON CONFLICT DO NOTHING
-                """, ct);
+            // Claim the message id. ON CONFLICT DO NOTHING → 0 rows means it's a redelivery. The
+            // table is resolved (schema-qualified) from the model, so it works whatever schema the
+            // consuming context maps it into; the values are still bound as parameters.
+            var sql = "INSERT INTO " + InboxTable() + " (\"MessageId\", \"Type\", \"Payload\", \"ReceivedAt\") "
+                    + "VALUES ({0}, {1}, {2}, {3}) ON CONFLICT DO NOTHING";
+            var inserted = await db.Database.ExecuteSqlRawAsync(sql, [messageId, type, payload, clock.GetUtcNow()], ct);
 
             if (inserted == 0)
             {
@@ -42,5 +42,16 @@ public sealed class InboxProcessor(DbContext db, IEnumerable<IInboxHandler> hand
             await tx.CommitAsync(ct);
             return true;
         });
+    }
+
+    /// <summary>The inbox table as a quoted, schema-qualified identifier, read from the model so the
+    /// raw claim targets whichever schema the consuming context maps it into.</summary>
+    private string InboxTable()
+    {
+        var entity = db.Model.FindEntityType(typeof(InboxMessage))
+            ?? throw new InvalidOperationException("InboxMessage is not mapped — call modelBuilder.MapInbox().");
+        var table = entity.GetTableName()!;
+        var schema = entity.GetSchema() ?? db.Model.GetDefaultSchema();
+        return schema is null ? $"\"{table}\"" : $"\"{schema}\".\"{table}\"";
     }
 }

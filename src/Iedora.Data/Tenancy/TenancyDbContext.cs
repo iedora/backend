@@ -1,4 +1,5 @@
 using Framework.Commands;
+using Framework.Inbox;
 using Framework.Outbox;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,6 +24,7 @@ public sealed class TenancyDbContext(DbContextOptions<TenancyDbContext> options)
         builder.HasDefaultSchema(Schema);
 
         builder.MapOutbox();   // async-write pipeline: this module's outbox
+        builder.MapInbox();    // + idempotent consumer (cross-module events)
         builder.MapCommands(); // + command-status tracking
 
         builder.Entity<Tenant>(tenant =>

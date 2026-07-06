@@ -11,12 +11,15 @@
     <!-- Non-web module: the auth outbox handlers + email + a self-contained registration, so the
          generic app worker can run auth's dispatcher WITHOUT referencing the web project. -->
     <ProjectReference Include="..\Iedora.Data\Iedora.Data.csproj" />
+    <ProjectReference Include="..\Iedora.Contracts\Iedora.Contracts.csproj" />
     <ProjectReference Include="..\..\framework\Outbox\Framework.Outbox\Framework.Outbox.csproj" />
+    <ProjectReference Include="..\..\framework\Inbox\Framework.Inbox\Framework.Inbox.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MailKit" />
     <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
   </ItemGroup>
 

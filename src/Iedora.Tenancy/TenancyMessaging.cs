@@ -1,3 +1,4 @@
+using Framework.Inbox;
 using Framework.Outbox;
 using Iedora.Data;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,7 +28,11 @@ public static class TenancyMessaging
     {
         services.TryAddSingleton(TimeProvider.System);
         services.AddOutbox<TenancyDbContext>();
+        services.AddInbox<TenancyDbContext>();
+
         services.AddScoped<IOutboxHandler, CreateTenantHandler>();
+        services.AddScoped<IOutboxHandler, UserProvisionedRelay>();       // transfer saga: → Tenancy inbox
+        services.AddScoped<IInboxHandler, UserProvisionedInboxHandler>(); //   reassigns ownership + completes the command
         return services;
     }
 }

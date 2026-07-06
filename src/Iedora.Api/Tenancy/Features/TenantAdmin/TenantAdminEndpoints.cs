@@ -1,9 +1,13 @@
 using System.ComponentModel.DataAnnotations;
+using Framework.Commands;
+using Framework.Outbox;
 using Framework.Web;
+using Iedora.Api.Identity.Contracts;
 using Iedora.Api.Shared;
 using Iedora.Api.Tenancy;
-using Iedora.Api.Identity.Contracts;
+using Iedora.Contracts;
 using Iedora.Data;
+using Iedora.Tenancy;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,9 +21,7 @@ public sealed record AdminCreateTenantRequest([property: Required] string Name, 
 
 public sealed record TransferOwnerRequest(
     [property: Required, EmailAddress] string Email,
-    [property: Required] string Name,
-    [property: Required, StringLength(128, MinimumLength = 8)] string Password);
-public sealed record TransferOwnerResponse(Guid OwnerId);
+    [property: Required] string Name);
 
 // GET /tenancy/admin/tenants[/{id}] — admin-only reads of tenants joined to their owner. The owner
 // is an Identity-module user, so it's resolved through IIdentityApi (never by querying identity
@@ -77,43 +79,28 @@ public static class TenantAdminEndpoints
             .Produces<CreateTenantResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest);
 
-        // Transfer a tenant to a BRAND-NEW owner: create the user (Identity, via the contract), then
-        // make them the tenant's sole owner — the tenant moves to them. User creation runs first, so a
-        // taken email / weak password fails before any Tenancy change. (Cross-module: the user and the
-        // ownership swap live in two schemas, so they aren't one transaction; this ordering keeps a
-        // partial failure recoverable rather than leaving a tenant ownerless.)
+        // Transfer a tenant to a BRAND-NEW owner — an outbox→inbox SAGA (the tenant's owner user lives
+        // in the Identity module, so it can't be one transaction). Validate synchronously, then record
+        // a tracking command + emit CreateUserRequested to Tenancy's outbox → 202. Hop 1: Identity's
+        // inbox creates the user (passwordless — they set one via reset) and emits UserProvisioned.
+        // Hop 2: Tenancy's inbox reassigns ownership and completes the command. Poll the status URL.
         admin.MapPost("/{id:guid}/transfer", async (
-                Guid id, TransferOwnerRequest req, TenancyDbContext db, IIdentityApi identity,
-                TimeProvider clock, CancellationToken ct) =>
+                Guid id, TransferOwnerRequest req, TenancyDbContext db, TimeProvider clock, CancellationToken ct) =>
             {
                 if (!await db.Tenants.AnyAsync(t => t.Id == id, ct))
                     return ProblemResults.From(TenancyErrors.TenantNotFound);
 
-                var created = await identity.CreateUserAsync(new NewUser(req.Email, req.Name, req.Password), ct);
-                if (created.IsError) return ProblemResults.From(created.Errors);
+                var commandId = Guid.CreateVersion7();
+                db.Set<Command>().Add(new Command { Id = commandId, Type = TransferSaga.CommandType, CreatedAt = clock.GetUtcNow() });
+                db.EnqueueOutbox(CreateUserRequested.Type, new CreateUserRequested(commandId, id, req.Email, req.Name), clock);
+                await db.SaveChangesAsync(ct); // command + first saga event, one transaction
 
-                var now = clock.GetUtcNow();
-                // Reassign ownership in one SaveChanges (atomic): drop the current owner(s), add the new.
-                var currentOwners = await db.Memberships
-                    .Where(m => m.TenantId == id && m.Role == MembershipRole.Owner)
-                    .ToListAsync(ct);
-                db.Memberships.RemoveRange(currentOwners);
-                db.Memberships.Add(new Membership
-                {
-                    UserId = created.Value,
-                    TenantId = id,
-                    Role = MembershipRole.Owner,
-                    CreatedAt = now,
-                });
-                await db.SaveChangesAsync(ct);
-
-                return TypedResults.Ok(new TransferOwnerResponse(created.Value));
+                return CommandEndpoints.AcceptedCommand(commandId, "/tenancy");
             })
             .WithName("TransferTenantOwner")
-            .WithSummary("Transfer a tenant to a brand-new owner user (admin).")
-            .Produces<TransferOwnerResponse>(StatusCodes.Status200OK)
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
+            .WithSummary("Transfer a tenant to a brand-new owner (admin, async saga — poll the status URL).")
+            .Produces<CommandAccepted>(StatusCodes.Status202Accepted)
+            .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
     private sealed record OwnedTenant(Guid Id, string Name, Guid OwnerId);

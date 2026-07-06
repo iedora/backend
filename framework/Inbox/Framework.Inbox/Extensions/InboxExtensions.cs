@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Framework.Inbox;
 
@@ -23,8 +22,9 @@ public static class InboxExtensions
     public static IServiceCollection AddInbox<TContext>(this IServiceCollection services)
         where TContext : DbContext
     {
-        services.TryAddScoped<DbContext>(sp => sp.GetRequiredService<TContext>());
-        services.AddScoped<InboxProcessor>();
+        // Per-DbContext, so one host can consume into several modules' inboxes (InboxProcessor<A> +
+        // InboxProcessor<B>), each deduping in its own transaction.
+        services.AddScoped<InboxProcessor<TContext>>();
         return services;
     }
 }
