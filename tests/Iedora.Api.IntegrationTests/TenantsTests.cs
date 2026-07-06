@@ -43,7 +43,7 @@ public sealed class TenantsTests : IntegrationTestBase
 
         // The caller now holds the sole owner membership for the tenant.
         await using var scope = TestHost.Factory.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+        var db = scope.ServiceProvider.GetRequiredService<TenancyDbContext>();
         var membership = await db.Memberships.SingleAsync(m => m.TenantId == tenantId);
         Assert.AreEqual(MembershipRoles.Owner, membership.Role);
         Assert.AreEqual(Guid.Parse(login.userId), membership.UserId);

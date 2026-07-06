@@ -7,6 +7,6 @@ using Microsoft.Extensions.Hosting;
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.AddServiceDefaults();
-builder.AddAuthOutboxDispatch();
+builder.AddIdentityOutboxDispatch();
 
 builder.Build().Run();

@@ -12,10 +12,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- The EF Core model (Identity + sessions) + migrations, shared by the auth API and the
-         migration worker. Owns the Npgsql provider choice; Design enables `dotnet ef`. -->
+    <!-- The per-module EF Core models (Identity + Tenancy) + migrations, shared by the API, the
+         migration worker, and the outbox worker. Owns the DB registration (AddIdentityDb /
+         AddTenancyDb) via the Aspire Npgsql integration; Design enables `dotnet ef`. -->
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>

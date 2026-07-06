@@ -31,17 +31,19 @@ public sealed class OutboxProcessor<TContext>(
         {
             await using var tx = await db.Database.BeginTransactionAsync(ct);
 
-            // Lock + claim eligible rows; other dispatchers SKIP LOCKED past them.
+            // Lock + claim eligible rows; other dispatchers SKIP LOCKED past them. The table is
+            // resolved (schema-qualified) from the model, so it works whichever schema the
+            // consuming context maps the outbox into. Values are still bound as parameters.
+            var sql = $"SELECT * FROM {OutboxTable()}\n" + """
+                WHERE "ProcessedAt" IS NULL
+                  AND "Attempts" < {0}
+                  AND ("NextAttemptAt" IS NULL OR "NextAttemptAt" <= {1})
+                ORDER BY "CreatedAt"
+                LIMIT {2}
+                FOR UPDATE SKIP LOCKED
+                """;
             var batch = await db.Set<OutboxMessage>()
-                .FromSql($"""
-                    SELECT * FROM outbox
-                    WHERE "ProcessedAt" IS NULL
-                      AND "Attempts" < {_opt.MaxAttempts}
-                      AND ("NextAttemptAt" IS NULL OR "NextAttemptAt" <= {now})
-                    ORDER BY "CreatedAt"
-                    LIMIT {_opt.BatchSize}
-                    FOR UPDATE SKIP LOCKED
-                    """)
+                .FromSqlRaw(sql, _opt.MaxAttempts, now, _opt.BatchSize)
                 .ToListAsync(ct);
 
             var handled = 0;
@@ -70,5 +72,16 @@ public sealed class OutboxProcessor<TContext>(
             await tx.CommitAsync(ct);
             return handled;
         });
+    }
+
+    /// <summary>The outbox table as a quoted, schema-qualified identifier, read from the model so
+    /// the raw claim query targets whichever schema the consuming context maps it into.</summary>
+    private string OutboxTable()
+    {
+        var entity = db.Model.FindEntityType(typeof(OutboxMessage))
+            ?? throw new InvalidOperationException("OutboxMessage is not mapped — call modelBuilder.MapOutbox().");
+        var table = entity.GetTableName()!;
+        var schema = entity.GetSchema() ?? db.Model.GetDefaultSchema();
+        return schema is null ? $"\"{table}\"" : $"\"{schema}\".\"{table}\"";
     }
 }

@@ -4,9 +4,11 @@ using Microsoft.Extensions.Hosting;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-// Aspire defaults (OpenTelemetry + health) and the Npgsql-wired AuthDbContext.
+// Aspire defaults (OpenTelemetry + health) and every module's DbContext — this worker owns the
+// whole schema, so it migrates all of them.
 builder.AddServiceDefaults();
-builder.AddNpgsqlDbContext<AuthDbContext>("authdb");
+builder.AddIdentityDb();
+builder.AddTenancyDb();
 
 builder.Services.AddHostedService<MigrationWorker>();
 

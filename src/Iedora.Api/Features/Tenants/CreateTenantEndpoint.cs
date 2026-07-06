@@ -19,7 +19,7 @@ public static class CreateTenantEndpoint
     public static void MapTenants(this RouteGroupBuilder group) =>
         group.MapPost("/tenants", async (
                 CreateTenantRequest req, ClaimsPrincipal principal,
-                AuthDbContext db, TimeProvider clock, CancellationToken ct) =>
+                TenancyDbContext db, TimeProvider clock, CancellationToken ct) =>
         {
             if (!Guid.TryParse(principal.FindFirstValue("sub"), out var userId))
                 return ProblemResults.From(AuthErrors.UserGone);

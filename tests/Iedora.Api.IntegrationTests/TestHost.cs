@@ -34,8 +34,9 @@ public class TestHost
         Factory = new AuthApiFactory(_db.GetConnectionString());
         await using (var scope = Factory.Services.CreateAsyncScope())
         {
-            var ctx = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
-            await ctx.Database.MigrateAsync(ct);
+            // Each module owns a schema + its own migrations — apply them all (as the worker does).
+            await scope.ServiceProvider.GetRequiredService<IdentityDbContext>().Database.MigrateAsync(ct);
+            await scope.ServiceProvider.GetRequiredService<TenancyDbContext>().Database.MigrateAsync(ct);
         }
 
         _conn = new NpgsqlConnection(_db.GetConnectionString());
@@ -43,8 +44,12 @@ public class TestHost
         _respawner = await Respawner.CreateAsync(_conn, new RespawnerOptions
         {
             DbAdapter = DbAdapter.Postgres,
-            SchemasToInclude = ["public"],
-            TablesToIgnore = [new Respawn.Graph.Table("__EFMigrationsHistory")],
+            SchemasToInclude = ["identity", "tenancy"],
+            TablesToIgnore =
+            [
+                new Respawn.Graph.Table("identity", "__EFMigrationsHistory"),
+                new Respawn.Graph.Table("tenancy", "__EFMigrationsHistory"),
+            ],
         });
     }
 
@@ -58,7 +63,7 @@ public class TestHost
     public static async Task<int> DispatchOutboxAsync()
     {
         await using var scope = Factory.Services.CreateAsyncScope();
-        return await scope.ServiceProvider.GetRequiredService<OutboxProcessor<AuthDbContext>>().DispatchPendingAsync(CancellationToken.None);
+        return await scope.ServiceProvider.GetRequiredService<OutboxProcessor<IdentityDbContext>>().DispatchPendingAsync(CancellationToken.None);
     }
 
     [AssemblyCleanup]

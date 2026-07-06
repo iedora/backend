@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Iedora.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Iedora.MigrationService;
 
@@ -20,16 +21,15 @@ public sealed class MigrationWorker(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var activity = _activitySource.StartActivity("migrate auth schema", ActivityKind.Client);
+        using var activity = _activitySource.StartActivity("migrate database schema", ActivityKind.Client);
         try
         {
             await using var scope = services.CreateAsyncScope();
-            var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+            // Each module owns a schema + its own migrations; this worker applies them all.
+            await MigrateAsync<IdentityDbContext>(scope.ServiceProvider, stoppingToken);
+            await MigrateAsync<TenancyDbContext>(scope.ServiceProvider, stoppingToken);
 
-            var strategy = db.Database.CreateExecutionStrategy();
-            await strategy.ExecuteAsync(() => db.Database.MigrateAsync(stoppingToken));
-
-            logger.LogInformation("Auth schema is up to date.");
+            logger.LogInformation("Database schema is up to date.");
         }
         catch (Exception ex)
         {
@@ -38,5 +38,13 @@ public sealed class MigrationWorker(
         }
 
         lifetime.StopApplication();
+    }
+
+    private static async Task MigrateAsync<TContext>(IServiceProvider scope, CancellationToken ct)
+        where TContext : DbContext
+    {
+        var db = scope.GetRequiredService<TContext>();
+        var strategy = db.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(() => db.Database.MigrateAsync(ct));
     }
 }

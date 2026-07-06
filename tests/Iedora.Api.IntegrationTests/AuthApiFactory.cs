@@ -25,7 +25,7 @@ public sealed class AuthApiFactory(string connectionString) : WebApplicationFact
         builder.ConfigureTestServices(services =>
         {
             services.Configure<OutboxOptions>(o => o.PollSeconds = 3600); // tests dispatch directly
-            services.AddOutbox<AuthDbContext>();
+            services.AddOutbox<IdentityDbContext>();
             services.AddScoped<IOutboxHandler, PasswordResetEmailHandler>();
             services.AddSingleton<FakeEmailSender>();
             services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<FakeEmailSender>());

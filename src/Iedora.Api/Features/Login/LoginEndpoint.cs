@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using Framework.Web;
 using Iedora.Api.Common;
-using Iedora.Data;
+using Iedora.Api.Features.Tenants;
 using Iedora.Api.Observability;
 using Iedora.Api.Security;
 using Iedora.Api.Sessions;
+using Iedora.Data;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace Iedora.Api.Features.Login;
 
@@ -22,7 +22,7 @@ public static class LoginEndpoint
 {
     public static void MapLogin(this RouteGroupBuilder group) =>
         group.MapPost("/login", async (
-                LoginRequest req, HttpContext http, UserManager<AppUser> users, AuthDbContext db,
+                LoginRequest req, HttpContext http, UserManager<AppUser> users, ITenancyApi tenancy,
                 SessionService sessions, JwtTokenService jwt, RefreshCookie cookie, CancellationToken ct) =>
         {
             using var activity = Telemetry.ActivitySource.StartActivity("auth.login");
@@ -36,12 +36,9 @@ public static class LoginEndpoint
             }
 
             var roles = await users.GetRolesAsync(user);
-            // Pin the user's earliest tenant as the session's default (null until they join/create one).
-            var tenantId = await db.Memberships
-                .Where(m => m.UserId == user.Id)
-                .OrderBy(m => m.CreatedAt)
-                .Select(m => (Guid?)m.TenantId)
-                .FirstOrDefaultAsync(ct);
+            // Pin the user's default tenant as the session's (null until they join/create one).
+            // Cross-module read via the Tenancy public API — login never touches tenancy tables.
+            var tenantId = await tenancy.GetDefaultTenantAsync(user.Id, ct);
             var (session, rawToken) = await sessions.CreateAsync(user.Id, tenantId, RequestMeta.From(http), ct);
             var response = AuthTokens.Issue(http.Response, user, roles, session, rawToken, jwt, cookie);
 

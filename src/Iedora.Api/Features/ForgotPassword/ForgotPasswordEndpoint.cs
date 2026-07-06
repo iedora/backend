@@ -17,7 +17,7 @@ public static class ForgotPasswordEndpoint
 {
     public static void MapForgotPassword(this RouteGroupBuilder group) =>
         group.MapPost("/forgot-password", async (
-                ForgotPasswordRequest req, UserManager<AppUser> users, AuthDbContext db,
+                ForgotPasswordRequest req, UserManager<AppUser> users, IdentityDbContext db,
                 TimeProvider clock, IOptions<PasswordResetOptions> options, CancellationToken ct) =>
         {
             var user = await users.FindByEmailAsync(req.Email);

@@ -3,16 +3,20 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Iedora.Data.Migrations
+namespace Iedora.Data.Tenancy.Migrations
 {
     /// <inheritdoc />
-    public partial class Tenants : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.EnsureSchema(
+                name: "tenancy");
+
             migrationBuilder.CreateTable(
                 name: "tenants",
+                schema: "tenancy",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -27,6 +31,7 @@ namespace Iedora.Data.Migrations
 
             migrationBuilder.CreateTable(
                 name: "memberships",
+                schema: "tenancy",
                 columns: table => new
                 {
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -38,14 +43,9 @@ namespace Iedora.Data.Migrations
                 {
                     table.PrimaryKey("PK_memberships", x => new { x.UserId, x.TenantId });
                     table.ForeignKey(
-                        name: "FK_memberships_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
                         name: "FK_memberships_tenants_TenantId",
                         column: x => x.TenantId,
+                        principalSchema: "tenancy",
                         principalTable: "tenants",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -53,11 +53,13 @@ namespace Iedora.Data.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_memberships_TenantId",
+                schema: "tenancy",
                 table: "memberships",
                 column: "TenantId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_tenants_Slug",
+                schema: "tenancy",
                 table: "tenants",
                 column: "Slug",
                 unique: true);
@@ -67,10 +69,12 @@ namespace Iedora.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "memberships");
+                name: "memberships",
+                schema: "tenancy");
 
             migrationBuilder.DropTable(
-                name: "tenants");
+                name: "tenants",
+                schema: "tenancy");
         }
     }
 }

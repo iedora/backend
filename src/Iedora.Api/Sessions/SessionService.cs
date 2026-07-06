@@ -18,7 +18,7 @@ public sealed record RotatedSession(Session Session, string Token, AppUser User)
 /// detects reuse; logout revokes a family or all of a user's sessions. The raw token lives
 /// only in the client cookie — the DB holds SHA-256 digests.
 /// </summary>
-public sealed class SessionService(AuthDbContext db, TimeProvider clock, IOptions<SessionSettings> options)
+public sealed class SessionService(IdentityDbContext db, TimeProvider clock, IOptions<SessionSettings> options)
 {
     private readonly SessionSettings _opt = options.Value;
 

@@ -28,9 +28,13 @@ builder.Services.AddOpenTelemetry()
     .WithTracing(tracing => tracing.AddSource(Telemetry.ActivitySourceName))
     .WithMetrics(metrics => metrics.AddMeter(Telemetry.MeterName));
 
-// Postgres via the Aspire integration: registers AuthDbContext from ConnectionStrings:authdb,
-// plus DB health checks and CLIENT db spans — no hand-wiring.
-builder.AddNpgsqlDbContext<AuthDbContext>("authdb");
+// Per-module Postgres contexts on the shared authdb (Aspire integration: connection, health
+// checks, CLIENT db spans). Each owns its schema: identity + tenancy.
+builder.AddIdentityDb();
+builder.AddTenancyDb();
+
+// Tenancy module's cross-module surface (login resolves the default tenant through this).
+builder.Services.AddScoped<ITenancyApi, TenancyApi>();
 
 // Full ASP.NET Core Identity over EF Core (its PasswordHasher, validators, roles).
 builder.Services.AddIdentityCore<AppUser>(options =>
@@ -39,7 +43,7 @@ builder.Services.AddIdentityCore<AppUser>(options =>
         options.Password.RequiredLength = 8;
     })
     .AddRoles<IdentityRole<Guid>>()
-    .AddEntityFrameworkStores<AuthDbContext>()
+    .AddEntityFrameworkStores<IdentityDbContext>()
     .AddDefaultTokenProviders(); // password-reset / forced-change tokens
 
 // Testable clock (FakeTimeProvider in tests) — drives token expiry + session TTLs.

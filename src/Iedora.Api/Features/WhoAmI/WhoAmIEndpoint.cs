@@ -16,7 +16,7 @@ public static class WhoAmIEndpoint
     public static void MapWhoAmI(this RouteGroupBuilder group) =>
         group.MapGet("/whoami",
             async Task<Results<Ok<WhoAmIResponse>, ProblemHttpResult>> (
-                ClaimsPrincipal principal, AuthDbContext db, CancellationToken ct) =>
+                ClaimsPrincipal principal, IdentityDbContext db, CancellationToken ct) =>
         {
             if (!Guid.TryParse(principal.FindFirstValue("sub"), out var userId))
                 return TypedResults.Problem(statusCode: StatusCodes.Status401Unauthorized);
