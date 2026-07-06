@@ -20,6 +20,16 @@ Architecture, module layout, and conventions are in [README.md](README.md) — r
 
 Modules don't touch each other's tables, errors, or internals. A cross-module call goes through the target module's `Contracts/` namespace **only** (`Iedora.Api.<Module>.Contracts`) — add the interface there, implement it `internal` in the owning module, resolve via DI. Each module owns its error catalog; cross-cutting errors/helpers live in `Iedora.Api/Shared`.
 
+## Writes — one pattern, every domain write
+
+Every domain write is asynchronous and identical in shape (`Framework.Commands`):
+1. **Validate synchronously first** — shape + auth + anything checkable via a sync read → immediate `4xx`. The client always gets validation errors up front.
+2. `db.SubmitCommand(commandId, type, payload, clock)` stages a `Pending` command **+** an outbox message in one transaction; the endpoint returns `202 { commandId, statusUrl }`.
+3. A `CommandHandler<TContext, TPayload>` runs the work off the outbox and records `Succeeded`(resultUrl) / `Failed`(code) on the command (expected failure = `ErrorOr`; exception = transient → outbox retries).
+4. Client polls `GET /<module>/commands/{id}` (SSE later).
+
+The only exception: **login/refresh stay synchronous** — they're an auth token exchange, not a domain command. Cross-module *reads* also stay synchronous (via `Contracts`).
+
 ## Gotchas (each already cost a debugging cycle)
 
 - Tests run on Testcontainers Postgres, never SQLite (SQLite can't translate `DateTimeOffset`).

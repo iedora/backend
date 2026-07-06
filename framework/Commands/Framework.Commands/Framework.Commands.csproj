@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Framework.Commands</RootNamespace>
+
+    <IsPackable>true</IsPackable>
+    <PackageId>Framework.Commands</PackageId>
+    <Authors>iedora</Authors>
+    <Description>The async-write command pipeline for EF Core services: an accept-side stages a Pending command + an outbox message in one transaction (SubmitCommand); a CommandHandler runs the work off the outbox and records the outcome (Succeeded/Failed) on the command row, so a client can poll a 202-accepted write to completion. Non-web (worker-safe). Built on Framework.Outbox.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Outbox\Framework.Outbox\Framework.Outbox.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="ErrorOr" />
+  </ItemGroup>
+
+</Project>
