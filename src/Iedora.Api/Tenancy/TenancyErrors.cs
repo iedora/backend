@@ -12,4 +12,8 @@ public static class TenancyErrors
     /// <summary>Admin-create referenced an owner user id that doesn't exist. Maps to 400.</summary>
     public static readonly Error UnknownOwner =
         Error.Validation("tenancy.unknown_owner", "The owner user does not exist.");
+
+    /// <summary>Operation targeted a tenant that doesn't exist. Maps to 404.</summary>
+    public static readonly Error TenantNotFound =
+        Error.NotFound("tenancy.tenant_not_found", "The tenant does not exist.");
 }

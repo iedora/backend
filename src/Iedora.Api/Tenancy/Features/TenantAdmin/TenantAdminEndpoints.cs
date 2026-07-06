@@ -15,6 +15,12 @@ public sealed record TenantListResponse(IReadOnlyList<TenantWithOwner> Tenants);
 
 public sealed record AdminCreateTenantRequest([property: Required] string Name, Guid OwnerUserId);
 
+public sealed record TransferOwnerRequest(
+    [property: Required, EmailAddress] string Email,
+    [property: Required] string Name,
+    [property: Required, StringLength(128, MinimumLength = 8)] string Password);
+public sealed record TransferOwnerResponse(Guid OwnerId);
+
 // GET /tenancy/admin/tenants[/{id}] — admin-only reads of tenants joined to their owner. The owner
 // is an Identity-module user, so it's resolved through IIdentityApi (never by querying identity
 // tables). Tenants without a resolvable owner are omitted. Feeds the staff/admin "tenants" views.
@@ -70,6 +76,44 @@ public static class TenantAdminEndpoints
             .WithSummary("Provision a tenant owned by an existing user (admin).")
             .Produces<CreateTenantResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest);
+
+        // Transfer a tenant to a BRAND-NEW owner: create the user (Identity, via the contract), then
+        // make them the tenant's sole owner — the tenant moves to them. User creation runs first, so a
+        // taken email / weak password fails before any Tenancy change. (Cross-module: the user and the
+        // ownership swap live in two schemas, so they aren't one transaction; this ordering keeps a
+        // partial failure recoverable rather than leaving a tenant ownerless.)
+        admin.MapPost("/{id:guid}/transfer", async (
+                Guid id, TransferOwnerRequest req, TenancyDbContext db, IIdentityApi identity,
+                TimeProvider clock, CancellationToken ct) =>
+            {
+                if (!await db.Tenants.AnyAsync(t => t.Id == id, ct))
+                    return ProblemResults.From(TenancyErrors.TenantNotFound);
+
+                var created = await identity.CreateUserAsync(new NewUser(req.Email, req.Name, req.Password), ct);
+                if (created.IsError) return ProblemResults.From(created.Errors);
+
+                var now = clock.GetUtcNow();
+                // Reassign ownership in one SaveChanges (atomic): drop the current owner(s), add the new.
+                var currentOwners = await db.Memberships
+                    .Where(m => m.TenantId == id && m.Role == MembershipRole.Owner)
+                    .ToListAsync(ct);
+                db.Memberships.RemoveRange(currentOwners);
+                db.Memberships.Add(new Membership
+                {
+                    UserId = created.Value,
+                    TenantId = id,
+                    Role = MembershipRole.Owner,
+                    CreatedAt = now,
+                });
+                await db.SaveChangesAsync(ct);
+
+                return TypedResults.Ok(new TransferOwnerResponse(created.Value));
+            })
+            .WithName("TransferTenantOwner")
+            .WithSummary("Transfer a tenant to a brand-new owner user (admin).")
+            .Produces<TransferOwnerResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
     }
 
     private sealed record OwnedTenant(Guid Id, string Name, Guid OwnerId);

@@ -13,6 +13,7 @@ namespace Iedora.Api.IntegrationTests;
 public sealed record OwnerPayload(string id, string email, string? name);
 public sealed record TenantOwnerPayload(string id, string name, OwnerPayload owner);
 public sealed record TenantListPayload(TenantOwnerPayload[] tenants);
+public sealed record TransferPayload(string ownerId);
 
 [TestClass]
 public sealed class TenantAdminTests : IntegrationTestBase
@@ -108,6 +109,68 @@ public sealed class TenantAdminTests : IntegrationTestBase
         var user = await RegisterAndLogin("plain@tasca.pt", "Sup3rSecret!");
         var resp = await PostJson("/tenancy/admin/tenants",
             new { name = "Nope", ownerUserId = user.userId }, user.accessToken);
+        Assert.AreEqual(HttpStatusCode.Forbidden, resp.StatusCode);
+    }
+
+    [TestMethod]
+    public async Task Transfer_moves_the_tenant_to_a_brand_new_owner()
+    {
+        var oldOwner = await RegisterAndLogin("old@tasca.pt", "Sup3rSecret!");
+        var tenant = (await (await PostJson("/tenancy/tenants", new { name = "Tasca" }, oldOwner.accessToken))
+            .Content.ReadFromJsonAsync<TenantPayload>())!;
+        var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
+
+        var resp = await PostJson($"/tenancy/admin/tenants/{tenant.id}/transfer",
+            new { email = "new@owner.pt", name = "New Owner", password = "N3wOwnerPass!" }, admin.accessToken);
+        Assert.AreEqual(HttpStatusCode.OK, resp.StatusCode);
+        var body = (await resp.Content.ReadFromJsonAsync<TransferPayload>())!;
+
+        // Sole owner is the new user; the old owner's membership is gone.
+        await using (var scope = TestHost.Factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<TenancyDbContext>();
+            var owners = await db.Memberships
+                .Where(m => m.TenantId == Guid.Parse(tenant.id) && m.Role == MembershipRole.Owner)
+                .ToListAsync();
+            Assert.HasCount(1, owners);
+            Assert.AreEqual(Guid.Parse(body.ownerId), owners[0].UserId);
+            Assert.AreNotEqual(Guid.Parse(oldOwner.userId), owners[0].UserId);
+        }
+
+        // The new owner can log in, and the transferred tenant is their default.
+        var (login, _) = await Login("new@owner.pt", "N3wOwnerPass!");
+        Assert.AreEqual(tenant.id, login.tenantId);
+    }
+
+    [TestMethod]
+    public async Task Transfer_to_a_taken_email_returns_409()
+    {
+        await Register("taken@owner.pt", "Sup3rSecret!");
+        var oldOwner = await RegisterAndLogin("old2@tasca.pt", "Sup3rSecret!");
+        var tenant = (await (await PostJson("/tenancy/tenants", new { name = "Bistro" }, oldOwner.accessToken))
+            .Content.ReadFromJsonAsync<TenantPayload>())!;
+        var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
+
+        var resp = await PostJson($"/tenancy/admin/tenants/{tenant.id}/transfer",
+            new { email = "taken@owner.pt", name = "Nope", password = "N3wOwnerPass!" }, admin.accessToken);
+        Assert.AreEqual(HttpStatusCode.Conflict, resp.StatusCode);
+    }
+
+    [TestMethod]
+    public async Task Transfer_of_unknown_tenant_returns_404()
+    {
+        var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
+        var resp = await PostJson($"/tenancy/admin/tenants/{Guid.NewGuid()}/transfer",
+            new { email = "x@owner.pt", name = "X", password = "N3wOwnerPass!" }, admin.accessToken);
+        Assert.AreEqual(HttpStatusCode.NotFound, resp.StatusCode);
+    }
+
+    [TestMethod]
+    public async Task Non_admin_cannot_transfer()
+    {
+        var user = await RegisterAndLogin("plain@tasca.pt", "Sup3rSecret!");
+        var resp = await PostJson($"/tenancy/admin/tenants/{Guid.NewGuid()}/transfer",
+            new { email = "x@owner.pt", name = "X", password = "N3wOwnerPass!" }, user.accessToken);
         Assert.AreEqual(HttpStatusCode.Forbidden, resp.StatusCode);
     }
 
