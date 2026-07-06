@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Iedora.ServiceDefaults\Iedora.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\Iedora.Contracts\Iedora.Contracts.csproj" />
     <ProjectReference Include="..\Iedora.Data\Iedora.Data.csproj" />
     <ProjectReference Include="..\Iedora.Messaging\Iedora.Messaging.csproj" />
     <ProjectReference Include="..\..\framework\Outbox\Framework.Outbox\Framework.Outbox.csproj" />

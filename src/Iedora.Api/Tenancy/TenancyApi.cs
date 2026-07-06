@@ -1,12 +1,12 @@
-using Iedora.Contracts;
+using Iedora.Api.Tenancy.Contracts;
 using Iedora.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Iedora.Api.Features.Tenants;
 
 /// <summary>Tenancy's implementation of the <see cref="ITenancyApi"/> contract. Internal — other
-/// modules only ever see the contract (in <c>Iedora.Contracts</c>), never this class or the
-/// tenancy tables it reads.</summary>
+/// modules only ever see the contract (this module's <c>Contracts</c> namespace), never this class
+/// or the tenancy tables it reads.</summary>
 internal sealed class TenancyApi(TenancyDbContext db) : ITenancyApi
 {
     public Task<Guid?> GetDefaultTenantAsync(Guid userId, CancellationToken ct) =>

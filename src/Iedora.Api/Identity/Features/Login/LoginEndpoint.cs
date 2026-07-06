@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Framework.Web;
 using Iedora.Api.Identity;
-using Iedora.Contracts;
+using Iedora.Api.Tenancy.Contracts;
 using Iedora.Api.Observability;
 using Iedora.Api.Security;
 using Iedora.Api.Sessions;

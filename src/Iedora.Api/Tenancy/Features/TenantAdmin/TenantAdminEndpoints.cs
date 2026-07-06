@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Framework.Web;
 using Iedora.Api.Shared;
 using Iedora.Api.Tenancy;
-using Iedora.Contracts;
+using Iedora.Api.Identity.Contracts;
 using Iedora.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
