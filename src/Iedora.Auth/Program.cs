@@ -1,4 +1,5 @@
 using Iedora.Auth.Data;
+using Iedora.Auth.Features.ChangePassword;
 using Iedora.Auth.Features.Jwks;
 using Iedora.Auth.Features.Login;
 using Iedora.Auth.Features.Logout;
@@ -34,7 +35,8 @@ builder.Services.AddIdentityCore<AppUser>(options =>
         options.Password.RequiredLength = 8;
     })
     .AddRoles<IdentityRole<Guid>>()
-    .AddEntityFrameworkStores<AuthDbContext>();
+    .AddEntityFrameworkStores<AuthDbContext>()
+    .AddDefaultTokenProviders(); // password-reset / forced-change tokens
 
 // Testable clock (FakeTimeProvider in tests) — drives token expiry + session TTLs.
 builder.Services.AddSingleton(TimeProvider.System);
@@ -84,6 +86,7 @@ auth.MapRegister();
 auth.MapLogin();
 auth.MapRefresh();
 auth.MapLogout();
+auth.MapChangePassword();
 auth.MapWhoAmI();
 auth.MapJwks();
 

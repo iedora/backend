@@ -31,7 +31,7 @@ public static class LogoutEndpoint
         {
             if (!Guid.TryParse(principal.FindFirstValue("sub"), out var userId))
                 return TypedResults.Problem(statusCode: StatusCodes.Status401Unauthorized);
-            await sessions.RevokeAllForUserAsync(userId, ct);
+            await sessions.RevokeAllForUserAsync(userId, exceptFamilyId: null, ct);
             cookie.Clear(http.Response);
             return TypedResults.Ok(new OkResponse(true));
         })

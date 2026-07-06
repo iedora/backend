@@ -32,6 +32,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+
+    <!-- Result pattern for expected failures (invalid credentials, token reuse, wrong password). -->
+    <PackageReference Include="ErrorOr" />
   </ItemGroup>
 
 </Project>

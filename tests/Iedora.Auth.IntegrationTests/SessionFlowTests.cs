@@ -41,8 +41,11 @@ public sealed class SessionFlowTests : IntegrationTestBase
         Assert.AreEqual(HttpStatusCode.OK, rotated.StatusCode);
         var c2 = RefreshCookieFrom(rotated)!;
 
-        // Replay the spent c1 → reuse detected, 401.
-        Assert.AreEqual(HttpStatusCode.Unauthorized, (await Refresh(c1)).StatusCode);
+        // Replay the spent c1 → reuse detected, 401 with the machine-readable result code.
+        var reuse = await Refresh(c1);
+        Assert.AreEqual(HttpStatusCode.Unauthorized, reuse.StatusCode);
+        using var problem = System.Text.Json.JsonDocument.Parse(await reuse.Content.ReadAsStringAsync());
+        Assert.AreEqual("auth.refresh_token_reuse", problem.RootElement.GetProperty("code").GetString());
 
         // …and the family is burned, so the previously-valid c2 is now dead too.
         Assert.AreEqual(HttpStatusCode.Unauthorized, (await Refresh(c2)).StatusCode);

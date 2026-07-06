@@ -38,7 +38,10 @@ Migrations live in `src/Iedora.Auth.Data`; add one with
 | Method | Route | |
 |---|---|---|
 | `POST` | `/auth/register` | Create an account. |
-| `POST` | `/auth/login` | Authenticate → ES256 access token. |
+| `POST` | `/auth/login` | Authenticate → ES256 access token + refresh cookie. |
+| `POST` | `/auth/refresh` | Rotate the refresh cookie (reuse detection burns the family). |
+| `POST` | `/auth/logout` / `/auth/logout-all` | Revoke this device's session / all of them. |
+| `POST` | `/auth/change-password` | Change password (authorized); revokes other sessions. |
 | `GET`  | `/auth/whoami` | Identity from the bearer token (authorized). |
 | `GET`  | `/auth/.well-known/jwks.json` | Public keys for offline token verification. |
 
@@ -50,5 +53,6 @@ and served at `/openapi/v1.json` at runtime.
 
 ## Conventions
 
-- **Central Package Management** — all NuGet versions live in [`Directory.Packages.props`](Directory.Packages.props); projects reference packages by name only.
-- **Security auditing** — [`Directory.Build.props`](Directory.Build.props) enables `NuGetAudit` (`all`) and promotes advisories `NU1901`–`NU1904` to build errors, so a known-vulnerable direct or transitive package fails the build.
+- **Central Package Management** — all NuGet versions live in [`Directory.Packages.props`](Directory.Packages.props) (with transitive pinning); projects reference packages by name only.
+- **Security auditing** — [`Directory.Build.props`](Directory.Build.props) promotes vulnerability advisories `NU1901`–`NU1904` to build errors (net10 audits transitively by default), so a known-vulnerable package fails the build.
+- **Result pattern** — expected failures are [`ErrorOr`](https://github.com/amantinband/error-or) values from an [error catalog](src/Iedora.Auth/Common/AuthErrors.cs) (no exceptions/null), mapped to RFC 9457 `ProblemDetails` by [`ProblemResults`](src/Iedora.Auth/Common/ProblemResults.cs) — the error `code` rides in the problem body as a machine-readable discriminator.

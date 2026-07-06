@@ -49,6 +49,13 @@ public abstract class IntegrationTestBase
         return Client.SendAsync(req);
     }
 
+    protected Task<HttpResponseMessage> PostJson(string path, object body, string? bearer = null)
+    {
+        var req = new HttpRequestMessage(HttpMethod.Post, path) { Content = JsonContent.Create(body) };
+        if (bearer is not null) req.Headers.Authorization = new("Bearer", bearer);
+        return Client.SendAsync(req);
+    }
+
     protected Task<HttpResponseMessage> Get(string path, string? bearer = null) =>
         Send(HttpMethod.Get, path, bearer);
 

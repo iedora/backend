@@ -1,3 +1,5 @@
+using ErrorOr;
+using Iedora.Auth.Common;
 using Iedora.Auth.Data;
 using Iedora.Auth.Observability;
 using Iedora.Auth.Security;
@@ -44,30 +46,30 @@ public sealed class SessionService(AuthDbContext db, TimeProvider clock, IOption
     }
 
     /// <summary>
-    /// Rotates the refresh token. Returns null for every invalid case (unknown, spent, expired,
-    /// user gone, lost race) — the endpoint maps that to 401. Presenting a spent token, or
-    /// losing the concurrent-rotation race, burns the whole family (token-theft response).
+    /// Rotates the refresh token. Returns a distinct <see cref="AuthErrors"/> for each invalid
+    /// case (all map to 401, but with different codes for the client + logs). Presenting a spent
+    /// token, or losing the concurrent-rotation race, burns the whole family (token-theft response).
     /// </summary>
-    public async Task<RotatedSession?> RotateAsync(string rawToken, RequestMeta meta, CancellationToken ct)
+    public async Task<ErrorOr<RotatedSession>> RotateAsync(string rawToken, RequestMeta meta, CancellationToken ct)
     {
         var now = clock.GetUtcNow();
         var hash = RefreshTokens.Hash(rawToken);
 
         var current = await db.Sessions.FirstOrDefaultAsync(s => s.TokenHash == hash, ct);
-        if (current is null) return null;                       // unknown token
+        if (current is null) return AuthErrors.InvalidRefreshToken;   // unknown token
 
-        if (current.IsRotated)                                  // spent token replayed → theft
+        if (current.IsRotated)                                        // spent token replayed → theft
         {
             await BurnFamilyAsync(current.FamilyId, ct);
-            return null;
+            return AuthErrors.RefreshTokenReuse;
         }
-        if (!current.IsLive(now)) return null;                  // expired / revoked
+        if (!current.IsLive(now)) return AuthErrors.InvalidRefreshToken; // expired / revoked
 
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == current.UserId, ct);
-        if (user is null)                                       // user removed
+        if (user is null)                                             // user removed
         {
             await BurnFamilyAsync(current.FamilyId, ct);
-            return null;
+            return AuthErrors.InvalidRefreshToken;
         }
 
         var (token, newHash) = RefreshTokens.New();
@@ -114,7 +116,7 @@ public sealed class SessionService(AuthDbContext db, TimeProvider clock, IOption
         if (!won)
         {
             await BurnFamilyAsync(current.FamilyId, ct);
-            return null;
+            return AuthErrors.RefreshTokenReuse;
         }
 
         Telemetry.SessionsRotated.Add(1);
@@ -130,13 +132,14 @@ public sealed class SessionService(AuthDbContext db, TimeProvider clock, IOption
             .ExecuteUpdateAsync(u => u.SetProperty(s => s.RevokedAt, (DateTimeOffset?)now), ct);
     }
 
-    /// <summary>Revoke every live session for a user (logout all devices).</summary>
-    public Task<int> RevokeAllForUserAsync(Guid userId, CancellationToken ct)
+    /// <summary>Revoke every live session for a user, optionally keeping one family alive
+    /// (e.g. the current device after a password change). Pass null to revoke all.</summary>
+    public Task<int> RevokeAllForUserAsync(Guid userId, Guid? exceptFamilyId, CancellationToken ct)
     {
         var now = clock.GetUtcNow();
-        return db.Sessions
-            .Where(s => s.UserId == userId && s.RevokedAt == null)
-            .ExecuteUpdateAsync(u => u.SetProperty(s => s.RevokedAt, (DateTimeOffset?)now), ct);
+        var query = db.Sessions.Where(s => s.UserId == userId && s.RevokedAt == null);
+        if (exceptFamilyId is { } family) query = query.Where(s => s.FamilyId != family);
+        return query.ExecuteUpdateAsync(u => u.SetProperty(s => s.RevokedAt, (DateTimeOffset?)now), ct);
     }
 
     /// <summary>Revoke the family a raw refresh token belongs to. Idempotent: an unknown
