@@ -1,4 +1,4 @@
-using Iedora.Api.Common;
+using Iedora.Api.Identity;
 using Iedora.Api.Features.ChangePassword;
 using Iedora.Api.Features.ForgotPassword;
 using Iedora.Api.Features.Jwks;

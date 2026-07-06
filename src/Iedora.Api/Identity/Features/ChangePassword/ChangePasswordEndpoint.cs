@@ -2,7 +2,8 @@ using System.ComponentModel.DataAnnotations;
 using Framework.Web;
 using System.Security.Claims;
 using ErrorOr;
-using Iedora.Api.Common;
+using Iedora.Api.Identity;
+using Iedora.Api.Shared;
 using Iedora.Data;
 using Iedora.Api.Sessions;
 using Microsoft.AspNetCore.Identity;
@@ -26,8 +27,8 @@ public static class ChangePasswordEndpoint
                 ChangePasswordRequest req, ClaimsPrincipal principal,
                 UserManager<AppUser> users, SessionService sessions, CancellationToken ct) =>
         {
-            if (!Guid.TryParse(principal.FindFirstValue("sub"), out var userId))
-                return ProblemResults.From(IdentityErrors.UserGone);
+            if (!principal.TryGetUserId(out var userId))
+                return ProblemResults.From(CommonErrors.Unauthenticated);
             Guid.TryParse(principal.FindFirstValue("sid"), out var currentFamily);
 
             var result = await ChangeAsync(users, sessions, userId, currentFamily, req, ct);

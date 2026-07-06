@@ -1,6 +1,6 @@
 using ErrorOr;
 
-namespace Iedora.Api.Common;
+namespace Iedora.Api.Identity;
 
 /// <summary>
 /// The auth error catalog. Each error's <c>code</c> (e.g. "auth.refresh_token_reuse") is a

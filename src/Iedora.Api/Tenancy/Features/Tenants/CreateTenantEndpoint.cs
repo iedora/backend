@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Framework.Web;
-using Iedora.Api.Common;
+using Iedora.Api.Shared;
 using Iedora.Data;
 
 namespace Iedora.Api.Features.Tenants;
@@ -21,8 +21,8 @@ public static class CreateTenantEndpoint
                 CreateTenantRequest req, ClaimsPrincipal principal,
                 TenancyDbContext db, TimeProvider clock, CancellationToken ct) =>
         {
-            if (!Guid.TryParse(principal.FindFirstValue("sub"), out var userId))
-                return ProblemResults.From(IdentityErrors.UserGone);
+            if (!principal.TryGetUserId(out var userId))
+                return ProblemResults.From(CommonErrors.Unauthenticated);
 
             var now = clock.GetUtcNow();
             var tenant = new Tenant { Id = Guid.CreateVersion7(), Name = req.Name, CreatedAt = now };
