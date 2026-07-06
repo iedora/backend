@@ -34,12 +34,13 @@ builder.AddProject<Projects.Iedora_Auth>("auth")
     .WithEnvironment("API_JWT_ISSUER", "https://api.iedora.com")
     .WithEnvironment("API_JWT_AUDIENCE", "iedora-api");
 
-// Dedicated outbox dispatcher (drains password-reset email etc.). Scales independently of the API.
-builder.AddProject<Projects.Iedora_Auth_Worker>("auth-worker")
+// Single app-wide background worker (drains every service's outbox — auth email, …). Scales
+// independently of the APIs; multi-replica-safe via FOR UPDATE SKIP LOCKED.
+builder.AddProject<Projects.Iedora_Worker>("worker")
     .WithReference(authdb)
     .WaitForCompletion(migrations)
     .WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")
     .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf")
-    .WithEnvironment("OTEL_SERVICE_NAME", "iedora-auth-worker");
+    .WithEnvironment("OTEL_SERVICE_NAME", "iedora-worker");
 
 builder.Build().Run();

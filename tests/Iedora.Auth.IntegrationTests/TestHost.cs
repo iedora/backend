@@ -58,7 +58,7 @@ public class TestHost
     public static async Task<int> DispatchOutboxAsync()
     {
         await using var scope = Factory.Services.CreateAsyncScope();
-        return await scope.ServiceProvider.GetRequiredService<OutboxProcessor>().DispatchPendingAsync(CancellationToken.None);
+        return await scope.ServiceProvider.GetRequiredService<OutboxProcessor<AuthDbContext>>().DispatchPendingAsync(CancellationToken.None);
     }
 
     [AssemblyCleanup]

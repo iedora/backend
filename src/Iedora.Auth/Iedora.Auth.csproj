@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Iedora.ServiceDefaults\Iedora.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Iedora.Auth.Data\Iedora.Auth.Data.csproj" />
+    <ProjectReference Include="..\Iedora.Auth.Messaging\Iedora.Auth.Messaging.csproj" />
     <ProjectReference Include="..\..\framework\Outbox\Framework.Outbox\Framework.Outbox.csproj" />
   </ItemGroup>
 

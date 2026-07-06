@@ -5,17 +5,17 @@ using Microsoft.Extensions.Options;
 namespace Framework.Outbox;
 
 /// <summary>
-/// Dispatches pending outbox messages: routes each to its <see cref="IOutboxHandler"/>, stamps
+/// Dispatches pending outbox messages for one DbContext type: routes each to its
+/// <see cref="IOutboxHandler"/> (by <c>Type</c>, resolved from the app-wide handler pool), stamps
 /// <c>ProcessedAt</c> on success, or bumps <c>Attempts</c> + backs off <c>NextAttemptAt</c> on
-/// failure until a cap. Claims a batch with <c>FOR UPDATE SKIP LOCKED</c> inside a transaction, so
-/// multiple dispatcher replicas take disjoint rows with zero coordination. DbContext-agnostic —
-/// resolves the consuming service's DbContext (registered as <see cref="DbContext"/> by
-/// <c>AddOutbox&lt;TContext&gt;</c>). Called on a loop by <see cref="OutboxBackgroundService"/>
-/// (and directly by tests). Postgres-targeted (SKIP LOCKED).
+/// failure. Claims a batch with <c>FOR UPDATE SKIP LOCKED</c> inside a transaction, so multiple
+/// dispatcher replicas take disjoint rows. Generic over the DbContext, so ONE worker can host the
+/// dispatchers for many services (<c>AddOutbox&lt;EachDbContext&gt;()</c>). Postgres-targeted.
 /// </summary>
-public sealed class OutboxProcessor(
-    DbContext db, IEnumerable<IOutboxHandler> handlers, TimeProvider clock,
-    IOptions<OutboxOptions> options, ILogger<OutboxProcessor> logger)
+public sealed class OutboxProcessor<TContext>(
+    TContext db, IEnumerable<IOutboxHandler> handlers, TimeProvider clock,
+    IOptions<OutboxOptions> options, ILogger<OutboxProcessor<TContext>> logger)
+    where TContext : DbContext
 {
     private readonly OutboxOptions _opt = options.Value;
     private readonly Dictionary<string, IOutboxHandler> _handlers = handlers.ToDictionary(h => h.Type);

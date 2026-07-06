@@ -1,4 +1,4 @@
-using Iedora.Auth.Email;
+using Iedora.Auth.Messaging;
 
 namespace Iedora.Auth.IntegrationTests;
 

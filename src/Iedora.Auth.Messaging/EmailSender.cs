@@ -3,7 +3,7 @@ using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
 
-namespace Iedora.Auth.Email;
+namespace Iedora.Auth.Messaging;
 
 /// <summary>SMTP settings, bound from the "Smtp" config section (env-overridable via Kamal).</summary>
 public sealed class SmtpSettings

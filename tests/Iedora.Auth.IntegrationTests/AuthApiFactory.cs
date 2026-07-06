@@ -1,7 +1,6 @@
 using Framework.Outbox;
 using Iedora.Auth.Data;
-using Iedora.Auth.Email;
-using Iedora.Auth.Features.ForgotPassword;
+using Iedora.Auth.Messaging;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;

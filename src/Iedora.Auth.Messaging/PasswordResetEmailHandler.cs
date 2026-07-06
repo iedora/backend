@@ -1,8 +1,7 @@
 using System.Text.Json;
-using Iedora.Auth.Email;
 using Framework.Outbox;
 
-namespace Iedora.Auth.Features.ForgotPassword;
+namespace Iedora.Auth.Messaging;
 
 public sealed record PasswordResetEmail(string Email, string ResetLink);
 

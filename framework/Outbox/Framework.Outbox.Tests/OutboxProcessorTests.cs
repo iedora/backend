@@ -60,10 +60,10 @@ public sealed class OutboxProcessorTests
 
     private static TestDbContext NewDb() => new(_options);
 
-    private OutboxProcessor Processor(TestDbContext db, int maxAttempts, int batchSize, params IOutboxHandler[] handlers) =>
+    private OutboxProcessor<TestDbContext> Processor(TestDbContext db, int maxAttempts, int batchSize, params IOutboxHandler[] handlers) =>
         new(db, handlers, _clock,
             Options.Create(new OutboxOptions { MaxAttempts = maxAttempts, BatchSize = batchSize }),
-            NullLogger<OutboxProcessor>.Instance);
+            NullLogger<OutboxProcessor<TestDbContext>>.Instance);
 
     private async Task EnqueueAsync(string type, object payload)
     {

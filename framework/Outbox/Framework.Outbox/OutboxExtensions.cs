@@ -38,10 +38,9 @@ public static class OutboxExtensions
     public static IServiceCollection AddOutbox<TContext>(this IServiceCollection services)
         where TContext : DbContext
     {
-        // Expose the concrete DbContext as its base so the processor stays context-agnostic.
-        services.AddScoped<DbContext>(sp => sp.GetRequiredService<TContext>());
-        services.AddScoped<OutboxProcessor>();
-        services.AddHostedService<OutboxBackgroundService>();
+        // Per-DbContext dispatcher, so one worker can host AddOutbox<A>() + AddOutbox<B>() + …
+        services.AddScoped<OutboxProcessor<TContext>>();
+        services.AddHostedService<OutboxBackgroundService<TContext>>();
         return services;
     }
 }
