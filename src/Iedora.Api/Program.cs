@@ -32,10 +32,9 @@ app.MapOpenApi();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Every module mounts its vertical slices under /auth.
-var auth = app.MapGroup("/auth");
-auth.MapIdentityModule();
-auth.MapTenancyModule();
+// Each module mounts its vertical slices under its own prefix (/auth, /tenancy).
+app.MapIdentityModule();
+app.MapTenancyModule();
 
 app.Run();
 

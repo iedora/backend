@@ -1,6 +1,6 @@
 using ErrorOr;
 using Framework.Web;
-using Iedora.Api.Common;
+using Iedora.Api.Identity;
 using Iedora.Data;
 using Iedora.Api.Observability;
 using Iedora.Api.Security;
@@ -47,7 +47,7 @@ public sealed class SessionService(IdentityDbContext db, TimeProvider clock, IOp
     }
 
     /// <summary>
-    /// Rotates the refresh token. Returns a distinct <see cref="AuthErrors"/> for each invalid
+    /// Rotates the refresh token. Returns a distinct <see cref="IdentityErrors"/> for each invalid
     /// case (all map to 401, but with different codes for the client + logs). Presenting a spent
     /// token, or losing the concurrent-rotation race, burns the whole family (token-theft response).
     /// </summary>
@@ -57,20 +57,20 @@ public sealed class SessionService(IdentityDbContext db, TimeProvider clock, IOp
         var hash = RefreshTokens.Hash(rawToken);
 
         var current = await db.Sessions.FirstOrDefaultAsync(s => s.TokenHash == hash, ct);
-        if (current is null) return AuthErrors.InvalidRefreshToken;   // unknown token
+        if (current is null) return IdentityErrors.InvalidRefreshToken;   // unknown token
 
         if (current.IsRotated)                                        // spent token replayed → theft
         {
             await BurnFamilyAsync(current.FamilyId, ct);
-            return AuthErrors.RefreshTokenReuse;
+            return IdentityErrors.RefreshTokenReuse;
         }
-        if (!current.IsLive(now)) return AuthErrors.InvalidRefreshToken; // expired / revoked
+        if (!current.IsLive(now)) return IdentityErrors.InvalidRefreshToken; // expired / revoked
 
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == current.UserId, ct);
         if (user is null)                                             // user removed
         {
             await BurnFamilyAsync(current.FamilyId, ct);
-            return AuthErrors.InvalidRefreshToken;
+            return IdentityErrors.InvalidRefreshToken;
         }
 
         var (token, newHash) = RefreshTokens.New();
@@ -117,7 +117,7 @@ public sealed class SessionService(IdentityDbContext db, TimeProvider clock, IOp
         if (!won)
         {
             await BurnFamilyAsync(current.FamilyId, ct);
-            return AuthErrors.RefreshTokenReuse;
+            return IdentityErrors.RefreshTokenReuse;
         }
 
         Telemetry.SessionsRotated.Add(1);

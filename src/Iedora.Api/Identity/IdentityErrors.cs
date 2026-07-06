@@ -1,13 +1,13 @@
 using ErrorOr;
 
-namespace Iedora.Api.Common;
+namespace Iedora.Api.Identity;
 
 /// <summary>
 /// The auth error catalog. Each error's <c>code</c> (e.g. "auth.refresh_token_reuse") is a
 /// stable, machine-readable discriminator the client can branch on; the description is human
 /// text. The error <c>Type</c> selects the HTTP status via <see cref="ProblemResults"/>.
 /// </summary>
-public static class AuthErrors
+public static class IdentityErrors
 {
     public static readonly Error InvalidCredentials =
         Error.Unauthorized("auth.invalid_credentials", "Invalid email or password.");

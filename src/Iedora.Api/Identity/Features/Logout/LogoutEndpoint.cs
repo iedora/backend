@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Iedora.Api.Shared;
 using Iedora.Api.Sessions;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -29,7 +30,7 @@ public static class LogoutEndpoint
             async Task<Results<Ok<OkResponse>, ProblemHttpResult>> (
                 ClaimsPrincipal principal, HttpContext http, SessionService sessions, RefreshCookie cookie, CancellationToken ct) =>
         {
-            if (!Guid.TryParse(principal.FindFirstValue("sub"), out var userId))
+            if (!principal.TryGetUserId(out var userId))
                 return TypedResults.Problem(statusCode: StatusCodes.Status401Unauthorized);
             await sessions.RevokeAllForUserAsync(userId, exceptFamilyId: null, ct);
             cookie.Clear(http.Response);

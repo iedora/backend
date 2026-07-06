@@ -13,7 +13,7 @@ public sealed record TokenResponse(
 
 /// <summary>Mints the access token, sets the refresh cookie, and shapes the response — the
 /// step login and refresh perform identically once they have a user + fresh session.</summary>
-public static class AuthTokens
+public static class IdentityTokens
 {
     public static TokenResponse Issue(
         HttpResponse response, AppUser user, IEnumerable<string> roles, Session session,

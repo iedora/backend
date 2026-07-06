@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Iedora.Data.Tenancy.Migrations
 {
     [DbContext(typeof(TenancyDbContext))]
-    [Migration("20260706155929_Initial")]
+    [Migration("20260706164447_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -39,9 +39,7 @@ namespace Iedora.Data.Tenancy.Migrations
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("text")
-                        .HasDefaultValue("member");
+                        .HasColumnType("text");
 
                     b.HasKey("UserId", "TenantId");
 
@@ -63,13 +61,7 @@ namespace Iedora.Data.Tenancy.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Slug")
-                        .HasColumnType("text");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("Slug")
-                        .IsUnique();
 
                     b.ToTable("tenants", "tenancy");
                 });

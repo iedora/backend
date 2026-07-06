@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Framework.Outbox;
-using Iedora.Api.Common;
+using Iedora.Api.Identity;
 using Iedora.Data;
 using Iedora.Messaging;
 using Microsoft.AspNetCore.Identity;

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Framework.Web;
-using Iedora.Api.Common;
+using Iedora.Api.Shared;
 using Iedora.Data;
 
 namespace Iedora.Api.Features.Tenants;
@@ -10,10 +10,10 @@ public sealed record CreateTenantRequest([property: Required] string Name);
 
 public sealed record CreateTenantResponse(Guid Id, string Name);
 
-// POST /auth/tenants — the signed-in user provisions a tenant and becomes its owner. The tenant
+// POST /tenancy/tenants — the signed-in user provisions a tenant and becomes its owner. The tenant
 // row + the owner membership are written in one SaveChanges (a single transaction). The caller's
 // current access token doesn't carry the new tenant; the next login/refresh re-resolves the
-// default tenant from memberships and pins it. Mirrors the Bun POST /auth/tenants.
+// default tenant from memberships and pins it.
 public static class CreateTenantEndpoint
 {
     public static void MapTenants(this RouteGroupBuilder group) =>
@@ -21,8 +21,8 @@ public static class CreateTenantEndpoint
                 CreateTenantRequest req, ClaimsPrincipal principal,
                 TenancyDbContext db, TimeProvider clock, CancellationToken ct) =>
         {
-            if (!Guid.TryParse(principal.FindFirstValue("sub"), out var userId))
-                return ProblemResults.From(AuthErrors.UserGone);
+            if (!principal.TryGetUserId(out var userId))
+                return ProblemResults.From(CommonErrors.Unauthenticated);
 
             var now = clock.GetUtcNow();
             var tenant = new Tenant { Id = Guid.CreateVersion7(), Name = req.Name, CreatedAt = now };
@@ -31,7 +31,7 @@ public static class CreateTenantEndpoint
             {
                 UserId = userId,
                 TenantId = tenant.Id,
-                Role = MembershipRoles.Owner,
+                Role = MembershipRole.Owner,
                 CreatedAt = now,
             });
             await db.SaveChangesAsync(ct); // tenant + owner membership atomically

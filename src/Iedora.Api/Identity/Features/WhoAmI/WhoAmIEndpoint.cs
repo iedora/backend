@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Iedora.Api.Shared;
 using Iedora.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +19,7 @@ public static class WhoAmIEndpoint
             async Task<Results<Ok<WhoAmIResponse>, ProblemHttpResult>> (
                 ClaimsPrincipal principal, IdentityDbContext db, CancellationToken ct) =>
         {
-            if (!Guid.TryParse(principal.FindFirstValue("sub"), out var userId))
+            if (!principal.TryGetUserId(out var userId))
                 return TypedResults.Problem(statusCode: StatusCodes.Status401Unauthorized);
 
             var mustChange = await db.Users

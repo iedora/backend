@@ -1,4 +1,4 @@
-namespace Iedora.Api.Common;
+namespace Iedora.Api.Identity;
 
 /// <summary>Password-reset settings, bound from the "PasswordReset" config section.</summary>
 public sealed class PasswordResetOptions

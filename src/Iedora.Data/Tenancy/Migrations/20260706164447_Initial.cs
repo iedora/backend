@@ -20,7 +20,6 @@ namespace Iedora.Data.Tenancy.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Slug = table.Column<string>(type: "text", nullable: true),
                     Name = table.Column<string>(type: "text", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
@@ -36,7 +35,7 @@ namespace Iedora.Data.Tenancy.Migrations
                 {
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     TenantId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Role = table.Column<string>(type: "text", nullable: false, defaultValue: "member"),
+                    Role = table.Column<string>(type: "text", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -56,13 +55,6 @@ namespace Iedora.Data.Tenancy.Migrations
                 schema: "tenancy",
                 table: "memberships",
                 column: "TenantId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_tenants_Slug",
-                schema: "tenancy",
-                table: "tenants",
-                column: "Slug",
-                unique: true);
         }
 
         /// <inheritdoc />
