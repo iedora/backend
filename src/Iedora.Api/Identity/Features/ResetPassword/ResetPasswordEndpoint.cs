@@ -35,12 +35,12 @@ public static class ResetPasswordEndpoint
         UserManager<AppUser> users, SessionService sessions, ResetPasswordRequest req, CancellationToken ct)
     {
         var user = await users.FindByEmailAsync(req.Email);
-        if (user is null) return AuthErrors.InvalidResetToken; // same as a bad token (no enumeration)
+        if (user is null) return IdentityErrors.InvalidResetToken; // same as a bad token (no enumeration)
 
         var result = await users.ResetPasswordAsync(user, req.Token, req.Password);
         if (!result.Succeeded)
         {
-            if (result.Errors.Any(e => e.Code == "InvalidToken")) return AuthErrors.InvalidResetToken;
+            if (result.Errors.Any(e => e.Code == "InvalidToken")) return IdentityErrors.InvalidResetToken;
             return result.Errors.Select(e => Error.Validation($"auth.{e.Code}", e.Description)).ToList();
         }
 

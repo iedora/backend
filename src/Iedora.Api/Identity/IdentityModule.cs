@@ -68,9 +68,10 @@ public static class IdentityModule
         return builder;
     }
 
-    /// <summary>Map the module's vertical-slice endpoints under the group (/auth).</summary>
-    public static RouteGroupBuilder MapIdentityModule(this RouteGroupBuilder group)
+    /// <summary>Map the module's vertical slices under its own prefix (<c>/auth</c>).</summary>
+    public static IEndpointRouteBuilder MapIdentityModule(this IEndpointRouteBuilder app)
     {
+        var group = app.MapGroup("/auth");
         group.MapRegister();
         group.MapLogin();
         group.MapRefresh();
@@ -80,6 +81,6 @@ public static class IdentityModule
         group.MapResetPassword();
         group.MapWhoAmI();
         group.MapJwks();
-        return group;
+        return app;
     }
 }

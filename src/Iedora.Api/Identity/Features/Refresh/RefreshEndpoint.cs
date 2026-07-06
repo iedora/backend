@@ -18,7 +18,7 @@ public static class RefreshEndpoint
                 JwtTokenService jwt, RefreshCookie cookie, CancellationToken ct) =>
         {
             var raw = cookie.Read(http.Request);
-            if (raw is null) return ProblemResults.From(AuthErrors.NoRefreshToken);
+            if (raw is null) return ProblemResults.From(IdentityErrors.NoRefreshToken);
 
             var result = await sessions.RotateAsync(raw, RequestMeta.From(http), ct);
             if (result.IsError)
@@ -29,7 +29,7 @@ public static class RefreshEndpoint
 
             var rotated = result.Value;
             var roles = await users.GetRolesAsync(rotated.User);
-            return TypedResults.Ok(AuthTokens.Issue(http.Response, rotated.User, roles, rotated.Session, rotated.Token, jwt, cookie));
+            return TypedResults.Ok(IdentityTokens.Issue(http.Response, rotated.User, roles, rotated.Session, rotated.Token, jwt, cookie));
         })
         .AllowAnonymous()
         .WithName("Refresh")

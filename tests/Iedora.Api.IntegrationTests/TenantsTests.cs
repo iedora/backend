@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Iedora.Api.IntegrationTests;
 
-// Wire shape of POST /auth/tenants (camelCase).
+// Wire shape of POST /tenancy/tenants (camelCase).
 public sealed record TenantPayload(string id, string name);
 
 [TestClass]
@@ -16,7 +16,7 @@ public sealed class TenantsTests : IntegrationTestBase
     [TestMethod]
     public async Task Create_tenant_without_token_returns_401()
     {
-        var resp = await PostJson("/auth/tenants", new { name = "Tasca do Zé" });
+        var resp = await PostJson("/tenancy/tenants", new { name = "Tasca do Zé" });
         Assert.AreEqual(HttpStatusCode.Unauthorized, resp.StatusCode);
     }
 
@@ -25,7 +25,7 @@ public sealed class TenantsTests : IntegrationTestBase
     public async Task Create_tenant_with_invalid_name_returns_400(string name)
     {
         var login = await RegisterAndLogin("owner@tasca.pt", "Sup3rSecret!");
-        var resp = await PostJson("/auth/tenants", new { name }, login.accessToken);
+        var resp = await PostJson("/tenancy/tenants", new { name }, login.accessToken);
         Assert.AreEqual(HttpStatusCode.BadRequest, resp.StatusCode);
     }
 
@@ -34,7 +34,7 @@ public sealed class TenantsTests : IntegrationTestBase
     {
         var login = await RegisterAndLogin("owner@tasca.pt", "Sup3rSecret!");
 
-        var resp = await PostJson("/auth/tenants", new { name = "Tasca do Zé" }, login.accessToken);
+        var resp = await PostJson("/tenancy/tenants", new { name = "Tasca do Zé" }, login.accessToken);
         Assert.AreEqual(HttpStatusCode.OK, resp.StatusCode);
 
         var tenant = (await resp.Content.ReadFromJsonAsync<TenantPayload>())!;
@@ -45,7 +45,7 @@ public sealed class TenantsTests : IntegrationTestBase
         await using var scope = TestHost.Factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<TenancyDbContext>();
         var membership = await db.Memberships.SingleAsync(m => m.TenantId == tenantId);
-        Assert.AreEqual(MembershipRoles.Owner, membership.Role);
+        Assert.AreEqual(MembershipRole.Owner, membership.Role);
         Assert.AreEqual(Guid.Parse(login.userId), membership.UserId);
     }
 
@@ -55,7 +55,7 @@ public sealed class TenantsTests : IntegrationTestBase
         var login = await RegisterAndLogin("owner@tasca.pt", "Sup3rSecret!");
         Assert.IsNull(login.tenantId); // no memberships yet
 
-        var created = (await (await PostJson("/auth/tenants", new { name = "Bistro" }, login.accessToken))
+        var created = (await (await PostJson("/tenancy/tenants", new { name = "Bistro" }, login.accessToken))
             .Content.ReadFromJsonAsync<TenantPayload>())!;
 
         // A fresh login re-resolves the default tenant from memberships and pins it on the session/token.

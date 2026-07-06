@@ -24,7 +24,6 @@ public sealed class TenancyDbContext(DbContextOptions<TenancyDbContext> options)
         {
             tenant.ToTable("tenants");
             tenant.HasKey(t => t.Id);
-            tenant.HasIndex(t => t.Slug).IsUnique(); // nullable ⇒ many NULLs allowed, one row per non-null slug
             tenant.Property(t => t.Name).IsRequired();
         });
 
@@ -32,7 +31,9 @@ public sealed class TenancyDbContext(DbContextOptions<TenancyDbContext> options)
         {
             membership.ToTable("memberships");
             membership.HasKey(m => new { m.UserId, m.TenantId }); // one row per user per tenant
-            membership.Property(m => m.Role).IsRequired().HasDefaultValue(MembershipRoles.Member);
+            membership.Property(m => m.Role)
+                .HasConversion<string>() // persist the enum name (text); the app always sets it
+                .IsRequired();
 
             membership.HasOne<Tenant>()
                 .WithMany()

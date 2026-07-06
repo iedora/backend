@@ -7,7 +7,7 @@ namespace Iedora.Api.Common;
 /// stable, machine-readable discriminator the client can branch on; the description is human
 /// text. The error <c>Type</c> selects the HTTP status via <see cref="ProblemResults"/>.
 /// </summary>
-public static class AuthErrors
+public static class IdentityErrors
 {
     public static readonly Error InvalidCredentials =
         Error.Unauthorized("auth.invalid_credentials", "Invalid email or password.");

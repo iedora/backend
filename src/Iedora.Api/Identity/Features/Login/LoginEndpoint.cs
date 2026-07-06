@@ -16,7 +16,7 @@ public sealed record LoginRequest(
 
 // POST /auth/login — verify the password with Identity, open a refresh-session family, set the
 // refresh cookie, and mint a session-bound ES256 access token. Failure is an explicit
-// AuthErrors value mapped to 401 (no exception/null). Custom span + counter ride the
+// IdentityErrors value mapped to 401 (no exception/null). Custom span + counter ride the
 // iedora-api ActivitySource/Meter.
 public static class LoginEndpoint
 {
@@ -32,7 +32,7 @@ public static class LoginEndpoint
             {
                 activity?.SetTag("auth.result", "denied");
                 Telemetry.TokensIssued.Add(1, new("grant", "password"), new("result", "denied"));
-                return ProblemResults.From(AuthErrors.InvalidCredentials);
+                return ProblemResults.From(IdentityErrors.InvalidCredentials);
             }
 
             var roles = await users.GetRolesAsync(user);
@@ -40,7 +40,7 @@ public static class LoginEndpoint
             // Cross-module read via the Tenancy public API — login never touches tenancy tables.
             var tenantId = await tenancy.GetDefaultTenantAsync(user.Id, ct);
             var (session, rawToken) = await sessions.CreateAsync(user.Id, tenantId, RequestMeta.From(http), ct);
-            var response = AuthTokens.Issue(http.Response, user, roles, session, rawToken, jwt, cookie);
+            var response = IdentityTokens.Issue(http.Response, user, roles, session, rawToken, jwt, cookie);
 
             activity?.SetTag("auth.result", "issued");
             activity?.SetTag("user.id", user.Id.ToString());

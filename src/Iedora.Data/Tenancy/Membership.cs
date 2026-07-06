@@ -7,14 +7,15 @@ public sealed class Membership
 {
     public Guid UserId { get; set; }
     public Guid TenantId { get; set; }
-    public string Role { get; set; } = MembershipRoles.Member;
+    public MembershipRole Role { get; set; } = MembershipRole.Member;
     public DateTimeOffset CreatedAt { get; set; }
 }
 
-/// <summary>The per-tenant roles (stored as text, mirroring the Bun schema).</summary>
-public static class MembershipRoles
+/// <summary>A user's role within a tenant. Persisted as its name (text) via a value conversion.
+/// <see cref="Member"/> is the zero value, so an unset role defaults to the least-privileged.</summary>
+public enum MembershipRole
 {
-    public const string Owner = "owner";
-    public const string Member = "member";
-    public const string Viewer = "viewer";
+    Member,
+    Owner,
+    Viewer,
 }

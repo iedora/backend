@@ -61,9 +61,9 @@ one with `dotnet ef migrations add <Name> --project src/Iedora.Data --context <I
 | `POST` | `/auth/change-password` | Change password (authorized); revokes other sessions. |
 | `POST` | `/auth/forgot-password` | Request a reset email (always 200 — no enumeration). |
 | `POST` | `/auth/reset-password` | Set a new password from the emailed token; revokes sessions. |
-| `POST` | `/auth/tenants` | Create a tenant owned by the caller (authorized); next login pins it. |
 | `GET`  | `/auth/whoami` | Identity from the bearer token (authorized). |
 | `GET`  | `/auth/.well-known/jwks.json` | Public keys for offline token verification. |
+| `POST` | `/tenancy/tenants` | Create a tenant owned by the caller (authorized); next login pins it. |
 
 ## OpenAPI contract
 

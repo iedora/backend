@@ -27,7 +27,7 @@ public static class ChangePasswordEndpoint
                 UserManager<AppUser> users, SessionService sessions, CancellationToken ct) =>
         {
             if (!Guid.TryParse(principal.FindFirstValue("sub"), out var userId))
-                return ProblemResults.From(AuthErrors.UserGone);
+                return ProblemResults.From(IdentityErrors.UserGone);
             Guid.TryParse(principal.FindFirstValue("sid"), out var currentFamily);
 
             var result = await ChangeAsync(users, sessions, userId, currentFamily, req, ct);
@@ -45,7 +45,7 @@ public static class ChangePasswordEndpoint
         Guid userId, Guid currentFamily, ChangePasswordRequest req, CancellationToken ct)
     {
         var user = await users.FindByIdAsync(userId.ToString());
-        if (user is null) return AuthErrors.UserGone;
+        if (user is null) return IdentityErrors.UserGone;
 
         IdentityResult result;
         if (user.MustChangePassword)
@@ -56,13 +56,13 @@ public static class ChangePasswordEndpoint
         }
         else
         {
-            if (string.IsNullOrEmpty(req.CurrentPassword)) return AuthErrors.CurrentPasswordRequired;
+            if (string.IsNullOrEmpty(req.CurrentPassword)) return IdentityErrors.CurrentPasswordRequired;
             result = await users.ChangePasswordAsync(user, req.CurrentPassword, req.NewPassword);
         }
 
         if (!result.Succeeded)
         {
-            if (result.Errors.Any(e => e.Code == "PasswordMismatch")) return AuthErrors.WrongCurrentPassword;
+            if (result.Errors.Any(e => e.Code == "PasswordMismatch")) return IdentityErrors.WrongCurrentPassword;
             // Password-policy failures → validation errors, grouped by Identity's error code.
             return result.Errors.Select(e => Error.Validation($"auth.{e.Code}", e.Description)).ToList();
         }

@@ -19,10 +19,11 @@ public static class TenancyModule
         return builder;
     }
 
-    /// <summary>Map the module's vertical-slice endpoints under the group (/auth).</summary>
-    public static RouteGroupBuilder MapTenancyModule(this RouteGroupBuilder group)
+    /// <summary>Map the module's vertical slices under its own prefix (<c>/tenancy</c>).</summary>
+    public static IEndpointRouteBuilder MapTenancyModule(this IEndpointRouteBuilder app)
     {
+        var group = app.MapGroup("/tenancy");
         group.MapTenants();
-        return group;
+        return app;
     }
 }
