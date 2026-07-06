@@ -1,5 +1,5 @@
 using Iedora.Auth.Data;
-using Iedora.Auth.Outbox;
+using Iedora.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

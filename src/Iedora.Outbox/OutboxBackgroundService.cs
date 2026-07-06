@@ -1,11 +1,14 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Iedora.Auth.Outbox;
+namespace Iedora.Outbox;
 
 /// <summary>
 /// Polls the outbox and dispatches pending messages. Single-instance dispatcher — fine for one
 /// host; for multiple replicas add <c>FOR UPDATE SKIP LOCKED</c> or a leader so a message isn't
-/// sent twice. Uses a TimeProvider-driven timer that waits BEFORE the first tick (so tests that
+/// handled twice. Uses a TimeProvider-driven timer that waits BEFORE the first tick (so tests that
 /// set a long interval never dispatch behind their backs).
 /// </summary>
 public sealed class OutboxBackgroundService(

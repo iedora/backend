@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Iedora.Outbox\Iedora.Outbox.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- The EF Core model (Identity + sessions) + migrations, shared by the auth API and the
          migration worker. Owns the Npgsql provider choice; Design enables `dotnet ef`. -->
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />

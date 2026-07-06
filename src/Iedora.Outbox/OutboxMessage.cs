@@ -1,10 +1,11 @@
-namespace Iedora.Auth.Data;
+namespace Iedora.Outbox;
 
 /// <summary>
 /// A pending side effect (e.g. an email) persisted in the SAME transaction as the domain change,
 /// so it survives a crash between commit and the effect running. A background dispatcher polls
-/// unprocessed rows, performs the effect, and stamps <see cref="ProcessedAt"/>; failures bump
-/// <see cref="Attempts"/> and push <see cref="NextAttemptAt"/> out (backoff) until a cap.
+/// unprocessed rows, routes each to its <see cref="IOutboxHandler"/> by <see cref="Type"/>, and
+/// stamps <see cref="ProcessedAt"/>; failures bump <see cref="Attempts"/> and push
+/// <see cref="NextAttemptAt"/> out (backoff) until a cap.
 /// </summary>
 public sealed class OutboxMessage
 {

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Iedora.Outbox</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Reusable transactional-outbox infrastructure: an EF entity + a background dispatcher.
+         DbContext-agnostic; consuming services register it with AddOutbox<TContext>() and
+         supply IOutboxHandler implementations. No message broker. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+  </ItemGroup>
+
+</Project>

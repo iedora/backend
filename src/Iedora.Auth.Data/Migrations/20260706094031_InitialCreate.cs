@@ -54,6 +54,24 @@ namespace Iedora.Auth.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "outbox",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Type = table.Column<string>(type: "text", nullable: false),
+                    Payload = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ProcessedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    Attempts = table.Column<int>(type: "integer", nullable: false),
+                    NextAttemptAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    LastError = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_outbox", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
@@ -225,6 +243,12 @@ namespace Iedora.Auth.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_outbox_CreatedAt",
+                table: "outbox",
+                column: "CreatedAt",
+                filter: "\"ProcessedAt\" IS NULL");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_sessions_FamilyId",
                 table: "sessions",
                 column: "FamilyId");
@@ -259,6 +283,9 @@ namespace Iedora.Auth.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "outbox");
 
             migrationBuilder.DropTable(
                 name: "sessions");

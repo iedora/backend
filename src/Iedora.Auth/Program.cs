@@ -11,9 +11,9 @@ using Iedora.Auth.Features.Register;
 using Iedora.Auth.Features.ResetPassword;
 using Iedora.Auth.Features.WhoAmI;
 using Iedora.Auth.Observability;
-using Iedora.Auth.Outbox;
 using Iedora.Auth.Security;
 using Iedora.Auth.Sessions;
+using Iedora.Outbox;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Hosting;
@@ -58,8 +58,8 @@ builder.Services.Configure<PasswordResetOptions>(builder.Configuration.GetSectio
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.Configure<OutboxOptions>(builder.Configuration.GetSection("Outbox"));
 builder.Services.AddSingleton<IEmailSender, MailKitEmailSender>();
-builder.Services.AddScoped<OutboxProcessor>();
-builder.Services.AddHostedService<OutboxBackgroundService>();
+builder.Services.AddOutbox<AuthDbContext>();
+builder.Services.AddScoped<IOutboxHandler, PasswordResetEmailHandler>();
 
 // ES256 JWT issuer/validator, DI-managed so it picks up TimeProvider. JwtBearer is configured
 // from the same instance (deferred to post-build so DI is available).
