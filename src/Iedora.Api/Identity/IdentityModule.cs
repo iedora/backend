@@ -1,5 +1,6 @@
 using Iedora.Api.Identity;
 using Iedora.Api.Identity.Contracts;
+using Iedora.Api.Features.Account;
 using Iedora.Api.Features.ChangePassword;
 using Iedora.Api.Features.ForgotPassword;
 using Iedora.Api.Features.Jwks;
@@ -85,6 +86,7 @@ public static class IdentityModule
         group.MapForgotPassword();
         group.MapResetPassword();
         group.MapWhoAmI();
+        group.MapAccountSessions();
         group.MapJwks();
         group.MapCommandStatus<IdentityDbContext>(); // GET /auth/commands/{id}
         return app;

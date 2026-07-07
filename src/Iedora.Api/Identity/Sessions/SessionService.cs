@@ -133,6 +133,27 @@ public sealed class SessionService(IdentityDbContext db, TimeProvider clock, IOp
             .ExecuteUpdateAsync(u => u.SetProperty(s => s.RevokedAt, (DateTimeOffset?)now), ct);
     }
 
+    /// <summary>The user's sessions, newest first — the device-history view. Includes revoked +
+    /// expired rows (the caller derives "current" from <see cref="Session.IsLive"/>). Read-only;
+    /// the secret token hash never leaves the server.</summary>
+    public Task<List<Session>> ListForUserAsync(Guid userId, int limit, CancellationToken ct) =>
+        db.Sessions.AsNoTracking()
+            .Where(s => s.UserId == userId)
+            .OrderByDescending(s => s.IssuedAt)
+            .Take(limit)
+            .ToListAsync(ct);
+
+    /// <summary>Revoke one device (family), scoped to its owner so a user can only sign out their
+    /// OWN devices. Returns true if a live session was revoked (false ⇒ unknown/already dead).</summary>
+    public async Task<bool> RevokeFamilyForUserAsync(Guid userId, Guid familyId, CancellationToken ct)
+    {
+        var now = clock.GetUtcNow();
+        var revoked = await db.Sessions
+            .Where(s => s.UserId == userId && s.FamilyId == familyId && s.RevokedAt == null)
+            .ExecuteUpdateAsync(u => u.SetProperty(s => s.RevokedAt, (DateTimeOffset?)now), ct);
+        return revoked > 0;
+    }
+
     /// <summary>Revoke every live session for a user, optionally keeping one family alive
     /// (e.g. the current device after a password change). Pass null to revoke all.</summary>
     public Task<int> RevokeAllForUserAsync(Guid userId, Guid? exceptFamilyId, CancellationToken ct)

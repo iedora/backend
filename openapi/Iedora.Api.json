@@ -297,6 +297,83 @@
         }
       }
     },
+    "/auth/sessions": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "List the signed-in user's sessions (their devices, full history).",
+        "operationId": "ListSessions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sessions/{family}/revoke": {
+      "post": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Sign out one of the signed-in user's devices.",
+        "operationId": "RevokeSession",
+        "parameters": [
+          {
+            "name": "family",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/auth/sessions/revoke-others": {
+      "post": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Sign out every other device of the signed-in user (keep this one).",
+        "operationId": "RevokeOtherSessions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/.well-known/jwks.json": {
       "get": {
         "tags": [
@@ -861,6 +938,86 @@
             "maxLength": 128,
             "minLength": 8,
             "type": "string"
+          }
+        }
+      },
+      "SessionsResponse": {
+        "required": [
+          "sessions"
+        ],
+        "type": "object",
+        "properties": {
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionView"
+            }
+          }
+        }
+      },
+      "SessionView": {
+        "required": [
+          "id",
+          "familyId",
+          "tenantId",
+          "ip",
+          "userAgent",
+          "issuedAt",
+          "expiresAt",
+          "absoluteExpiresAt",
+          "revokedAt",
+          "current"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "familyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "ip": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "userAgent": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "issuedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "absoluteExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revokedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "current": {
+            "type": "boolean"
           }
         }
       },
