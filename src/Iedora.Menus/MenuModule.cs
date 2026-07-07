@@ -29,6 +29,8 @@ public static class MenuModule
         pub.MapTracking();   // GET /public/track/{slug}, POST /public/track/{slug}/session
 
         var api = app.MapGroup("/api").RequireAuthorization();
+        api.MapGroup("/dashboard").MapDashboard(); // tenant-scoped analytics (reads over the caller's tenant)
+
         var restaurant = api.MapGroup("/restaurants/{slug}");
         restaurant.MapRestaurantReads();  // GET /api/restaurants/{slug}[/tree]
         restaurant.MapRestaurantWrites(); // PATCH identity, rename slug, complete-onboarding, DELETE
