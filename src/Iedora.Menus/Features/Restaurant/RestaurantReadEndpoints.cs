@@ -15,7 +15,12 @@ public sealed record RestaurantDetail(
     Guid Id, Guid TenantId, string Name, string Slug, string? Description, LocalizedText? DescriptionI18n,
     string? LogoUrl, string? BannerUrl, Theme? Theme, string DefaultLanguage,
     IReadOnlyList<string> SupportedLanguages, string DefaultCurrency,
-    DateTimeOffset? OnboardingCompletedAt, DateTimeOffset UpdatedAt);
+    DateTimeOffset? OnboardingCompletedAt, DateTimeOffset UpdatedAt)
+{
+    public static RestaurantDetail From(Restaurant r) => new(
+        r.Id, r.TenantId, r.Name, r.Slug, r.Description, r.DescriptionI18n, r.LogoUrl, r.BannerUrl,
+        r.Theme, r.DefaultLanguage, r.SupportedLanguages, r.DefaultCurrency, r.OnboardingCompletedAt, r.UpdatedAt);
+}
 
 public sealed record RestaurantOverview(RestaurantDetail Restaurant, IReadOnlyList<MenuSummary> Menus);
 
@@ -67,7 +72,7 @@ public static class RestaurantReadEndpoints
                 m.Id, m.Name, m.Active, m.Position, m.UpdatedAt,
                 categoryCounts.GetValueOrDefault(m.Id), dishCounts.GetValueOrDefault(m.Id))).ToList();
 
-            return TypedResults.Ok(new RestaurantOverview(Detail(rest), summaries));
+            return TypedResults.Ok(new RestaurantOverview(RestaurantDetail.From(rest), summaries));
         })
         .WithName("RestaurantOverview")
         .WithSummary("The restaurant plus a per-menu summary with counts (owner/staff).");
@@ -86,10 +91,6 @@ public static class RestaurantReadEndpoints
         .WithName("MenuTree")
         .WithSummary("The full raw content tree — i18n intact, incl. inactive/unavailable (builder).");
     }
-
-    private static RestaurantDetail Detail(Restaurant r) => new(
-        r.Id, r.TenantId, r.Name, r.Slug, r.Description, r.DescriptionI18n, r.LogoUrl, r.BannerUrl,
-        r.Theme, r.DefaultLanguage, r.SupportedLanguages, r.DefaultCurrency, r.OnboardingCompletedAt, r.UpdatedAt);
 
     // Three flat queries (no N+1) → nested tree, ordered by (position, created_at) at every level.
     // Nothing is filtered: the builder sees inactive menus and unavailable items too.

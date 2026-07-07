@@ -13,13 +13,22 @@ namespace Iedora.Menus;
 /// </summary>
 internal static class RestaurantAccess
 {
+    /// <summary>Load a restaurant for a READ (no change tracking), authorized for the caller.</summary>
     public static async Task<Restaurant?> LoadAsync(
         MenuDbContext db, ClaimsPrincipal caller, string slug, CancellationToken ct)
     {
         var restaurant = await db.Restaurants.AsNoTracking().FirstOrDefaultAsync(r => r.Slug == slug, ct);
-        if (restaurant is null) return null;
-
-        var owns = caller.TenantId() is { } tenant && tenant == restaurant.TenantId;
-        return owns || caller.IsInRole(Roles.Admin) ? restaurant : null;
+        return restaurant is not null && CanAccess(caller, restaurant) ? restaurant : null;
     }
+
+    /// <summary>Load a restaurant TRACKED for a write (mutate + SaveChanges), authorized for the caller.</summary>
+    public static async Task<Restaurant?> LoadTrackedAsync(
+        MenuDbContext db, ClaimsPrincipal caller, string slug, CancellationToken ct)
+    {
+        var restaurant = await db.Restaurants.FirstOrDefaultAsync(r => r.Slug == slug, ct);
+        return restaurant is not null && CanAccess(caller, restaurant) ? restaurant : null;
+    }
+
+    public static bool CanAccess(ClaimsPrincipal caller, Restaurant restaurant) =>
+        (caller.TenantId() is { } tenant && tenant == restaurant.TenantId) || caller.IsInRole(Roles.Admin);
 }
