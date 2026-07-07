@@ -19,6 +19,7 @@
     <ProjectReference Include="..\..\framework\Inbox\Framework.Inbox\Framework.Inbox.csproj" />
     <ProjectReference Include="..\..\framework\Commands\Framework.Commands\Framework.Commands.csproj" />
     <ProjectReference Include="..\..\framework\Web\Framework.Web\Framework.Web.csproj" />
+    <ProjectReference Include="..\..\framework\Email\Framework.Email\Framework.Email.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,7 +27,6 @@
     <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="ErrorOr" />
-    <PackageReference Include="MailKit" />
     <!-- The module now owns its EF model + migrations; Design enables `dotnet ef`. -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>

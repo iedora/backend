@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Framework.Email</RootNamespace>
+
+    <!-- Standalone, generic — structured like a NuGet library (packable). -->
+    <IsPackable>true</IsPackable>
+    <PackageId>Framework.Email</PackageId>
+    <Authors>iedora</Authors>
+    <Description>Reusable SMTP email transport: an IEmailSender abstraction + a MailKit implementation bound from an "Smtp" config section. Transport only — pair it with a transactional outbox for retries.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MailKit" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+  </ItemGroup>
+
+</Project>
