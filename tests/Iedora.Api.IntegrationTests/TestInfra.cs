@@ -34,16 +34,22 @@ public abstract class IntegrationTestBase
     protected Task<HttpResponseMessage> Register(string email, string password, string? name = "User") =>
         Client.PostAsJsonAsync("/auth/register", new { email, password, displayName = name });
 
-    /// <summary>Create an account end-to-end: register (202) → dispatch the Identity handler → assert
-    /// the account landed. Use this wherever a test just needs an existing account.</summary>
-    protected async Task RegisterAccount(string email, string password, string? name = "User")
+    /// <summary>Drive an accepted (202) Identity write end-to-end: dispatch the handler, poll the
+    /// status, assert success, and return the status payload.</summary>
+    protected async Task<CommandStatusPayload> AwaitIdentityCommandAsync(HttpResponseMessage accept, string? bearer = null)
     {
-        var accept = await Register(email, password, name);
         Assert.AreEqual(System.Net.HttpStatusCode.Accepted, accept.StatusCode);
         var accepted = (await accept.Content.ReadFromJsonAsync<CommandAcceptedPayload>())!;
-        await TestHost.DispatchOutboxAsync(); // Identity outbox → RegisterUserHandler
-        Assert.AreEqual("Succeeded", (await GetCommandStatus(accepted.statusUrl)).status);
+        await TestHost.DispatchOutboxAsync(); // Identity outbox → the command's handler
+        var status = await GetCommandStatus(accepted.statusUrl, bearer);
+        Assert.AreEqual("Succeeded", status.status);
+        return status;
     }
+
+    /// <summary>Create an account end-to-end: register (202) → dispatch the Identity handler → assert
+    /// the account landed. Use this wherever a test just needs an existing account.</summary>
+    protected async Task RegisterAccount(string email, string password, string? name = "User") =>
+        await AwaitIdentityCommandAsync(await Register(email, password, name));
 
     /// <summary>Log in and assert success; returns the token body + the raw refresh cookie.</summary>
     protected async Task<(TokenPayload body, string refresh)> Login(string email, string password)

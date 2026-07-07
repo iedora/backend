@@ -165,7 +165,7 @@
         "tags": [
           "Iedora.Api"
         ],
-        "summary": "Change the signed-in user's password; revokes the user's other sessions.",
+        "summary": "Change the signed-in user's password (async — poll the status URL); revokes other sessions.",
         "operationId": "ChangePassword",
         "requestBody": {
           "content": {
@@ -178,8 +178,15 @@
           "required": true
         },
         "responses": {
-          "204": {
-            "description": "No Content"
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandAccepted"
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad Request",
@@ -233,7 +240,7 @@
         "tags": [
           "Iedora.Api"
         ],
-        "summary": "Set a new password using the emailed reset token.",
+        "summary": "Set a new password using the emailed reset token (async — poll the status URL).",
         "operationId": "ResetPassword",
         "requestBody": {
           "content": {
@@ -246,8 +253,15 @@
           "required": true
         },
         "responses": {
-          "204": {
-            "description": "No Content"
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandAccepted"
+                }
+              }
+            }
           },
           "400": {
             "description": "Bad Request",

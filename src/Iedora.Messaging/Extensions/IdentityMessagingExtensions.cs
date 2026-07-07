@@ -44,8 +44,10 @@ public static class IdentityMessagingExtensions
         services.AddInbox<IdentityDbContext>();
 
         services.AddScoped<IOutboxHandler, PasswordResetEmailHandler>();
-        services.AddScoped<IOutboxHandler, RegisterUserHandler>();   // async write: create account
-        services.AddScoped<IOutboxHandler, CreateUserRelay>();       // transfer saga: → Identity inbox
+        services.AddScoped<IOutboxHandler, RegisterUserHandler>();     // async write: create account
+        services.AddScoped<IOutboxHandler, ChangePasswordHandler>();   // async write: change password
+        services.AddScoped<IOutboxHandler, ResetPasswordHandler>();    // async write: reset password
+        services.AddScoped<IOutboxHandler, CreateUserRelay>();         // transfer saga: → Identity inbox
         services.AddScoped<IInboxHandler, CreateUserInboxHandler>(); //   creates the new owner user
         return services;
     }
