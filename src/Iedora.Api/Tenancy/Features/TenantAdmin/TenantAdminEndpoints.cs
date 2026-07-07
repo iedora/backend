@@ -51,8 +51,8 @@ public static class TenantAdminEndpoints
             .WithSummary("Get a tenant with its owner (admin).");
 
         // Admin provisions a tenant owned by an EXISTING user (distinct from the user-facing
-        // POST /tenancy/tenants, which owns it by the caller). The owner must be a real user —
-        // verified through IIdentityApi, since Identity owns users.
+        // POST /tenancy/tenants, which owns it by the caller). Validate synchronously that the owner
+        // is a real user (Identity owns users), then submit the SAME create-tenant command → 202.
         admin.MapPost("/", async (
                 AdminCreateTenantRequest req, TenancyDbContext db, IIdentityApi identity,
                 TimeProvider clock, CancellationToken ct) =>
@@ -60,23 +60,14 @@ public static class TenantAdminEndpoints
                 var owner = (await identity.GetUsersAsync([req.OwnerUserId], ct)).FirstOrDefault();
                 if (owner is null) return ProblemResults.From(TenancyErrors.UnknownOwner);
 
-                var now = clock.GetUtcNow();
-                var tenant = new Tenant { Id = Guid.CreateVersion7(), Name = req.Name, CreatedAt = now };
-                db.Tenants.Add(tenant);
-                db.Memberships.Add(new Membership
-                {
-                    UserId = req.OwnerUserId,
-                    TenantId = tenant.Id,
-                    Role = MembershipRole.Owner,
-                    CreatedAt = now,
-                });
-                await db.SaveChangesAsync(ct); // tenant + owner membership atomically
-
-                return TypedResults.Ok(new CreateTenantResponse(tenant.Id, tenant.Name));
+                var commandId = Guid.CreateVersion7();
+                db.SubmitCommand(commandId, CreateTenantCommand.Type, new CreateTenantCommand(req.Name, req.OwnerUserId), clock);
+                await db.SaveChangesAsync(ct);
+                return CommandEndpoints.AcceptedCommand(commandId, "/tenancy");
             })
             .WithName("AdminCreateTenant")
-            .WithSummary("Provision a tenant owned by an existing user (admin).")
-            .Produces<CreateTenantResponse>(StatusCodes.Status200OK)
+            .WithSummary("Provision a tenant owned by an existing user (admin, async — poll the status URL).")
+            .Produces<CommandAccepted>(StatusCodes.Status202Accepted)
             .ProducesProblem(StatusCodes.Status400BadRequest);
 
         // Transfer a tenant to a BRAND-NEW owner — an outbox→inbox SAGA (the tenant's owner user lives
