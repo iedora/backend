@@ -46,6 +46,30 @@
         }
       }
     },
+    "/auth/token": {
+      "post": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Client-credentials grant: HTTP Basic clientId:secret → an internal service token.",
+        "operationId": "Token",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceTokenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/auth/login": {
       "post": {
         "tags": [
@@ -937,6 +961,26 @@
           "password": {
             "maxLength": 128,
             "minLength": 8,
+            "type": "string"
+          }
+        }
+      },
+      "ServiceTokenResponse": {
+        "required": [
+          "accessToken",
+          "expiresAt",
+          "tokenType"
+        ],
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tokenType": {
             "type": "string"
           }
         }
