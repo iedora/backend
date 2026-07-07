@@ -1,4 +1,5 @@
 using Iedora.Identity;
+using Iedora.Notifications;
 using Iedora.Tenancy;
 
 // The single app-wide background worker. It composes each feature module's outbox-dispatch side —
@@ -9,5 +10,6 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.AddServiceDefaults();
 builder.AddIdentityOutboxDispatch();
 builder.AddTenancyMessaging();
+builder.AddNotificationsMessaging();
 
 builder.Build().Run();

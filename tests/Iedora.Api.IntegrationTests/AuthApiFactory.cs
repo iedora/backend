@@ -1,10 +1,12 @@
 using Framework.Email;
 using Framework.Outbox;
 using Iedora.Identity;
+using Iedora.Notifications;
 using Iedora.Tenancy;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Iedora.Api.IntegrationTests;
@@ -27,8 +29,13 @@ public sealed class AuthApiFactory(string connectionString) : WebApplicationFact
         builder.ConfigureTestServices(services =>
         {
             services.Configure<OutboxOptions>(o => { o.PollSeconds = 3600; o.WakeOnNotify = false; }); // tests dispatch directly
-            services.AddIdentityMessagingHandlers(); // Identity outbox + inbox + handlers (email, create-user saga)
+            services.AddIdentityMessagingHandlers(); // Identity outbox + inbox + handlers (create-user saga)
             services.AddTenancyHandlers();           // Tenancy outbox + inbox + handlers (create-tenant, transfer saga)
+            // The Notifications service (its own inbox + SMTP delivery) isn't referenced by the API,
+            // so register its DbContext + handlers here to drive email end-to-end in-process.
+            services.AddDbContext<NotificationsDbContext>(o => o.UseNpgsql(connectionString,
+                p => p.MigrationsHistoryTable("__EFMigrationsHistory", NotificationsDbContext.Schema)));
+            services.AddNotificationsHandlers();
             services.AddSingleton<FakeEmailSender>();
             services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<FakeEmailSender>()); // override the real sender
         });

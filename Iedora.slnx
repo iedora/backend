@@ -24,6 +24,8 @@
     <Project Path="src/Iedora.Tenancy.Contracts/Iedora.Tenancy.Contracts.csproj" />
     <Project Path="src/Iedora.Identity/Iedora.Identity.csproj" />
     <Project Path="src/Iedora.Menus/Iedora.Menus.csproj" />
+    <Project Path="src/Iedora.Notifications.Contracts/Iedora.Notifications.Contracts.csproj" />
+    <Project Path="src/Iedora.Notifications/Iedora.Notifications.csproj" />
     <Project Path="src/Iedora.Api/Iedora.Api.csproj" />
     <Project Path="src/Iedora.MigrationService/Iedora.MigrationService.csproj" />
     <Project Path="src/Iedora.Tenancy/Iedora.Tenancy.csproj" />
