@@ -113,7 +113,7 @@ public sealed class MenuTrackingTests : IntegrationTestBase
         Assert.AreEqual(HttpStatusCode.NoContent, resp.StatusCode);
 
         var duration = await Query(db => db.MenuSessions.Where(s => s.RestaurantId == restId).Select(s => s.DurationSeconds).SingleAsync());
-        Assert.AreEqual(3600, duration); // clamped
+        Assert.AreEqual((short)3600, duration); // clamped
     }
 
     [TestMethod]

@@ -61,8 +61,7 @@ public static class TrackingEndpoints
                     if (body?.DurationSeconds is > 0)
                         await ViewTracking.RecordSessionAsync(db, rest, body.DurationSeconds.Value, now, ct);
 
-                    var visitor = http.Request.Cookies[VisitorCookie];
-                    if (!string.IsNullOrEmpty(visitor) && body?.Items is { Count: > 0 })
+                    if (Guid.TryParse(http.Request.Cookies[VisitorCookie], out var visitor) && body?.Items is { Count: > 0 })
                     {
                         var ids = body.Items
                             .Select(s => Guid.TryParse(s, out var g) ? g : (Guid?)null)
@@ -84,13 +83,13 @@ public static class TrackingEndpoints
     }
 
     // A stable per-visitor id (httpOnly cookie), minted on the first view and reused thereafter.
-    private static string EnsureVisitor(HttpContext http)
+    // The cookie carries the canonical GUID text; a tampered/legacy value just mints a fresh id.
+    private static Guid EnsureVisitor(HttpContext http)
     {
-        var existing = http.Request.Cookies[VisitorCookie];
-        if (!string.IsNullOrEmpty(existing)) return existing;
+        if (Guid.TryParse(http.Request.Cookies[VisitorCookie], out var existing)) return existing;
 
-        var id = Guid.NewGuid().ToString();
-        http.Response.Cookies.Append(VisitorCookie, id, new CookieOptions
+        var id = Guid.NewGuid();
+        http.Response.Cookies.Append(VisitorCookie, id.ToString(), new CookieOptions
         {
             Path = "/", MaxAge = TimeSpan.FromDays(365), HttpOnly = true, SameSite = SameSiteMode.Lax,
         });

@@ -5,19 +5,26 @@ namespace Iedora.Menus;
 // Atomic dedup-gated view/item counters + raw session durations (ported from data/views.ts). The
 // dedup insert wins at most once per bucket and only that winner drives the counter increment — one
 // statement, idempotent under retries. Raw SQL because EF can't express INSERT…ON CONFLICT upserts.
+// Buckets are native types (date / hour-truncated timestamptz), passed as typed params.
 internal static class ViewTracking
 {
-    public static string Day(DateTimeOffset t) => t.UtcDateTime.ToString("yyyy-MM-dd");
-    private static string HourBucket(DateTimeOffset t) => t.UtcDateTime.ToString("yyyy-MM-dd-HH");
+    public static DateOnly Day(DateTimeOffset t) => DateOnly.FromDateTime(t.UtcDateTime);
+
+    // The UTC hour a view lands in — the dedup granularity for menu views.
+    private static DateTimeOffset HourStart(DateTimeOffset t)
+    {
+        var u = t.UtcDateTime;
+        return new DateTimeOffset(u.Year, u.Month, u.Day, u.Hour, 0, 0, TimeSpan.Zero);
+    }
 
     /// <summary>Count one menu view (deduped per visitor/restaurant/hour).</summary>
     public static Task RecordViewAsync(
-        MenuDbContext db, Restaurant r, string visitorId, string language, DateTimeOffset now, CancellationToken ct)
+        MenuDbContext db, Restaurant r, Guid visitorId, string language, DateTimeOffset now, CancellationToken ct)
     {
-        var (hour, day) = (HourBucket(now), Day(now));
+        var (hour, day) = (HourStart(now), Day(now));
         return db.Database.ExecuteSqlInterpolatedAsync($"""
             WITH won AS (
-              INSERT INTO menu.view_seen ("VisitorId", "RestaurantId", "HourBucket")
+              INSERT INTO menu.view_seen ("VisitorId", "RestaurantId", "HourStart")
               VALUES ({visitorId}, {r.Id}, {hour}) ON CONFLICT DO NOTHING
               RETURNING 1)
             INSERT INTO menu.daily_view ("RestaurantId", "TenantId", "Day", "Language", "Count")
@@ -28,7 +35,7 @@ internal static class ViewTracking
 
     /// <summary>Count a batch of item views (deduped per visitor/item/day, restaurant-scoped).</summary>
     public static Task RecordItemViewsAsync(
-        MenuDbContext db, Restaurant r, Guid[] itemIds, string visitorId, DateTimeOffset now, CancellationToken ct)
+        MenuDbContext db, Restaurant r, Guid[] itemIds, Guid visitorId, DateTimeOffset now, CancellationToken ct)
     {
         var day = Day(now);
         return db.Database.ExecuteSqlInterpolatedAsync($"""
@@ -50,7 +57,7 @@ internal static class ViewTracking
     public static async Task RecordSessionAsync(
         MenuDbContext db, Restaurant r, double durationSeconds, DateTimeOffset now, CancellationToken ct)
     {
-        var clamped = Math.Clamp((int)Math.Round(durationSeconds), 1, 3600);
+        var clamped = (short)Math.Clamp((int)Math.Round(durationSeconds), 1, 3600);
         db.MenuSessions.Add(new MenuSession
         {
             Id = Guid.CreateVersion7(), RestaurantId = r.Id, TenantId = r.TenantId,

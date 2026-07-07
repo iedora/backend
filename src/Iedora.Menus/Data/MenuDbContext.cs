@@ -113,12 +113,13 @@ public sealed class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbC
             qr.HasOne<Restaurant>().WithMany().HasForeignKey(q => q.RestaurantId).OnDelete(DeleteBehavior.SetNull);
         });
 
+        // The two "seen" tables are dedup markers only (no payload, no audit column): a row's mere
+        // existence gates the counter increment. They grow one row per visitor/bucket; a retention
+        // prune (+ its index) can be added later — until then, no extra index burdens the write path.
         builder.Entity<ViewSeen>(v =>
         {
             v.ToTable("view_seen");
-            v.HasKey(x => new { x.VisitorId, x.RestaurantId, x.HourBucket });
-            v.HasIndex(x => x.SeenAt);
-            v.Property(x => x.SeenAt).HasDefaultValueSql("now()");
+            v.HasKey(x => new { x.VisitorId, x.RestaurantId, x.HourStart });
             v.HasOne<Restaurant>().WithMany().HasForeignKey(x => x.RestaurantId).OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -134,8 +135,6 @@ public sealed class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbC
         {
             v.ToTable("item_view_seen");
             v.HasKey(x => new { x.VisitorId, x.ItemId, x.Day });
-            v.HasIndex(x => x.SeenAt);
-            v.Property(x => x.SeenAt).HasDefaultValueSql("now()");
             v.HasOne<Item>().WithMany().HasForeignKey(x => x.ItemId).OnDelete(DeleteBehavior.Cascade);
         });
 
