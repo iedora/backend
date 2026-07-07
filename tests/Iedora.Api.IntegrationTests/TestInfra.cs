@@ -96,6 +96,17 @@ public abstract class IntegrationTestBase
     protected Task<HttpResponseMessage> Get(string path, string? bearer = null) =>
         Send(HttpMethod.Get, path, bearer);
 
+    protected Task<HttpResponseMessage> Delete(string path, string? bearer = null) =>
+        Send(HttpMethod.Delete, path, bearer);
+
+    /// <summary>Send a JSON body with an arbitrary verb (PATCH/PUT/POST) and optional bearer.</summary>
+    protected Task<HttpResponseMessage> SendJson(HttpMethod method, string path, object body, string? bearer = null)
+    {
+        var req = new HttpRequestMessage(method, path) { Content = JsonContent.Create(body) };
+        if (bearer is not null) req.Headers.Authorization = new("Bearer", bearer);
+        return Client.SendAsync(req);
+    }
+
     protected Task<HttpResponseMessage> PostBearer(string path, string? bearer) =>
         Send(HttpMethod.Post, path, bearer);
 

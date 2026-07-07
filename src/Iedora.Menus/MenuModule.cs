@@ -27,7 +27,10 @@ public static class MenuModule
         pub.MapPublicMenu(); // GET /public/r/{slug}
 
         var api = app.MapGroup("/api").RequireAuthorization();
-        api.MapGroup("/restaurants/{slug}").MapRestaurantReads(); // GET /api/restaurants/{slug}[/tree]
+        var restaurant = api.MapGroup("/restaurants/{slug}");
+        restaurant.MapRestaurantReads();  // GET /api/restaurants/{slug}[/tree]
+        restaurant.MapMenuBuilder();      // menu create/update/delete
+        restaurant.MapCategoryBuilder();  // category create/update/delete + reorder
         return app;
     }
 }

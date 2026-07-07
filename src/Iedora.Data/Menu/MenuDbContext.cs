@@ -105,7 +105,7 @@ internal static class JsonbPropertyExtensions
 {
     public static Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder<T> HasJsonb<T>(
         this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder<T> property, JsonSerializerOptions json)
-        where T : class
+        where T : class?
     {
         var converter = new ValueConverter<T, string>(
             v => JsonSerializer.Serialize(v, json),
