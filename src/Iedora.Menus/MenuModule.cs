@@ -29,6 +29,7 @@ public static class MenuModule
         var api = app.MapGroup("/api").RequireAuthorization();
         var restaurant = api.MapGroup("/restaurants/{slug}");
         restaurant.MapRestaurantReads();  // GET /api/restaurants/{slug}[/tree]
+        restaurant.MapRestaurantWrites(); // PATCH identity, rename slug, complete-onboarding, DELETE
         restaurant.MapMenuBuilder();      // menu create/update/delete
         restaurant.MapCategoryBuilder();  // category create/update/delete + reorder
         restaurant.MapItemBuilder();      // item create/update/delete + reorder

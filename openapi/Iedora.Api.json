@@ -933,6 +933,97 @@
             "description": "Not Found"
           }
         }
+      },
+      "patch": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Update a restaurant's identity (owner/staff).",
+        "operationId": "UpdateRestaurant",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIdentityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Delete a restaurant and all its content (owner/staff).",
+        "operationId": "DeleteRestaurant",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/restaurants/{slug}/tree": {
@@ -965,6 +1056,104 @@
           },
           "404": {
             "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/restaurants/{slug}/slug": {
+      "post": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Rename a restaurant's public slug (owner/staff).",
+        "operationId": "RenameSlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenameSlugRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/restaurants/{slug}/complete-onboarding": {
+      "post": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Mark a restaurant's onboarding complete (owner/staff).",
+        "operationId": "CompleteOnboarding",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -2309,6 +2498,17 @@
           }
         }
       },
+      "RenameSlugRequest": {
+        "required": [
+          "slug"
+        ],
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          }
+        }
+      },
       "ReorderRequest": {
         "required": [
           "orderedIds"
@@ -2593,6 +2793,41 @@
         }
       },
       "Theme": {
+        "required": [
+          "primaryColor",
+          "secondaryColor",
+          "font",
+          "layout"
+        ],
+        "type": "object",
+        "properties": {
+          "primaryColor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "secondaryColor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "font": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "layout": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ThemeInput": {
         "required": [
           "primaryColor",
           "secondaryColor",
@@ -2966,6 +3201,65 @@
             "additionalProperties": {
               "type": "string"
             }
+          }
+        }
+      },
+      "UpdateIdentityRequest": {
+        "required": [
+          "name",
+          "description",
+          "descriptionI18n",
+          "theme",
+          "defaultLanguage",
+          "supportedLanguages",
+          "defaultCurrency"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "descriptionI18n": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "theme": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ThemeInput"
+              }
+            ]
+          },
+          "defaultLanguage": {
+            "type": "string"
+          },
+          "supportedLanguages": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "defaultCurrency": {
+            "type": "string"
           }
         }
       },
