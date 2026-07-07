@@ -20,6 +20,11 @@ public sealed class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbC
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Item> Items => Set<Item>();
     public DbSet<QrCode> QrCodes => Set<QrCode>();
+    public DbSet<ViewSeen> ViewSeen => Set<ViewSeen>();
+    public DbSet<DailyView> DailyViews => Set<DailyView>();
+    public DbSet<ItemViewSeen> ItemViewSeen => Set<ItemViewSeen>();
+    public DbSet<ItemView> ItemViews => Set<ItemView>();
+    public DbSet<MenuSession> MenuSessions => Set<MenuSession>();
 
     // camelCase JSON so the jsonb keys match the Bun service's shape (labelI18n, priceCents, …).
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -106,6 +111,51 @@ public sealed class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbC
             qr.Property(q => q.CreatedAt).HasDefaultValueSql("now()");
             // A sticker outlives the restaurant it was bound to (reusable): SET NULL, not cascade.
             qr.HasOne<Restaurant>().WithMany().HasForeignKey(q => q.RestaurantId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<ViewSeen>(v =>
+        {
+            v.ToTable("view_seen");
+            v.HasKey(x => new { x.VisitorId, x.RestaurantId, x.HourBucket });
+            v.HasIndex(x => x.SeenAt);
+            v.Property(x => x.SeenAt).HasDefaultValueSql("now()");
+            v.HasOne<Restaurant>().WithMany().HasForeignKey(x => x.RestaurantId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<DailyView>(d =>
+        {
+            d.ToTable("daily_view");
+            d.HasKey(x => new { x.RestaurantId, x.Day, x.Language });
+            d.HasIndex(x => new { x.TenantId, x.Day });
+            d.HasOne<Restaurant>().WithMany().HasForeignKey(x => x.RestaurantId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ItemViewSeen>(v =>
+        {
+            v.ToTable("item_view_seen");
+            v.HasKey(x => new { x.VisitorId, x.ItemId, x.Day });
+            v.HasIndex(x => x.SeenAt);
+            v.Property(x => x.SeenAt).HasDefaultValueSql("now()");
+            v.HasOne<Item>().WithMany().HasForeignKey(x => x.ItemId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ItemView>(v =>
+        {
+            v.ToTable("item_view");
+            v.HasKey(x => new { x.ItemId, x.Day });
+            v.HasIndex(x => new { x.TenantId, x.Day });
+            v.HasOne<Restaurant>().WithMany().HasForeignKey(x => x.RestaurantId).OnDelete(DeleteBehavior.Cascade);
+            v.HasOne<Item>().WithMany().HasForeignKey(x => x.ItemId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<MenuSession>(s =>
+        {
+            s.ToTable("menu_session");
+            s.HasKey(x => x.Id);
+            s.Property(x => x.Id).HasDefaultValueSql("uuidv7()");
+            s.HasIndex(x => new { x.TenantId, x.Day });
+            s.Property(x => x.CreatedAt).HasDefaultValueSql("now()");
+            s.HasOne<Restaurant>().WithMany().HasForeignKey(x => x.RestaurantId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

@@ -942,6 +942,70 @@
         }
       }
     },
+    "/public/track/{slug}": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Count one public menu view (pixel beacon).",
+        "operationId": "TrackView",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/public/track/{slug}/session": {
+      "post": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Record a guest session's dwell time + viewed dishes.",
+        "operationId": "TrackSession",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SessionBeacon"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/restaurants/{slug}": {
       "get": {
         "tags": [
@@ -3099,6 +3163,33 @@
           },
           "tokenType": {
             "type": "string"
+          }
+        }
+      },
+      "SessionBeacon": {
+        "required": [
+          "durationSeconds",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "durationSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "items": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

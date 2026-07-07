@@ -26,6 +26,7 @@ public static class MenuModule
         var pub = app.MapGroup("/public").AllowAnonymous();
         pub.MapPublicMenu(); // GET /public/r/{slug}
         pub.MapPublicQr();   // GET /public/qr/{code}
+        pub.MapTracking();   // GET /public/track/{slug}, POST /public/track/{slug}/session
 
         var api = app.MapGroup("/api").RequireAuthorization();
         var restaurant = api.MapGroup("/restaurants/{slug}");
