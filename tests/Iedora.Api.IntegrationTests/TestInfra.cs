@@ -51,6 +51,18 @@ public abstract class IntegrationTestBase
     protected async Task RegisterAccount(string email, string password, string? name = "User") =>
         await AwaitIdentityCommandAsync(await Register(email, password, name));
 
+    /// <summary>Mint an internal service token via the client-credentials grant (the test client
+    /// configured in <c>AuthApiFactory</c>). Use as the bearer for Service-gated admin endpoints.</summary>
+    protected async Task<string> ServiceToken()
+    {
+        var req = new HttpRequestMessage(HttpMethod.Post, "/auth/token");
+        var basic = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("test-client:test-secret"));
+        req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", basic);
+        var resp = await Client.SendAsync(req);
+        Assert.AreEqual(System.Net.HttpStatusCode.OK, resp.StatusCode);
+        return (await resp.Content.ReadFromJsonAsync<ServiceTokenWire>())!.accessToken;
+    }
+
     /// <summary>Log in and assert success; returns the token body + the raw refresh cookie.</summary>
     protected async Task<(TokenPayload body, string refresh)> Login(string email, string password)
     {

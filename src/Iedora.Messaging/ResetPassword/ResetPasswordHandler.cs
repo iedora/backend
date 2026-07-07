@@ -14,5 +14,5 @@ internal sealed class ResetPasswordHandler(IdentityDbContext db, TimeProvider cl
 
     protected override Task<ErrorOr<string?>> ExecuteAsync(ResetPasswordCommand cmd, CancellationToken ct) =>
         PasswordCredential.ApplyAsync(
-            Db, Clock, cmd.UserId, cmd.PasswordHash, clearMustChangePassword: false, keepFamilyId: null, ct);
+            Db, Clock, cmd.UserId, cmd.PasswordHash, mustChangePassword: false, keepFamilyId: null, ct);
 }

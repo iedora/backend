@@ -49,7 +49,7 @@ public static class ChangePasswordEndpoint
             var passwordHash = users.PasswordHasher.HashPassword(user, req.NewPassword);
             var commandId = Guid.CreateVersion7();
             db.SubmitCommand(commandId, ChangePasswordCommand.Type,
-                new ChangePasswordCommand(userId, passwordHash, user.MustChangePassword, currentFamily), clock);
+                new ChangePasswordCommand(userId, passwordHash, currentFamily), clock);
             await db.SaveChangesAsync(ct);
 
             return CommandEndpoints.AcceptedCommand(commandId, "/auth");

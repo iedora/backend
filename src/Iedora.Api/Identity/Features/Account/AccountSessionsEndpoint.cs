@@ -13,7 +13,13 @@ namespace Iedora.Api.Features.Account;
 public sealed record SessionView(
     Guid Id, Guid FamilyId, Guid? TenantId, string? Ip, string? UserAgent,
     DateTimeOffset IssuedAt, DateTimeOffset ExpiresAt, DateTimeOffset AbsoluteExpiresAt,
-    DateTimeOffset? RevokedAt, bool Current);
+    DateTimeOffset? RevokedAt, bool Current)
+{
+    /// <summary>Project a session row to the wire view; <c>Current</c> = live at <paramref name="now"/>.</summary>
+    public static SessionView From(Session s, DateTimeOffset now) =>
+        new(s.Id, s.FamilyId, s.TenantId, s.Ip, s.UserAgent,
+            s.IssuedAt, s.ExpiresAt, s.AbsoluteExpiresAt, s.RevokedAt, s.IsLive(now));
+}
 
 public sealed record SessionsResponse(IReadOnlyList<SessionView> Sessions);
 
@@ -37,7 +43,7 @@ public static class AccountSessionsEndpoint
 
             var now = clock.GetUtcNow();
             var rows = await sessions.ListForUserAsync(userId, MaxSessions, ct);
-            return TypedResults.Ok(new SessionsResponse(rows.Select(s => Map(s, now)).ToList()));
+            return TypedResults.Ok(new SessionsResponse(rows.Select(s => SessionView.From(s, now)).ToList()));
         })
         .RequireAuthorization()
         .WithName("ListSessions")
@@ -74,8 +80,4 @@ public static class AccountSessionsEndpoint
         .WithName("RevokeOtherSessions")
         .WithSummary("Sign out every other device of the signed-in user (keep this one).");
     }
-
-    private static SessionView Map(Session s, DateTimeOffset now) =>
-        new(s.Id, s.FamilyId, s.TenantId, s.Ip, s.UserAgent,
-            s.IssuedAt, s.ExpiresAt, s.AbsoluteExpiresAt, s.RevokedAt, s.IsLive(now));
 }
