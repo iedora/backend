@@ -1006,6 +1006,77 @@
         }
       }
     },
+    "/api/dashboard/analytics": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Tenant scan analytics + content state for a range.",
+        "operationId": "DashboardAnalytics",
+        "parameters": [
+          {
+            "name": "range",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboard/views/month": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "The tenant's menu views this calendar month.",
+        "operationId": "DashboardMonthlyViews",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonthlyViewsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/restaurants/{slug}": {
       "get": {
         "tags": [
@@ -2158,6 +2229,74 @@
           }
         }
       },
+      "AnalyticsResponse": {
+        "required": [
+          "range",
+          "totalScans",
+          "todayScans",
+          "dailyBreakdown",
+          "menus",
+          "dishes",
+          "languages",
+          "topDishes",
+          "avgSessionSeconds"
+        ],
+        "type": "object",
+        "properties": {
+          "range": {
+            "type": "string"
+          },
+          "totalScans": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "todayScans": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "dailyBreakdown": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DailyPoint"
+            }
+          },
+          "menus": {
+            "$ref": "#/components/schemas/MenuStats"
+          },
+          "dishes": {
+            "$ref": "#/components/schemas/DishStats"
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "topDishes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopDish"
+            }
+          },
+          "avgSessionSeconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "BindQrRequest": {
         "required": [
           "restaurantId"
@@ -2340,6 +2479,51 @@
           }
         }
       },
+      "DailyPoint": {
+        "required": [
+          "day",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date"
+          },
+          "count": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "DishStats": {
+        "required": [
+          "total",
+          "lastAddedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastAddedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "ForgotPasswordRequest": {
         "required": [
           "email"
@@ -2518,6 +2702,31 @@
           }
         }
       },
+      "MenuStats": {
+        "required": [
+          "total",
+          "active"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "active": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "MenuSummary": {
         "required": [
           "id",
@@ -2592,6 +2801,22 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "MonthlyViewsResponse": {
+        "required": [
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "count": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -3407,6 +3632,31 @@
               "null",
               "boolean"
             ]
+          }
+        }
+      },
+      "TopDish": {
+        "required": [
+          "itemId",
+          "itemName",
+          "viewCount"
+        ],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "itemName": {
+            "type": "string"
+          },
+          "viewCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
