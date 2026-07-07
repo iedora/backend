@@ -10,16 +10,17 @@
     <IsPackable>true</IsPackable>
     <PackageId>Framework.Outbox</PackageId>
     <Authors>iedora</Authors>
-    <Description>Reusable, broker-free transactional outbox for EF Core services: stage effects in the SAME SaveChangesAsync as the domain change; a background dispatcher routes each to an IOutboxHandler with retry/backoff. Provider-agnostic (relational).</Description>
+    <Description>Reusable, broker-free transactional outbox for EF Core services: stage effects in the SAME SaveChangesAsync as the domain change; a dispatcher woken by Postgres NOTIFY (poll as fallback) routes each to an IOutboxHandler with retry/backoff, claiming via FOR UPDATE SKIP LOCKED. Postgres-targeted.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Reusable transactional-outbox infrastructure: an EF entity + a background dispatcher.
-         DbContext-agnostic; consuming services register it with AddOutbox<TContext>() and
-         supply IOutboxHandler implementations. No message broker. -->
+    <!-- Reusable transactional-outbox infrastructure: an EF entity + a NOTIFY-woken dispatcher.
+         DbContext-agnostic; consuming services register it with AddOutbox<TContext>() and supply
+         IOutboxHandler implementations. Postgres-native (SKIP LOCKED + LISTEN/NOTIFY), no broker. -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="Npgsql" />
   </ItemGroup>
 
 </Project>

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Npgsql;
 using Testcontainers.PostgreSql;
 
 namespace Framework.Outbox.Tests;
@@ -42,7 +43,10 @@ public sealed class OutboxProcessorTests
     {
         _pg = new PostgreSqlBuilder("postgres:18-alpine").Build();
         await _pg.StartAsync(context.CancellationTokenSource.Token);
-        _options = new DbContextOptionsBuilder<TestDbContext>().UseNpgsql(_pg.GetConnectionString()).Options;
+        _options = new DbContextOptionsBuilder<TestDbContext>()
+            .UseNpgsql(_pg.GetConnectionString())
+            .UseOutboxNotifications()
+            .Options;
         await using var db = new TestDbContext(_options);
         await db.Database.EnsureCreatedAsync();
     }
@@ -76,6 +80,25 @@ public sealed class OutboxProcessorTests
     {
         await using var db = NewDb();
         return await db.Set<OutboxMessage>().SingleAsync();
+    }
+
+    [TestMethod]
+    public async Task Enqueue_fires_a_NOTIFY_on_the_outbox_channel()
+    {
+        // TestDbContext has no default schema, so its wake-up channel is "outbox_public".
+        await using var listener = new NpgsqlConnection(_pg.GetConnectionString());
+        await listener.OpenAsync();
+        string? channel = null;
+        listener.Notification += (_, e) => channel = e.Channel;
+        await using (var listen = new NpgsqlCommand("LISTEN outbox_public", listener))
+            await listen.ExecuteNonQueryAsync();
+
+        // The interceptor should emit pg_notify in the same commit as the outbox insert.
+        await EnqueueAsync("test", new { hello = "world" });
+
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        await listener.WaitAsync(timeout.Token); // returns when the NOTIFY lands (throws if it never does)
+        Assert.AreEqual("outbox_public", channel);
     }
 
     [TestMethod]

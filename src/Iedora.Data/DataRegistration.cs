@@ -1,3 +1,4 @@
+using Framework.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 
@@ -14,16 +15,18 @@ public static class DataRegistration
     public static IHostApplicationBuilder AddIdentityDb(this IHostApplicationBuilder builder)
     {
         builder.AddNpgsqlDbContext<IdentityDbContext>("authdb",
-            configureDbContextOptions: o => o.UseNpgsql(
-                p => p.MigrationsHistoryTable("__EFMigrationsHistory", IdentityDbContext.Schema)));
+            configureDbContextOptions: o => o
+                .UseNpgsql(p => p.MigrationsHistoryTable("__EFMigrationsHistory", IdentityDbContext.Schema))
+                .UseOutboxNotifications());
         return builder;
     }
 
     public static IHostApplicationBuilder AddTenancyDb(this IHostApplicationBuilder builder)
     {
         builder.AddNpgsqlDbContext<TenancyDbContext>("authdb",
-            configureDbContextOptions: o => o.UseNpgsql(
-                p => p.MigrationsHistoryTable("__EFMigrationsHistory", TenancyDbContext.Schema)));
+            configureDbContextOptions: o => o
+                .UseNpgsql(p => p.MigrationsHistoryTable("__EFMigrationsHistory", TenancyDbContext.Schema))
+                .UseOutboxNotifications());
         return builder;
     }
 }
