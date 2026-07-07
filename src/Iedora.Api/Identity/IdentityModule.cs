@@ -10,6 +10,7 @@ using Iedora.Api.Features.Refresh;
 using Iedora.Api.Features.Register;
 using Iedora.Api.Features.ResetPassword;
 using Iedora.Api.Features.Token;
+using Iedora.Api.Features.UsersAdmin;
 using Iedora.Api.Features.WhoAmI;
 using Iedora.Api.Observability;
 using Iedora.Api.Security;
@@ -92,6 +93,7 @@ public static class IdentityModule
         group.MapResetPassword();
         group.MapWhoAmI();
         group.MapAccountSessions();
+        group.MapUsersAdmin();
         group.MapJwks();
         group.MapCommandStatus<IdentityDbContext>(); // GET /auth/commands/{id}
         return app;

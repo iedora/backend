@@ -14,5 +14,5 @@ internal sealed class ChangePasswordHandler(IdentityDbContext db, TimeProvider c
 
     protected override Task<ErrorOr<string?>> ExecuteAsync(ChangePasswordCommand cmd, CancellationToken ct) =>
         PasswordCredential.ApplyAsync(
-            Db, Clock, cmd.UserId, cmd.PasswordHash, cmd.ClearMustChangePassword, cmd.KeepFamilyId, ct);
+            Db, Clock, cmd.UserId, cmd.PasswordHash, mustChangePassword: false, cmd.KeepFamilyId, ct);
 }
