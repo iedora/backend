@@ -901,6 +901,47 @@
         }
       }
     },
+    "/public/qr/{code}": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Resolve a QR sticker code to its restaurant slug.",
+        "operationId": "ResolveQr",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QrTarget"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/restaurants/{slug}": {
       "get": {
         "tags": [
@@ -1796,6 +1837,230 @@
           }
         }
       }
+    },
+    "/api/staff/qr-codes": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "List all QR stickers with their bound restaurant (staff).",
+        "operationId": "ListQrCodes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QrCodeListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Create QR stickers (staff).",
+        "operationId": "CreateQrCodes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQrRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateQrResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/qr-codes/{code}/bind": {
+      "post": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Bind a QR sticker to a restaurant (staff).",
+        "operationId": "BindQrCode",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BindQrRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/qr-codes/{code}/unbind": {
+      "post": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Unbind a QR sticker (staff).",
+        "operationId": "UnbindQrCode",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/qr-codes/{code}": {
+      "patch": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Set a QR sticker's label (staff).",
+        "operationId": "LabelQrCode",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LabelQrRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Delete a QR sticker (staff).",
+        "operationId": "DeleteQrCode",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1826,6 +2091,18 @@
             "maxLength": 128,
             "minLength": 8,
             "type": "string"
+          }
+        }
+      },
+      "BindQrRequest": {
+        "required": [
+          "restaurantId"
+        ],
+        "type": "object",
+        "properties": {
+          "restaurantId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -1930,6 +2207,61 @@
             "maxLength": 80,
             "minLength": 1,
             "type": "string"
+          }
+        }
+      },
+      "CreateQrRequest": {
+        "required": [
+          "code",
+          "count",
+          "restaurantId",
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "count": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "restaurantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateQrResponse": {
+        "required": [
+          "inserted"
+        ],
+        "type": "object",
+        "properties": {
+          "inserted": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -2090,6 +2422,20 @@
             "items": {
               "$ref": "#/components/schemas/Jwk"
             }
+          }
+        }
+      },
+      "LabelQrRequest": {
+        "required": [
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -2471,6 +2817,84 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "QrCodeListResponse": {
+        "required": [
+          "codes"
+        ],
+        "type": "object",
+        "properties": {
+          "codes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QrCodeView"
+            }
+          }
+        }
+      },
+      "QrCodeView": {
+        "required": [
+          "code",
+          "restaurantId",
+          "restaurantName",
+          "restaurantSlug",
+          "label",
+          "boundAt",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "restaurantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "restaurantName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "restaurantSlug": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "boundAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "QrTarget": {
+        "required": [
+          "slug"
+        ],
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
           }
         }
       },

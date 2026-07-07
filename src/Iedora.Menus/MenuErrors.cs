@@ -40,4 +40,10 @@ internal static class MenuErrors
     // Deferred: rotating all content to a new default language (promoteDefaultLanguage) is its own slice.
     public static readonly Error DefaultLanguageChangeUnsupported = Error.Validation(
         "menu.default_language_change_unsupported", "Changing the default language isn't supported yet.");
+
+    public static readonly Error InvalidQrCode = Error.Validation(
+        "menu.invalid_qr_code", "A QR code must be 1-64 chars of a-z, 0-9, _ or -.");
+
+    public static readonly Error UnknownRestaurant = Error.Validation(
+        "menu.unknown_restaurant", "No restaurant with that id.");
 }
