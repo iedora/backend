@@ -1,5 +1,5 @@
 using Framework.Outbox;
-using Iedora.Messaging;
+using Iedora.Identity;
 using Iedora.Tenancy;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;

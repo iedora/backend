@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Iedora.Kernel</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Shared cross-cutting minimal-API helpers (CommandEndpoints) need the ASP.NET surface. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ErrorOr" />
+    <ProjectReference Include="..\..\framework\Commands\Framework.Commands\Framework.Commands.csproj" />
+  </ItemGroup>
+<!-- The Web SDK's implicit global usings (this is a plain SDK lib that hosts ASP.NET endpoints). -->
+  <ItemGroup>
+    <Using Include="Microsoft.AspNetCore.Builder" />
+    <Using Include="Microsoft.AspNetCore.Http" />
+    <Using Include="Microsoft.AspNetCore.Routing" />
+    <Using Include="Microsoft.Extensions.DependencyInjection" />
+    <Using Include="Microsoft.Extensions.Configuration" />
+    <Using Include="Microsoft.Extensions.Hosting" />
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+</Project>
