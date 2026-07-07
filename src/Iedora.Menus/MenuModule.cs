@@ -1,4 +1,3 @@
-using Iedora.Data;
 using Iedora.Kernel;
 
 namespace Iedora.Menus;

@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using Framework.Outbox;
-using Iedora.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 

@@ -2,7 +2,6 @@ using System.Text.Json;
 using Framework.Inbox;
 using Framework.Outbox;
 using Iedora.Contracts;
-using Iedora.Data;
 using Microsoft.AspNetCore.Identity;
 
 namespace Iedora.Identity;

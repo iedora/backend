@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Framework.Web;
 using Iedora.Contracts;
-using Iedora.Data;
 using Microsoft.AspNetCore.Identity;
 
 namespace Iedora.Identity;

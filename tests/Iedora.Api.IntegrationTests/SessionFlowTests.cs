@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Iedora.Api.IntegrationTests;
 
