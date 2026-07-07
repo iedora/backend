@@ -78,15 +78,14 @@ public sealed class TenantAdminTests : IntegrationTestBase
         var target = await RegisterAndLogin("target@tasca.pt", "Sup3rSecret!");
         var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
 
-        var resp = await PostJson("/tenancy/admin/tenants",
-            new { name = "Admin's Tasca", ownerUserId = target.userId }, admin.accessToken);
-        Assert.AreEqual(HttpStatusCode.OK, resp.StatusCode);
-        var created = (await resp.Content.ReadFromJsonAsync<TenantPayload>())!;
+        var createdId = await AwaitTenancyCommandAsync(
+            await PostJson("/tenancy/admin/tenants", new { name = "Admin's Tasca", ownerUserId = target.userId }, admin.accessToken),
+            admin.accessToken);
 
         // The target user (not the admin) is the owner.
         await using var scope = TestHost.Factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<TenancyDbContext>();
-        var membership = await db.Memberships.SingleAsync(m => m.TenantId == Guid.Parse(created.id));
+        var membership = await db.Memberships.SingleAsync(m => m.TenantId == Guid.Parse(createdId));
         Assert.AreEqual(MembershipRole.Owner, membership.Role);
         Assert.AreEqual(Guid.Parse(target.userId), membership.UserId);
     }

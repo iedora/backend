@@ -404,7 +404,7 @@
         "tags": [
           "Iedora.Api"
         ],
-        "summary": "Provision a tenant owned by an existing user (admin).",
+        "summary": "Provision a tenant owned by an existing user (admin, async — poll the status URL).",
         "operationId": "AdminCreateTenant",
         "requestBody": {
           "content": {
@@ -417,12 +417,12 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "OK",
+          "202": {
+            "description": "Accepted",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateTenantResponse"
+                  "$ref": "#/components/schemas/CommandAccepted"
                 }
               }
             }
@@ -618,22 +618,6 @@
         ],
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string"
-          }
-        }
-      },
-      "CreateTenantResponse": {
-        "required": [
-          "id",
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
           "name": {
             "type": "string"
           }

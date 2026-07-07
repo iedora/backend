@@ -10,9 +10,6 @@ namespace Iedora.Api.Features.Tenants;
 
 public sealed record CreateTenantRequest([property: Required] string Name);
 
-// Shared with the (still-synchronous) admin-create endpoint until it too moves to the pipeline.
-public sealed record CreateTenantResponse(Guid Id, string Name);
-
 // POST /tenancy/tenants — the signed-in user provisions a tenant. Validated SYNCHRONOUSLY here,
 // then accepted (202) and executed asynchronously: SubmitCommand stages a Pending command + an
 // outbox message in one transaction; CreateTenantHandler (in the worker) does the write. The client

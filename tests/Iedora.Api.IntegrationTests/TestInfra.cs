@@ -78,11 +78,10 @@ public abstract class IntegrationTestBase
         return (await Login(email, password)).body;
     }
 
-    /// <summary>Drive an async write end-to-end: assert 202, dispatch the Tenancy handler, poll the
+    /// <summary>Drive an accepted (202) Tenancy write end-to-end: dispatch the handler, poll the
     /// status, assert success, and return the resource id from the result location.</summary>
-    protected async Task<string> CreateTenantAsync(string name, string bearer)
+    protected async Task<string> AwaitTenancyCommandAsync(HttpResponseMessage accept, string bearer)
     {
-        var accept = await PostJson("/tenancy/tenants", new { name }, bearer);
         Assert.AreEqual(System.Net.HttpStatusCode.Accepted, accept.StatusCode);
         var accepted = (await accept.Content.ReadFromJsonAsync<CommandAcceptedPayload>())!;
 
@@ -92,6 +91,10 @@ public abstract class IntegrationTestBase
         Assert.AreEqual("Succeeded", status.status);
         return status.resultLocation!.Split('/')[^1]; // /tenancy/tenants/{id}
     }
+
+    /// <summary>The signed-in user creates a tenant (async), returning its id once it lands.</summary>
+    protected async Task<string> CreateTenantAsync(string name, string bearer) =>
+        await AwaitTenancyCommandAsync(await PostJson("/tenancy/tenants", new { name }, bearer), bearer);
 
     protected async Task<CommandStatusPayload> GetCommandStatus(string statusUrl, string bearer)
     {

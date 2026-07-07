@@ -7,8 +7,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Iedora.Api.IntegrationTests;
 
-// Wire shape of POST /tenancy/tenants (camelCase).
-public sealed record TenantPayload(string id, string name);
 
 [TestClass]
 public sealed class TenantsTests : IntegrationTestBase
