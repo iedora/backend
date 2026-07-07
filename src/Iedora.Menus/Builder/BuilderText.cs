@@ -70,4 +70,58 @@ internal static class BuilderText
         if (di.IsError) return di.Errors;
         return new TextFields(n.Value, d.Value, ni.Value, di.Value);
     }
+
+    /// <summary>Menus often print a trailing period on dish names ("Bacalhau à Brás."); drop it so
+    /// titles read cleanly — but never down to empty (a lone "." keeps its dot).</summary>
+    public static string StripTrailingDots(string s)
+    {
+        var end = s.Length;
+        while (end > 0 && (s[end - 1] == '.' || char.IsWhiteSpace(s[end - 1]))) end--;
+        return end > 0 ? s[..end] : s;
+    }
+
+    /// <summary>The normalized item fields.</summary>
+    public sealed record ItemFields(
+        string Name, LocalizedText? NameI18n, string? Description, LocalizedText? DescriptionI18n,
+        int PriceCents, string Currency, bool Available, List<string> Tags, List<Variant>? Variants);
+
+    /// <summary>Normalize an item write: trim + strip trailing dots on the name, prune i18n overrides,
+    /// inherit the restaurant's currency, and validate + prune variants. DataAnnotations already bound
+    /// name/price/tags/variant counts. <paramref name="rawVariants"/> null ⇒ resulting Variants null.</summary>
+    public static ErrorOr<ItemFields> Item(
+        string name, Dictionary<string, string>? nameI18n, string? description,
+        Dictionary<string, string>? descriptionI18n, int priceCents, string? currency, bool? available,
+        List<string>? tags, IReadOnlyList<(string Label, Dictionary<string, string>? LabelI18n, int PriceCents)>? rawVariants,
+        string defaultLang, string defaultCurrency)
+    {
+        var n = Name(name, MaxItemName, "name");
+        if (n.IsError) return n.Errors;
+        var ni = I18n(nameI18n, defaultLang, "name");
+        if (ni.IsError) return ni.Errors;
+        var d = Optional(description, MaxDescription, "description");
+        if (d.IsError) return d.Errors;
+        var di = I18n(descriptionI18n, defaultLang, "description");
+        if (di.IsError) return di.Errors;
+
+        List<Variant>? variants = null;
+        if (rawVariants is not null)
+        {
+            variants = [];
+            for (var i = 0; i < rawVariants.Count; i++)
+            {
+                var v = rawVariants[i];
+                var label = Name(v.Label, MaxItemName, $"variant {i + 1} label");
+                if (label.IsError) return label.Errors;
+                var labelI18n = I18n(v.LabelI18n, defaultLang, "variant label");
+                if (labelI18n.IsError) return labelI18n.Errors;
+                variants.Add(new Variant(label.Value, labelI18n.Value, v.PriceCents));
+            }
+            if (variants.Count == 0) variants = null; // empty ⇒ single price
+        }
+
+        return new ItemFields(
+            StripTrailingDots(n.Value), ni.Value, d.Value, di.Value, priceCents,
+            string.IsNullOrEmpty(currency) ? (defaultCurrency.Length > 0 ? defaultCurrency : "EUR") : currency,
+            available ?? true, tags ?? [], variants);
+    }
 }
