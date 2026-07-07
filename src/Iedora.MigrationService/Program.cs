@@ -1,5 +1,6 @@
 using Iedora.Identity;
 using Iedora.Menus;
+using Iedora.Notifications;
 using Iedora.Tenancy;
 using Iedora.MigrationService;
 
@@ -11,6 +12,7 @@ builder.AddServiceDefaults();
 builder.AddIdentityDb();
 builder.AddTenancyDb();
 builder.AddMenuDb();
+builder.AddNotificationsDb();
 
 builder.Services.AddHostedService<MigrationWorker>();
 

@@ -1,3 +1,4 @@
+using Iedora.Notifications;
 using Iedora.Identity;
 using Iedora.Menus;
 using Iedora.Tenancy;
@@ -39,6 +40,7 @@ public class TestHost
             await scope.ServiceProvider.GetRequiredService<IdentityDbContext>().Database.MigrateAsync(ct);
             await scope.ServiceProvider.GetRequiredService<TenancyDbContext>().Database.MigrateAsync(ct);
             await scope.ServiceProvider.GetRequiredService<MenuDbContext>().Database.MigrateAsync(ct);
+            await scope.ServiceProvider.GetRequiredService<NotificationsDbContext>().Database.MigrateAsync(ct);
         }
 
         _conn = new NpgsqlConnection(_db.GetConnectionString());
@@ -46,12 +48,13 @@ public class TestHost
         _respawner = await Respawner.CreateAsync(_conn, new RespawnerOptions
         {
             DbAdapter = DbAdapter.Postgres,
-            SchemasToInclude = ["identity", "tenancy", "menu"],
+            SchemasToInclude = ["identity", "tenancy", "menu", "notifications"],
             TablesToIgnore =
             [
                 new Respawn.Graph.Table("identity", "__EFMigrationsHistory"),
                 new Respawn.Graph.Table("tenancy", "__EFMigrationsHistory"),
                 new Respawn.Graph.Table("menu", "__EFMigrationsHistory"),
+                new Respawn.Graph.Table("notifications", "__EFMigrationsHistory"),
             ],
         });
     }

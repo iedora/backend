@@ -1,4 +1,3 @@
-using Framework.Email;
 using Framework.Inbox;
 using Framework.Outbox;
 using Microsoft.AspNetCore.Identity;
@@ -11,14 +10,12 @@ public static class IdentityMessagingExtensions
 {
     /// <summary>
     /// Register the Identity module's message dispatch into a host (the generic app worker):
-    /// IdentityDbContext, SMTP config, Identity Core (so saga handlers can create users off the
-    /// request path), and its outbox/inbox handlers. Self-contained — the worker never references
-    /// the API web project.
+    /// IdentityDbContext, Identity Core (so saga handlers can create users off the request path),
+    /// and its outbox/inbox handlers. Self-contained — the worker never references the API web project.
     /// </summary>
     public static IHostApplicationBuilder AddIdentityOutboxDispatch(this IHostApplicationBuilder builder)
     {
         builder.AddIdentityDb();
-        builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
         builder.Services.Configure<OutboxOptions>(builder.Configuration.GetSection("Outbox"));
 
         // The worker has no ASP.NET Identity pipeline of its own, so add UserManager here.
@@ -36,12 +33,10 @@ public static class IdentityMessagingExtensions
     public static IServiceCollection AddIdentityMessagingHandlers(this IServiceCollection services)
     {
         services.TryAddSingleton(TimeProvider.System);
-        services.AddSmtpEmail();
 
         services.AddOutbox<IdentityDbContext>();
         services.AddInbox<IdentityDbContext>();
 
-        services.AddScoped<IOutboxHandler, PasswordResetEmailHandler>();
         services.AddScoped<IOutboxHandler, RegisterUserHandler>();     // async write: create account
         services.AddScoped<IOutboxHandler, ChangePasswordHandler>();      // async write: change password
         services.AddScoped<IOutboxHandler, ResetPasswordHandler>();       // async write: reset password

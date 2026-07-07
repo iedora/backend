@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Iedora.Identity;
 using Iedora.Menus;
+using Iedora.Notifications;
 using Iedora.Tenancy;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,6 +31,7 @@ public sealed class MigrationWorker(
             await MigrateAsync<IdentityDbContext>(scope.ServiceProvider, stoppingToken);
             await MigrateAsync<TenancyDbContext>(scope.ServiceProvider, stoppingToken);
             await MigrateAsync<MenuDbContext>(scope.ServiceProvider, stoppingToken);
+            await MigrateAsync<NotificationsDbContext>(scope.ServiceProvider, stoppingToken);
 
             logger.LogInformation("Database schema is up to date.");
         }
