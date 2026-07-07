@@ -1,4 +1,4 @@
-namespace Iedora.Contracts;
+namespace Iedora.Identity.Contracts;
 
 /// <summary>A minimal projection of a user, for other modules to hydrate references held by id.</summary>
 public sealed record UserSummary(Guid Id, string Email, string? Name);

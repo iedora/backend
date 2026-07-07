@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Framework.Commands;
 using Framework.Web;
-using Iedora.Kernel;
+using Iedora.Identity.Contracts;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 

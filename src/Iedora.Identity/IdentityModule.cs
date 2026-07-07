@@ -1,5 +1,6 @@
-using Iedora.Contracts;
-using Iedora.Kernel;
+using Framework.Web;
+using Iedora.Identity.Contracts;
+using Iedora.Tenancy.Contracts;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 

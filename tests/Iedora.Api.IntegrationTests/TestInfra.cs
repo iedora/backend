@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using Iedora.Identity;
 using Iedora.Menus;
 using Iedora.Tenancy;
-using Iedora.Kernel;
+using Iedora.Identity.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;

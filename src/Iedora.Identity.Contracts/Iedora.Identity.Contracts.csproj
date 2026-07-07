@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Iedora.Identity.Contracts</RootNamespace>
+  </PropertyGroup>
+
+  <!-- The Identity module's EXTERNAL surface: the callable IIdentityApi, the auth vocabulary it owns
+       (roles / policies / token types), the token's claim-reading helpers, the shared unauthenticated
+       error, and the events it publishes. Other modules reference THIS, never the module itself. -->
+  <ItemGroup>
+    <PackageReference Include="ErrorOr" />
+  </ItemGroup>
+
+</Project>

@@ -17,8 +17,8 @@
     <Project Path="framework/Web/Framework.Web/Framework.Web.csproj" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/Iedora.Contracts/Iedora.Contracts.csproj" />
-    <Project Path="src/Iedora.Kernel/Iedora.Kernel.csproj" />
+    <Project Path="src/Iedora.Identity.Contracts/Iedora.Identity.Contracts.csproj" />
+    <Project Path="src/Iedora.Tenancy.Contracts/Iedora.Tenancy.Contracts.csproj" />
     <Project Path="src/Iedora.Identity/Iedora.Identity.csproj" />
     <Project Path="src/Iedora.Menus/Iedora.Menus.csproj" />
     <Project Path="src/Iedora.Api/Iedora.Api.csproj" />

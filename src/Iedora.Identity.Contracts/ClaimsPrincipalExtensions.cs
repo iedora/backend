@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace Iedora.Kernel;
+namespace Iedora.Identity.Contracts;
 
 /// <summary>Cross-cutting helpers for the authenticated caller — shared by every module's authed
 /// endpoints so they don't each re-read raw claims.</summary>
@@ -9,10 +9,10 @@ public static class ClaimsPrincipalExtensions
     /// <summary>The caller's user id from the access token's <c>sub</c> claim (JwtBearer runs with
     /// <c>MapInboundClaims = false</c>, so it stays "sub"). False when absent or unparseable.</summary>
     public static bool TryGetUserId(this ClaimsPrincipal principal, out Guid userId) =>
-        Guid.TryParse(principal.FindFirstValue("sub"), out userId);
+        Guid.TryParse(principal.FindFirst("sub")?.Value, out userId);
 
     /// <summary>The caller's current tenant from the access token's <c>tid</c> claim, or null when the
     /// token carries no tenant (e.g. a tenant-less staff token).</summary>
     public static Guid? TenantId(this ClaimsPrincipal principal) =>
-        Guid.TryParse(principal.FindFirstValue("tid"), out var id) ? id : null;
+        Guid.TryParse(principal.FindFirst("tid")?.Value, out var id) ? id : null;
 }

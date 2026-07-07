@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="ErrorOr" />
+    <ProjectReference Include="..\..\Commands\Framework.Commands\Framework.Commands.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-namespace Iedora.Kernel;
+namespace Iedora.Identity.Contracts;
 
 /// <summary>Cross-cutting authorization constants (shared kernel — every module may reference).</summary>
 public static class Roles

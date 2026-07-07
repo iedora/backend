@@ -1,4 +1,5 @@
-using Iedora.Contracts;
+using Iedora.Identity.Contracts;
+using Iedora.Tenancy.Contracts;
 using Microsoft.EntityFrameworkCore;
 
 namespace Iedora.Tenancy;

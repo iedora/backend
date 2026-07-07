@@ -16,8 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Iedora.Contracts\Iedora.Contracts.csproj" />
-    <ProjectReference Include="..\Iedora.Kernel\Iedora.Kernel.csproj" />
+    <ProjectReference Include="..\Iedora.Tenancy.Contracts\Iedora.Tenancy.Contracts.csproj" />
+    <ProjectReference Include="..\Iedora.Identity.Contracts\Iedora.Identity.Contracts.csproj" />
     <ProjectReference Include="..\..\framework\Outbox\Framework.Outbox\Framework.Outbox.csproj" />
     <ProjectReference Include="..\..\framework\Inbox\Framework.Inbox\Framework.Inbox.csproj" />
     <ProjectReference Include="..\..\framework\Commands\Framework.Commands\Framework.Commands.csproj" />

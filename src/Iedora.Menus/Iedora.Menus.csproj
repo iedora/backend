@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Iedora.Kernel\Iedora.Kernel.csproj" />
+    <ProjectReference Include="..\Iedora.Identity.Contracts\Iedora.Identity.Contracts.csproj" />
     <ProjectReference Include="..\..\framework\Web\Framework.Web\Framework.Web.csproj" />
   </ItemGroup>
 

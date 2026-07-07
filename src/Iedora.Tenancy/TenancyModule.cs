@@ -1,5 +1,6 @@
-using Iedora.Kernel;
-using Iedora.Contracts;
+using Framework.Web;
+using Iedora.Identity.Contracts;
+using Iedora.Tenancy.Contracts;
 
 namespace Iedora.Tenancy;
 
