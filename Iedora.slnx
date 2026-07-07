@@ -21,6 +21,7 @@
     <Project Path="src/Iedora.Data/Iedora.Data.csproj" />
     <Project Path="src/Iedora.Kernel/Iedora.Kernel.csproj" />
     <Project Path="src/Iedora.Identity/Iedora.Identity.csproj" />
+    <Project Path="src/Iedora.Menus/Iedora.Menus.csproj" />
     <Project Path="src/Iedora.Api/Iedora.Api.csproj" />
     <Project Path="src/Iedora.MigrationService/Iedora.MigrationService.csproj" />
     <Project Path="src/Iedora.Tenancy/Iedora.Tenancy.csproj" />

@@ -28,6 +28,7 @@ public sealed class MigrationWorker(
             // Each module owns a schema + its own migrations; this worker applies them all.
             await MigrateAsync<IdentityDbContext>(scope.ServiceProvider, stoppingToken);
             await MigrateAsync<TenancyDbContext>(scope.ServiceProvider, stoppingToken);
+            await MigrateAsync<MenuDbContext>(scope.ServiceProvider, stoppingToken);
 
             logger.LogInformation("Database schema is up to date.");
         }

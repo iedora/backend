@@ -859,6 +859,47 @@
           }
         }
       }
+    },
+    "/public/r/{slug}": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Render a restaurant's active menus for guests (localized).",
+        "operationId": "PublicMenu",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicPayload"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1116,6 +1157,223 @@
           }
         }
       },
+      "PublicCategory": {
+        "required": [
+          "id",
+          "name",
+          "description",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicItem"
+            }
+          }
+        }
+      },
+      "PublicItem": {
+        "required": [
+          "id",
+          "name",
+          "description",
+          "priceCents",
+          "currency",
+          "imageUrl",
+          "tags",
+          "variants"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "priceCents": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicVariant"
+            }
+          }
+        }
+      },
+      "PublicMenu": {
+        "required": [
+          "id",
+          "name",
+          "description",
+          "categories"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicCategory"
+            }
+          }
+        }
+      },
+      "PublicPayload": {
+        "required": [
+          "restaurant",
+          "menus",
+          "defaultLanguage",
+          "supportedLanguages",
+          "currentLanguage"
+        ],
+        "type": "object",
+        "properties": {
+          "restaurant": {
+            "$ref": "#/components/schemas/PublicRestaurant"
+          },
+          "menus": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicMenu"
+            }
+          },
+          "defaultLanguage": {
+            "type": "string"
+          },
+          "supportedLanguages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "currentLanguage": {
+            "type": "string"
+          }
+        }
+      },
+      "PublicRestaurant": {
+        "required": [
+          "name",
+          "slug",
+          "description",
+          "logoUrl",
+          "bannerUrl",
+          "theme"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "logoUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "bannerUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "theme": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Theme"
+              }
+            ]
+          }
+        }
+      },
+      "PublicVariant": {
+        "required": [
+          "label",
+          "priceCents"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "priceCents": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "RegisterRequest": {
         "required": [
           "email",
@@ -1292,6 +1550,41 @@
           },
           "owner": {
             "$ref": "#/components/schemas/OwnerSummary"
+          }
+        }
+      },
+      "Theme": {
+        "required": [
+          "primaryColor",
+          "secondaryColor",
+          "font",
+          "layout"
+        ],
+        "type": "object",
+        "properties": {
+          "primaryColor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "secondaryColor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "font": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "layout": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

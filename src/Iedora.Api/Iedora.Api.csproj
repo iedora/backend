@@ -18,6 +18,7 @@
     <ProjectReference Include="..\..\Iedora.ServiceDefaults\Iedora.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Iedora.Identity\Iedora.Identity.csproj" />
     <ProjectReference Include="..\Iedora.Tenancy\Iedora.Tenancy.csproj" />
+    <ProjectReference Include="..\Iedora.Menus\Iedora.Menus.csproj" />
     <ProjectReference Include="..\Iedora.Kernel\Iedora.Kernel.csproj" />
   </ItemGroup>
 

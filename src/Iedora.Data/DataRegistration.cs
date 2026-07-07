@@ -29,4 +29,12 @@ public static class DataRegistration
                 .UseOutboxNotifications());
         return builder;
     }
+
+    public static IHostApplicationBuilder AddMenuDb(this IHostApplicationBuilder builder)
+    {
+        builder.AddNpgsqlDbContext<MenuDbContext>("authdb",
+            configureDbContextOptions: o => o
+                .UseNpgsql(p => p.MigrationsHistoryTable("__EFMigrationsHistory", MenuDbContext.Schema)));
+        return builder;
+    }
 }
