@@ -30,8 +30,20 @@ public abstract class IntegrationTestBase
         Client = TestHost.Factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false });
     }
 
+    /// <summary>The raw (async) register POST — returns the 202.</summary>
     protected Task<HttpResponseMessage> Register(string email, string password, string? name = "User") =>
         Client.PostAsJsonAsync("/auth/register", new { email, password, displayName = name });
+
+    /// <summary>Create an account end-to-end: register (202) → dispatch the Identity handler → assert
+    /// the account landed. Use this wherever a test just needs an existing account.</summary>
+    protected async Task RegisterAccount(string email, string password, string? name = "User")
+    {
+        var accept = await Register(email, password, name);
+        Assert.AreEqual(System.Net.HttpStatusCode.Accepted, accept.StatusCode);
+        var accepted = (await accept.Content.ReadFromJsonAsync<CommandAcceptedPayload>())!;
+        await TestHost.DispatchOutboxAsync(); // Identity outbox → RegisterUserHandler
+        Assert.AreEqual("Succeeded", (await GetCommandStatus(accepted.statusUrl)).status);
+    }
 
     /// <summary>Log in and assert success; returns the token body + the raw refresh cookie.</summary>
     protected async Task<(TokenPayload body, string refresh)> Login(string email, string password)
@@ -74,7 +86,7 @@ public abstract class IntegrationTestBase
 
     protected async Task<TokenPayload> RegisterAndLogin(string email, string password)
     {
-        Assert.AreEqual(System.Net.HttpStatusCode.Created, (await Register(email, password)).StatusCode);
+        await RegisterAccount(email, password);
         return (await Login(email, password)).body;
     }
 
@@ -96,7 +108,7 @@ public abstract class IntegrationTestBase
     protected async Task<string> CreateTenantAsync(string name, string bearer) =>
         await AwaitTenancyCommandAsync(await PostJson("/tenancy/tenants", new { name }, bearer), bearer);
 
-    protected async Task<CommandStatusPayload> GetCommandStatus(string statusUrl, string bearer)
+    protected async Task<CommandStatusPayload> GetCommandStatus(string statusUrl, string? bearer = null)
     {
         var resp = await Get(statusUrl, bearer);
         Assert.AreEqual(System.Net.HttpStatusCode.OK, resp.StatusCode);

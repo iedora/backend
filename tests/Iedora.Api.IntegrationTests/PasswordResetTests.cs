@@ -11,7 +11,7 @@ public sealed class PasswordResetTests : IntegrationTestBase
     [TestMethod]
     public async Task Forgot_password_for_existing_user_enqueues_and_sends_a_reset_email()
     {
-        await Register("owner@tasca.pt", "Sup3rSecret!");
+        await RegisterAccount("owner@tasca.pt", "Sup3rSecret!");
         var resp = await PostJson("/auth/forgot-password", new { email = "owner@tasca.pt" });
         Assert.AreEqual(HttpStatusCode.OK, resp.StatusCode);
 
@@ -34,7 +34,7 @@ public sealed class PasswordResetTests : IntegrationTestBase
     [TestMethod]
     public async Task Reset_password_with_a_valid_token_lets_the_new_password_log_in()
     {
-        await Register("chef@tasca.pt", "Sup3rSecret!");
+        await RegisterAccount("chef@tasca.pt", "Sup3rSecret!");
         await PostJson("/auth/forgot-password", new { email = "chef@tasca.pt" });
         await TestHost.DispatchOutboxAsync();
         var (email, token) = ExtractResetLink(TestHost.EmailSender.Sent.Single().HtmlBody);
@@ -52,7 +52,7 @@ public sealed class PasswordResetTests : IntegrationTestBase
     [TestMethod]
     public async Task Reset_password_with_a_bad_token_returns_400()
     {
-        await Register("bad@tasca.pt", "Sup3rSecret!");
+        await RegisterAccount("bad@tasca.pt", "Sup3rSecret!");
         var reset = await PostJson("/auth/reset-password",
             new { email = "bad@tasca.pt", token = "not-a-real-token", password = "Ev3nBetter!" });
         Assert.AreEqual(HttpStatusCode.BadRequest, reset.StatusCode);

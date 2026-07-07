@@ -8,18 +8,26 @@ namespace Iedora.Api.IntegrationTests;
 public sealed class AuthFlowTests : IntegrationTestBase
 {
     [TestMethod]
-    public async Task Register_creates_account_and_returns_201()
+    public async Task Register_is_accepted_then_the_account_lands()
     {
-        var resp = await Register("owner@tasca.pt", "Sup3rSecret!");
-        Assert.AreEqual(HttpStatusCode.Created, resp.StatusCode);
+        var accept = await Register("owner@tasca.pt", "Sup3rSecret!");
+        Assert.AreEqual(HttpStatusCode.Accepted, accept.StatusCode);
+        var accepted = (await accept.Content.ReadFromJsonAsync<CommandAcceptedPayload>())!;
+
+        await TestHost.DispatchOutboxAsync(); // Identity outbox → RegisterUserHandler
+
+        var status = await GetCommandStatus(accepted.statusUrl);
+        Assert.AreEqual("Succeeded", status.status);
+        Assert.IsTrue(status.resultLocation!.StartsWith("/auth/users/"));
     }
 
     [TestMethod]
-    public async Task Register_duplicate_email_returns_400()
+    public async Task Register_duplicate_email_returns_409_synchronously()
     {
-        await Register("dupe@tasca.pt", "Sup3rSecret!");
+        await RegisterAccount("dupe@tasca.pt", "Sup3rSecret!");
+        // The account exists, so the sync pre-check rejects the second attempt up front.
         var second = await Register("dupe@tasca.pt", "Sup3rSecret!");
-        Assert.AreEqual(HttpStatusCode.BadRequest, second.StatusCode);
+        Assert.AreEqual(HttpStatusCode.Conflict, second.StatusCode);
     }
 
     [TestMethod]
@@ -34,7 +42,7 @@ public sealed class AuthFlowTests : IntegrationTestBase
     [TestMethod]
     public async Task Login_with_correct_password_issues_token_and_sets_refresh_cookie()
     {
-        await Register("chef@bistro.pt", "Sup3rSecret!");
+        await RegisterAccount("chef@bistro.pt", "Sup3rSecret!");
         var resp = await Client.PostAsJsonAsync("/auth/login", new { email = "chef@bistro.pt", password = "Sup3rSecret!" });
 
         Assert.AreEqual(HttpStatusCode.OK, resp.StatusCode);
@@ -47,7 +55,7 @@ public sealed class AuthFlowTests : IntegrationTestBase
     [TestMethod]
     public async Task Login_with_wrong_password_returns_401()
     {
-        await Register("chef@bistro.pt", "Sup3rSecret!");
+        await RegisterAccount("chef@bistro.pt", "Sup3rSecret!");
         var resp = await Client.PostAsJsonAsync("/auth/login", new { email = "chef@bistro.pt", password = "wrong" });
         Assert.AreEqual(HttpStatusCode.Unauthorized, resp.StatusCode);
     }

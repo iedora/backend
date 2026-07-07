@@ -10,7 +10,7 @@
         "tags": [
           "Iedora.Api"
         ],
-        "summary": "Create a new account.",
+        "summary": "Create a new account (async — poll the status URL).",
         "operationId": "Register",
         "requestBody": {
           "content": {
@@ -23,22 +23,22 @@
           "required": true
         },
         "responses": {
-          "201": {
-            "description": "Created",
+          "202": {
+            "description": "Accepted",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RegisteredResponse"
+                  "$ref": "#/components/schemas/CommandAccepted"
                 }
               }
             }
           },
-          "400": {
-            "description": "Bad Request",
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -300,6 +300,41 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/auth/commands/{id}": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Poll an async write's outcome.",
+        "operationId": "IdentityDbContextCommandStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
           }
         }
       }
@@ -634,53 +669,6 @@
           }
         }
       },
-      "HttpValidationProblemDetails": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "title": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "status": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "detail": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "instance": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "errors": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      },
       "Jwk": {
         "required": [
           "kty",
@@ -814,22 +802,6 @@
               "null",
               "string"
             ]
-          }
-        }
-      },
-      "RegisteredResponse": {
-        "required": [
-          "id",
-          "email"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "email": {
-            "type": "string"
           }
         }
       },

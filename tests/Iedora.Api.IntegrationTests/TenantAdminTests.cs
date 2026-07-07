@@ -143,7 +143,7 @@ public sealed class TenantAdminTests : IntegrationTestBase
     [TestMethod]
     public async Task Transfer_saga_with_a_taken_email_fails_the_command()
     {
-        await Register("taken@owner.pt", "Sup3rSecret!");
+        await RegisterAccount("taken@owner.pt", "Sup3rSecret!");
         var oldOwner = await RegisterAndLogin("old2@tasca.pt", "Sup3rSecret!");
         var tenantId = await CreateTenantAsync("Bistro", oldOwner.accessToken);
         var admin = await RegisterLoginAsAdmin("staff@iedora.com", "Sup3rSecret!");
@@ -181,7 +181,7 @@ public sealed class TenantAdminTests : IntegrationTestBase
     /// <summary>Register, grant the admin role (so the JWT carries it), and log in.</summary>
     private async Task<TokenPayload> RegisterLoginAsAdmin(string email, string password)
     {
-        Assert.AreEqual(HttpStatusCode.Created, (await Register(email, password)).StatusCode);
+        await RegisterAccount(email, password);
         await using (var scope = TestHost.Factory.Services.CreateAsyncScope())
         {
             var roles = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();

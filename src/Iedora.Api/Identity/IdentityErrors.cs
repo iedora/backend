@@ -32,4 +32,7 @@ public static class IdentityErrors
 
     public static readonly Error InvalidResetToken =
         Error.Validation("auth.invalid_reset_token", "The reset link is invalid or has expired.");
+
+    public static readonly Error EmailTaken =
+        Error.Conflict("auth.email_taken", "An account with that email already exists.");
 }

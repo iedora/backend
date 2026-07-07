@@ -1,3 +1,4 @@
+using Framework.Commands;
 using Framework.Inbox;
 using Framework.Outbox;
 using Microsoft.AspNetCore.Identity;
@@ -24,8 +25,9 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
         base.OnModelCreating(builder);
         builder.HasDefaultSchema(Schema);
 
-        builder.MapOutbox(); // reusable outbox table (owned by this module)
-        builder.MapInbox();  // + idempotent consumer (cross-module events, e.g. the transfer saga)
+        builder.MapOutbox();   // reusable outbox table (owned by this module)
+        builder.MapInbox();    // + idempotent consumer (cross-module events, e.g. the transfer saga)
+        builder.MapCommands(); // + async-write command-status tracking
 
         builder.Entity<Session>(session =>
         {
