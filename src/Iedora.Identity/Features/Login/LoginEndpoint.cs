@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Framework.Web;
-using Iedora.Contracts;
+using Iedora.Identity.Contracts;
+using Iedora.Tenancy.Contracts;
 using Microsoft.AspNetCore.Identity;
 
 namespace Iedora.Identity;

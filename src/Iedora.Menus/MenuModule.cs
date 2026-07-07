@@ -1,4 +1,4 @@
-using Iedora.Kernel;
+using Iedora.Identity.Contracts;
 
 namespace Iedora.Menus;
 

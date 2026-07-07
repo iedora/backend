@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using Iedora.Kernel;
+using Iedora.Identity.Contracts;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Iedora.Identity;

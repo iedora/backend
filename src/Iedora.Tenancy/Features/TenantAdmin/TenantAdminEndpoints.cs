@@ -2,8 +2,8 @@ using System.ComponentModel.DataAnnotations;
 using Framework.Commands;
 using Framework.Outbox;
 using Framework.Web;
-using Iedora.Contracts;
-using Iedora.Kernel;
+using Iedora.Identity.Contracts;
+using Iedora.Tenancy.Contracts;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 

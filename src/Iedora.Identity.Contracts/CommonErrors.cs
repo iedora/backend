@@ -1,6 +1,6 @@
 using ErrorOr;
 
-namespace Iedora.Kernel;
+namespace Iedora.Identity.Contracts;
 
 /// <summary>
 /// The shared-kernel error catalog: errors that belong to NO single module, so every module may

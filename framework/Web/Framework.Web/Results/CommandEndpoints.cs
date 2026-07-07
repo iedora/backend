@@ -1,8 +1,11 @@
 using Framework.Commands;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 
-namespace Iedora.Kernel;
+namespace Framework.Web;
 
 /// <summary>The 202 body for an accepted async write: the command id + where to poll its outcome.</summary>
 public sealed record CommandAccepted(Guid CommandId, string StatusUrl);

@@ -1,4 +1,4 @@
-namespace Iedora.Contracts;
+namespace Iedora.Tenancy.Contracts;
 
 /// <summary>
 /// The <b>Tenancy</b> module's public API for other modules. Everything under this module's

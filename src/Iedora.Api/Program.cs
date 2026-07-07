@@ -1,5 +1,5 @@
 using Iedora.Identity;
-using Iedora.Kernel;
+using Iedora.Identity.Contracts;
 using Iedora.Menus;
 using Iedora.Tenancy;
 
