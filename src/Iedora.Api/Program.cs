@@ -1,5 +1,6 @@
 using Iedora.Identity;
 using Iedora.Kernel;
+using Iedora.Menus;
 using Iedora.Tenancy;
 using Microsoft.Extensions.Hosting;
 
@@ -13,6 +14,7 @@ builder.AddServiceDefaults();
 // whole modular-monolith surface: add a module here and it self-wires.
 builder.AddIdentityModule();
 builder.AddTenancyModule();
+builder.AddMenuModule();
 
 // Host-level cross-cutting.
 builder.Services.AddSingleton(TimeProvider.System); // testable clock (session TTLs, token expiry)
@@ -41,6 +43,7 @@ app.UseAuthorization();
 // Each module mounts its vertical slices under its own prefix (/auth, /tenancy).
 app.MapIdentityModule();
 app.MapTenancyModule();
+app.MapMenuModule();
 
 app.Run();
 

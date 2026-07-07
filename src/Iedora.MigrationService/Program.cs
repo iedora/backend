@@ -9,6 +9,7 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.AddServiceDefaults();
 builder.AddIdentityDb();
 builder.AddTenancyDb();
+builder.AddMenuDb();
 
 builder.Services.AddHostedService<MigrationWorker>();
 

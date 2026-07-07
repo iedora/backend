@@ -37,6 +37,7 @@ public class TestHost
             // Each module owns a schema + its own migrations — apply them all (as the worker does).
             await scope.ServiceProvider.GetRequiredService<IdentityDbContext>().Database.MigrateAsync(ct);
             await scope.ServiceProvider.GetRequiredService<TenancyDbContext>().Database.MigrateAsync(ct);
+            await scope.ServiceProvider.GetRequiredService<MenuDbContext>().Database.MigrateAsync(ct);
         }
 
         _conn = new NpgsqlConnection(_db.GetConnectionString());
@@ -44,11 +45,12 @@ public class TestHost
         _respawner = await Respawner.CreateAsync(_conn, new RespawnerOptions
         {
             DbAdapter = DbAdapter.Postgres,
-            SchemasToInclude = ["identity", "tenancy"],
+            SchemasToInclude = ["identity", "tenancy", "menu"],
             TablesToIgnore =
             [
                 new Respawn.Graph.Table("identity", "__EFMigrationsHistory"),
                 new Respawn.Graph.Table("tenancy", "__EFMigrationsHistory"),
+                new Respawn.Graph.Table("menu", "__EFMigrationsHistory"),
             ],
         });
     }
