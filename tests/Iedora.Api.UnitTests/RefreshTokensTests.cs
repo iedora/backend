@@ -1,4 +1,4 @@
-using Iedora.Api.Security;
+using Iedora.Identity;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Iedora.Api.UnitTests;

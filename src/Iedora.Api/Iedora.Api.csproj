@@ -11,15 +11,14 @@
     <OpenApiGenerateDocumentsOnBuild>true</OpenApiGenerateDocumentsOnBuild>
   </PropertyGroup>
 
+  <!-- The thin web HOST: composes the feature modules (each a self-contained vertical-slice
+       library) and maps their endpoints. All feature code — endpoints, commands, handlers — lives
+       in the module libraries; the host only wires them together. -->
   <ItemGroup>
     <ProjectReference Include="..\..\Iedora.ServiceDefaults\Iedora.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\Iedora.Data\Iedora.Data.csproj" />
-    <ProjectReference Include="..\Iedora.Messaging\Iedora.Messaging.csproj" />
+    <ProjectReference Include="..\Iedora.Identity\Iedora.Identity.csproj" />
     <ProjectReference Include="..\Iedora.Tenancy\Iedora.Tenancy.csproj" />
-    <ProjectReference Include="..\Iedora.Contracts\Iedora.Contracts.csproj" />
-    <ProjectReference Include="..\..\framework\Outbox\Framework.Outbox\Framework.Outbox.csproj" />
-    <ProjectReference Include="..\..\framework\Commands\Framework.Commands\Framework.Commands.csproj" />
-    <ProjectReference Include="..\..\framework\Web\Framework.Web\Framework.Web.csproj" />
+    <ProjectReference Include="..\Iedora.Kernel\Iedora.Kernel.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,18 +30,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-
-    <!-- ASP.NET Core Identity stores + the Aspire Npgsql integration (DbContext + health checks
-         + DB telemetry). Access tokens are ES256 JWTs validated by the JwtBearer handler. The
-         EF model + migrations live in Iedora.Data. -->
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
-    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
-
-    <!-- Result pattern for expected failures (invalid credentials, token reuse, wrong password). -->
-    <PackageReference Include="ErrorOr" />
-    <!-- SMTP email sink for the outbox (password-reset mail). -->
-    <PackageReference Include="MailKit" />
   </ItemGroup>
 
 </Project>

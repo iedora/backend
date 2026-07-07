@@ -1,6 +1,6 @@
-using Iedora.Api.Identity;
-using Iedora.Api.Shared;
-using Iedora.Api.Tenancy;
+using Iedora.Identity;
+using Iedora.Kernel;
+using Iedora.Tenancy;
 using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,7 +21,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy(Policies.Admin, policy => policy.RequireRole(Roles.Admin));
     options.AddPolicy(Policies.Service, policy => policy.RequireClaim("typ", TokenTypes.Service));
 });
-builder.Services.AddValidation();     // built-in minimal-API DataAnnotations validation (.NET 10)
+// NOTE: AddValidation() is called inside each module (AddIdentityModule/AddTenancyModule), not here —
+// the .NET 10 validation source generator must run in the assembly that defines the endpoints.
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();        // build-time source of truth for the generated frontend client
 

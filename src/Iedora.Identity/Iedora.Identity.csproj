@@ -4,14 +4,11 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>Iedora.Tenancy</RootNamespace>
+    <RootNamespace>Iedora.Identity</RootNamespace>
   </PropertyGroup>
 
-  <!-- The Tenancy module (true vertical slices): endpoints + command payloads + handlers + saga,
-       co-located per feature. The API host maps its endpoints; the worker drains its outbox; neither
-       references the other. -->
   <ItemGroup>
-    <!-- Hosts minimal-API endpoints, so it needs the ASP.NET shared framework. -->
+    <!-- The module hosts minimal-API endpoints, so it needs the ASP.NET shared framework. -->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
@@ -19,13 +16,18 @@
     <ProjectReference Include="..\Iedora.Data\Iedora.Data.csproj" />
     <ProjectReference Include="..\Iedora.Contracts\Iedora.Contracts.csproj" />
     <ProjectReference Include="..\Iedora.Kernel\Iedora.Kernel.csproj" />
+    <ProjectReference Include="..\..\framework\Outbox\Framework.Outbox\Framework.Outbox.csproj" />
     <ProjectReference Include="..\..\framework\Inbox\Framework.Inbox\Framework.Inbox.csproj" />
     <ProjectReference Include="..\..\framework\Commands\Framework.Commands\Framework.Commands.csproj" />
     <ProjectReference Include="..\..\framework\Web\Framework.Web\Framework.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="ErrorOr" />
+    <PackageReference Include="MailKit" />
   </ItemGroup>
 <!-- The Web SDK's implicit global usings (this is a plain SDK lib that hosts ASP.NET endpoints). -->
   <ItemGroup>

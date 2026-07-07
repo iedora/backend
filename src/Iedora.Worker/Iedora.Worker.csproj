@@ -9,9 +9,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Iedora.ServiceDefaults\Iedora.ServiceDefaults.csproj" />
-    <!-- Generic app worker: it references each service's non-web messaging MODULE (which brings
-         its DbContext, handlers + dispatch registration) — never a service's web project. -->
-    <ProjectReference Include="..\Iedora.Messaging\Iedora.Messaging.csproj" />
+    <!-- Generic app worker: references each feature MODULE (bringing its DbContext, handlers +
+         dispatch registration) and calls only their outbox-dispatch composition. It maps no
+         endpoints, so it runs no web surface even though the modules are web-capable. -->
+    <ProjectReference Include="..\Iedora.Identity\Iedora.Identity.csproj" />
     <ProjectReference Include="..\Iedora.Tenancy\Iedora.Tenancy.csproj" />
   </ItemGroup>
 
