@@ -12,6 +12,7 @@ using Iedora.Api.Features.WhoAmI;
 using Iedora.Api.Observability;
 using Iedora.Api.Security;
 using Iedora.Api.Sessions;
+using Iedora.Api.Shared;
 using Iedora.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -85,6 +86,7 @@ public static class IdentityModule
         group.MapResetPassword();
         group.MapWhoAmI();
         group.MapJwks();
+        group.MapCommandStatus<IdentityDbContext>(); // GET /auth/commands/{id}
         return app;
     }
 }

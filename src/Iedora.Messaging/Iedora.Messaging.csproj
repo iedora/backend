@@ -14,6 +14,7 @@
     <ProjectReference Include="..\Iedora.Contracts\Iedora.Contracts.csproj" />
     <ProjectReference Include="..\..\framework\Outbox\Framework.Outbox\Framework.Outbox.csproj" />
     <ProjectReference Include="..\..\framework\Inbox\Framework.Inbox\Framework.Inbox.csproj" />
+    <ProjectReference Include="..\..\framework\Commands\Framework.Commands\Framework.Commands.csproj" />
   </ItemGroup>
 
   <ItemGroup>

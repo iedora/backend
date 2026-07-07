@@ -10,7 +10,7 @@ public sealed class SessionFlowTests : IntegrationTestBase
     [TestMethod]
     public async Task Refresh_rotates_the_token()
     {
-        await Register("a@tasca.pt", "Sup3rSecret!");
+        await RegisterAccount("a@tasca.pt", "Sup3rSecret!");
         var (_, c1) = await Login("a@tasca.pt", "Sup3rSecret!");
 
         var resp = await Refresh(c1);
@@ -33,7 +33,7 @@ public sealed class SessionFlowTests : IntegrationTestBase
     [TestMethod]
     public async Task Reusing_a_rotated_token_burns_the_whole_family()
     {
-        await Register("victim@tasca.pt", "Sup3rSecret!");
+        await RegisterAccount("victim@tasca.pt", "Sup3rSecret!");
         var (_, c1) = await Login("victim@tasca.pt", "Sup3rSecret!");
 
         // Legit rotation: c1 → c2.
@@ -54,7 +54,7 @@ public sealed class SessionFlowTests : IntegrationTestBase
     [TestMethod]
     public async Task Logout_revokes_the_session_and_clears_the_cookie()
     {
-        await Register("bye@tasca.pt", "Sup3rSecret!");
+        await RegisterAccount("bye@tasca.pt", "Sup3rSecret!");
         var (_, c1) = await Login("bye@tasca.pt", "Sup3rSecret!");
 
         var logout = await Logout(c1);
@@ -74,7 +74,7 @@ public sealed class SessionFlowTests : IntegrationTestBase
     [TestMethod]
     public async Task Logout_all_revokes_every_session_of_the_user()
     {
-        await Register("multi@tasca.pt", "Sup3rSecret!");
+        await RegisterAccount("multi@tasca.pt", "Sup3rSecret!");
         var (session1, c1) = await Login("multi@tasca.pt", "Sup3rSecret!"); // device 1
         var (_, c2) = await Login("multi@tasca.pt", "Sup3rSecret!");        // device 2
 

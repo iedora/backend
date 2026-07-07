@@ -60,7 +60,7 @@ public sealed class ChangePasswordTests : IntegrationTestBase
     [TestMethod]
     public async Task Change_revokes_other_sessions_but_keeps_the_current_device()
     {
-        await Register("multi@tasca.pt", Old);
+        await RegisterAccount("multi@tasca.pt", Old);
         var (device1, _) = await Login("multi@tasca.pt", Old);   // current device
         var (_, c2) = await Login("multi@tasca.pt", Old);        // another device
 
