@@ -18,12 +18,16 @@ public static class MenuModule
         return builder;
     }
 
-    /// <summary>Map the module's slices. The guest surface lives under <c>/public</c> (unauthenticated);
-    /// the owner/staff surfaces under <c>/api</c> land in later slices.</summary>
+    /// <summary>Map the module's slices: the unauthenticated guest surface under <c>/public</c>, and
+    /// the authenticated owner/staff surface under <c>/api</c> (scoped restaurant access is enforced
+    /// per-request by <see cref="RestaurantAccess"/>).</summary>
     public static IEndpointRouteBuilder MapMenuModule(this IEndpointRouteBuilder app)
     {
         var pub = app.MapGroup("/public").AllowAnonymous();
         pub.MapPublicMenu(); // GET /public/r/{slug}
+
+        var api = app.MapGroup("/api").RequireAuthorization();
+        api.MapGroup("/restaurants/{slug}").MapRestaurantReads(); // GET /api/restaurants/{slug}[/tree]
         return app;
     }
 }
