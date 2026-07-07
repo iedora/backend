@@ -31,6 +31,7 @@ public static class MenuModule
         restaurant.MapRestaurantReads();  // GET /api/restaurants/{slug}[/tree]
         restaurant.MapMenuBuilder();      // menu create/update/delete
         restaurant.MapCategoryBuilder();  // category create/update/delete + reorder
+        restaurant.MapItemBuilder();      // item create/update/delete + reorder
         return app;
     }
 }
