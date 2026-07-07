@@ -1,5 +1,9 @@
 using System.Net.Http.Json;
+using Iedora.Data;
+using Iedora.Kernel;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Iedora.Api.IntegrationTests;
@@ -105,6 +109,34 @@ public abstract class IntegrationTestBase
     protected async Task<TokenPayload> RegisterAndLogin(string email, string password)
     {
         await RegisterAccount(email, password);
+        return (await Login(email, password)).body;
+    }
+
+    /// <summary>Create a user who owns a fresh tenant, and return a token whose <c>tid</c> claim is
+    /// pinned to it (login resolves the default tenant from the earliest membership, so we re-login
+    /// after creating the tenant). Used by menu/owner-scoped tests.</summary>
+    protected async Task<(TokenPayload token, Guid tenantId)> CreateOwnerWithTenant(
+        string email, string password, string tenantName = "Tenant")
+    {
+        var login = await RegisterAndLogin(email, password);
+        var tenantId = await CreateTenantAsync(tenantName, login.accessToken);
+        var relogin = (await Login(email, password)).body; // now the tid claim is present
+        return (relogin, Guid.Parse(tenantId));
+    }
+
+    /// <summary>Register, grant the admin role (so the JWT carries it), and log in.</summary>
+    protected async Task<TokenPayload> RegisterLoginAsAdmin(string email, string password)
+    {
+        await RegisterAccount(email, password);
+        await using (var scope = TestHost.Factory.Services.CreateAsyncScope())
+        {
+            var roles = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+            if (!await roles.RoleExistsAsync(Roles.Admin))
+                await roles.CreateAsync(new IdentityRole<Guid>(Roles.Admin));
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+            var user = (await users.FindByEmailAsync(email))!;
+            await users.AddToRoleAsync(user, Roles.Admin);
+        }
         return (await Login(email, password)).body;
     }
 

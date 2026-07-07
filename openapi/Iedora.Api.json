@@ -900,6 +900,74 @@
           }
         }
       }
+    },
+    "/api/restaurants/{slug}": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "The restaurant plus a per-menu summary with counts (owner/staff).",
+        "operationId": "RestaurantOverview",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantOverview"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/restaurants/{slug}/tree": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "The full raw content tree — i18n intact, incl. inactive/unavailable (builder).",
+        "operationId": "MenuTree",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuTreeResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1082,6 +1150,83 @@
           },
           "password": {
             "type": "string"
+          }
+        }
+      },
+      "MenuSummary": {
+        "required": [
+          "id",
+          "name",
+          "active",
+          "position",
+          "updatedAt",
+          "categoryCount",
+          "dishCount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "position": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "categoryCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "dishCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "MenuTreeResponse": {
+        "required": [
+          "menus",
+          "defaultLanguage",
+          "supportedLanguages"
+        ],
+        "type": "object",
+        "properties": {
+          "menus": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TreeMenu"
+            }
+          },
+          "defaultLanguage": {
+            "type": "string"
+          },
+          "supportedLanguages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -1419,6 +1564,119 @@
           }
         }
       },
+      "RestaurantDetail": {
+        "required": [
+          "id",
+          "tenantId",
+          "name",
+          "slug",
+          "description",
+          "descriptionI18n",
+          "logoUrl",
+          "bannerUrl",
+          "theme",
+          "defaultLanguage",
+          "supportedLanguages",
+          "defaultCurrency",
+          "onboardingCompletedAt",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "descriptionI18n": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "logoUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "bannerUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "theme": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Theme"
+              }
+            ]
+          },
+          "defaultLanguage": {
+            "type": "string"
+          },
+          "supportedLanguages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "defaultCurrency": {
+            "type": "string"
+          },
+          "onboardingCompletedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RestaurantOverview": {
+        "required": [
+          "restaurant",
+          "menus"
+        ],
+        "type": "object",
+        "properties": {
+          "restaurant": {
+            "$ref": "#/components/schemas/RestaurantDetail"
+          },
+          "menus": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuSummary"
+            }
+          }
+        }
+      },
       "ServiceTokenResponse": {
         "required": [
           "accessToken",
@@ -1633,6 +1891,258 @@
           },
           "name": {
             "type": "string"
+          }
+        }
+      },
+      "TreeCategory": {
+        "required": [
+          "id",
+          "menuId",
+          "name",
+          "nameI18n",
+          "description",
+          "descriptionI18n",
+          "position",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "menuId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nameI18n": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "descriptionI18n": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "position": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TreeItem"
+            }
+          }
+        }
+      },
+      "TreeItem": {
+        "required": [
+          "id",
+          "categoryId",
+          "name",
+          "nameI18n",
+          "description",
+          "descriptionI18n",
+          "priceCents",
+          "currency",
+          "imageUrl",
+          "position",
+          "available",
+          "tags",
+          "variants"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nameI18n": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "descriptionI18n": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "priceCents": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "position": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TreeVariant"
+            }
+          }
+        }
+      },
+      "TreeMenu": {
+        "required": [
+          "id",
+          "name",
+          "nameI18n",
+          "description",
+          "descriptionI18n",
+          "position",
+          "active",
+          "categories"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nameI18n": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "descriptionI18n": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "position": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TreeCategory"
+            }
+          }
+        }
+      },
+      "TreeVariant": {
+        "required": [
+          "label",
+          "labelI18n",
+          "priceCents"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "labelI18n": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "priceCents": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },

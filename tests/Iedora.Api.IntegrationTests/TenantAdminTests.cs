@@ -177,20 +177,4 @@ public sealed class TenantAdminTests : IntegrationTestBase
             new { email = "x@owner.pt", name = "X" }, user.accessToken);
         Assert.AreEqual(HttpStatusCode.Forbidden, resp.StatusCode);
     }
-
-    /// <summary>Register, grant the admin role (so the JWT carries it), and log in.</summary>
-    private async Task<TokenPayload> RegisterLoginAsAdmin(string email, string password)
-    {
-        await RegisterAccount(email, password);
-        await using (var scope = TestHost.Factory.Services.CreateAsyncScope())
-        {
-            var roles = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-            if (!await roles.RoleExistsAsync(Roles.Admin))
-                await roles.CreateAsync(new IdentityRole<Guid>(Roles.Admin));
-            var users = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
-            var user = (await users.FindByEmailAsync(email))!;
-            await users.AddToRoleAsync(user, Roles.Admin);
-        }
-        return (await Login(email, password)).body;
-    }
 }

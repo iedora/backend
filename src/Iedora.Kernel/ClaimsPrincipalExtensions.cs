@@ -10,4 +10,9 @@ public static class ClaimsPrincipalExtensions
     /// <c>MapInboundClaims = false</c>, so it stays "sub"). False when absent or unparseable.</summary>
     public static bool TryGetUserId(this ClaimsPrincipal principal, out Guid userId) =>
         Guid.TryParse(principal.FindFirstValue("sub"), out userId);
+
+    /// <summary>The caller's current tenant from the access token's <c>tid</c> claim, or null when the
+    /// token carries no tenant (e.g. a tenant-less staff token).</summary>
+    public static Guid? TenantId(this ClaimsPrincipal principal) =>
+        Guid.TryParse(principal.FindFirstValue("tid"), out var id) ? id : null;
 }
