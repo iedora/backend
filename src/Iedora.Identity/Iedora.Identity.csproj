@@ -13,7 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Iedora.Data\Iedora.Data.csproj" />
     <ProjectReference Include="..\Iedora.Contracts\Iedora.Contracts.csproj" />
     <ProjectReference Include="..\Iedora.Kernel\Iedora.Kernel.csproj" />
     <ProjectReference Include="..\..\framework\Outbox\Framework.Outbox\Framework.Outbox.csproj" />
@@ -28,6 +27,10 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="ErrorOr" />
     <PackageReference Include="MailKit" />
+    <!-- The module now owns its EF model + migrations; Design enables `dotnet ef`. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 <!-- The Web SDK's implicit global usings (this is a plain SDK lib that hosts ASP.NET endpoints). -->
   <ItemGroup>

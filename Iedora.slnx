@@ -18,7 +18,6 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Iedora.Contracts/Iedora.Contracts.csproj" />
-    <Project Path="src/Iedora.Data/Iedora.Data.csproj" />
     <Project Path="src/Iedora.Kernel/Iedora.Kernel.csproj" />
     <Project Path="src/Iedora.Identity/Iedora.Identity.csproj" />
     <Project Path="src/Iedora.Menus/Iedora.Menus.csproj" />

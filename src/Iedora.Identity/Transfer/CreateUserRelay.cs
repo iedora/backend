@@ -2,7 +2,6 @@ using System.Text.Json;
 using Framework.Inbox;
 using Framework.Outbox;
 using Iedora.Contracts;
-using Iedora.Data;
 
 namespace Iedora.Identity;
 

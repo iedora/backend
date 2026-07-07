@@ -1,11 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
-using Iedora.Kernel;
-using Iedora.Data;
-using Microsoft.AspNetCore.Identity;
+using Iedora.Identity;
+using Iedora.Menus;
+using Iedora.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Iedora.Api.IntegrationTests;
 

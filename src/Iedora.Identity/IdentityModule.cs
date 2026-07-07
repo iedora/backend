@@ -1,11 +1,7 @@
 using Iedora.Contracts;
 using Iedora.Kernel;
-using Iedora.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace Iedora.Identity;
 

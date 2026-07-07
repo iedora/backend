@@ -16,9 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Iedora.Data\Iedora.Data.csproj" />
     <ProjectReference Include="..\Iedora.Contracts\Iedora.Contracts.csproj" />
     <ProjectReference Include="..\Iedora.Kernel\Iedora.Kernel.csproj" />
+    <ProjectReference Include="..\..\framework\Outbox\Framework.Outbox\Framework.Outbox.csproj" />
     <ProjectReference Include="..\..\framework\Inbox\Framework.Inbox\Framework.Inbox.csproj" />
     <ProjectReference Include="..\..\framework\Commands\Framework.Commands\Framework.Commands.csproj" />
     <ProjectReference Include="..\..\framework\Web\Framework.Web\Framework.Web.csproj" />
@@ -26,6 +26,11 @@
 
   <ItemGroup>
     <PackageReference Include="ErrorOr" />
+    <!-- The module now owns its EF model + migrations. -->
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 <!-- The Web SDK's implicit global usings (this is a plain SDK lib that hosts ASP.NET endpoints). -->
   <ItemGroup>

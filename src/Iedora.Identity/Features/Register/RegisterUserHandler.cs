@@ -1,6 +1,5 @@
 using ErrorOr;
 using Framework.Commands;
-using Iedora.Data;
 using Microsoft.AspNetCore.Identity;
 
 namespace Iedora.Identity;

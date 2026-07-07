@@ -2,7 +2,6 @@ using Iedora.Identity;
 using Iedora.Kernel;
 using Iedora.Menus;
 using Iedora.Tenancy;
-using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
