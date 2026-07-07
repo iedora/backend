@@ -40,7 +40,7 @@ public sealed class PasswordResetTests : IntegrationTestBase
         var (email, token) = ExtractResetLink(TestHost.EmailSender.Sent.Single().HtmlBody);
 
         var reset = await PostJson("/auth/reset-password", new { email, token, password = "Ev3nBetter!" });
-        Assert.AreEqual(HttpStatusCode.NoContent, reset.StatusCode);
+        await AwaitIdentityCommandAsync(reset);
 
         // Old password rejected; the reset one works.
         var oldTry = await Client.PostAsJsonAsync("/auth/login", new { email = "chef@tasca.pt", password = "Sup3rSecret!" });

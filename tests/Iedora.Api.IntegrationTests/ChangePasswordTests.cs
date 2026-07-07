@@ -14,13 +14,13 @@ public sealed class ChangePasswordTests : IntegrationTestBase
     private const string New = "Ev3nBetter!";
 
     [TestMethod]
-    public async Task Voluntary_change_with_correct_current_returns_204_and_lets_new_password_log_in()
+    public async Task Voluntary_change_with_correct_current_is_accepted_and_lets_new_password_log_in()
     {
         var login = await RegisterAndLogin("owner@tasca.pt", Old);
 
         var resp = await PostJson("/auth/change-password",
             new { currentPassword = Old, newPassword = New }, login.accessToken);
-        Assert.AreEqual(HttpStatusCode.NoContent, resp.StatusCode);
+        await AwaitIdentityCommandAsync(resp, login.accessToken);
 
         // Old password no longer works; new one does.
         var oldTry = await Client.PostAsJsonAsync("/auth/login", new { email = "owner@tasca.pt", password = Old });
@@ -51,7 +51,8 @@ public sealed class ChangePasswordTests : IntegrationTestBase
     public async Task Policy_violating_new_password_returns_400()
     {
         var login = await RegisterAndLogin("weak@tasca.pt", Old);
-        // 8 chars (passes the DataAnnotation length) but violates Identity policy → handler maps to 400.
+        // 8 chars (passes the DataAnnotation length) but violates Identity policy → rejected 400 up
+        // front (synchronously), before any command is submitted.
         var resp = await PostJson("/auth/change-password",
             new { currentPassword = Old, newPassword = "12345678" }, login.accessToken);
         Assert.AreEqual(HttpStatusCode.BadRequest, resp.StatusCode);
@@ -66,7 +67,7 @@ public sealed class ChangePasswordTests : IntegrationTestBase
 
         var resp = await PostJson("/auth/change-password",
             new { currentPassword = Old, newPassword = New }, device1.accessToken);
-        Assert.AreEqual(HttpStatusCode.NoContent, resp.StatusCode);
+        await AwaitIdentityCommandAsync(resp, device1.accessToken);
 
         // The other device's refresh is dead; the current device's session survives.
         Assert.AreEqual(HttpStatusCode.Unauthorized, (await Refresh(c2)).StatusCode);
@@ -81,7 +82,11 @@ public sealed class ChangePasswordTests : IntegrationTestBase
         // No current password supplied — allowed because the account is flagged must-change.
         var resp = await PostJson("/auth/change-password",
             new { newPassword = New }, login.accessToken);
-        Assert.AreEqual(HttpStatusCode.NoContent, resp.StatusCode);
+        await AwaitIdentityCommandAsync(resp, login.accessToken);
+
+        // The forced-change flag is cleared and the new password logs in.
+        var newTry = await Client.PostAsJsonAsync("/auth/login", new { email = "forced@tasca.pt", password = New });
+        Assert.AreEqual(HttpStatusCode.OK, newTry.StatusCode);
     }
 
     private static async Task SetMustChangePassword(string email)

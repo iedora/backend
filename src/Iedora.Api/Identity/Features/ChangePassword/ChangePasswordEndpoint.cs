@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using Framework.Web;
 using System.Security.Claims;
-using ErrorOr;
+using Framework.Commands;
+using Framework.Web;
 using Iedora.Api.Identity;
+using Iedora.Api.Security;
 using Iedora.Api.Shared;
 using Iedora.Data;
-using Iedora.Api.Sessions;
+using Iedora.Messaging;
 using Microsoft.AspNetCore.Identity;
 
 namespace Iedora.Api.Features.ChangePassword;
@@ -14,67 +15,49 @@ public sealed record ChangePasswordRequest(
     string? CurrentPassword,
     [property: Required, StringLength(128, MinimumLength = 8)] string NewPassword);
 
-// POST /auth/change-password — change the signed-in user's password.
-// Voluntary change requires the current password; a forced change (MustChangePassword, set by an
-// admin) skips it since the user just authenticated. On success the flag clears and every OTHER
-// session is revoked (the current device stays signed in). The handler returns ErrorOr<Success>;
-// each failure is a typed error mapped to its status (missing current → 400, wrong current → 403,
-// weak password → 400 validation).
+// POST /auth/change-password — change the signed-in user's password (async). Everything that can
+// reject the request is checked synchronously first: a voluntary change verifies the current password
+// (missing → 400, wrong → 403), a forced change (MustChangePassword) skips it, and the new password is
+// run through the Identity policy (weak → 400). Only then is the hash computed and a command submitted
+// → 202. The handler swaps the hash and revokes the user's OTHER sessions; poll the status URL.
 public static class ChangePasswordEndpoint
 {
     public static void MapChangePassword(this RouteGroupBuilder group) =>
         group.MapPost("/change-password", async (
                 ChangePasswordRequest req, ClaimsPrincipal principal,
-                UserManager<AppUser> users, SessionService sessions, CancellationToken ct) =>
+                UserManager<AppUser> users, IdentityDbContext db, TimeProvider clock, CancellationToken ct) =>
         {
             if (!principal.TryGetUserId(out var userId))
                 return ProblemResults.From(CommonErrors.Unauthenticated);
-            Guid.TryParse(principal.FindFirstValue("sid"), out var currentFamily);
 
-            var result = await ChangeAsync(users, sessions, userId, currentFamily, req, ct);
-            return result.IsError ? ProblemResults.From(result.Errors) : TypedResults.NoContent();
+            var user = await users.FindByIdAsync(userId.ToString());
+            if (user is null) return ProblemResults.From(IdentityErrors.UserGone);
+
+            // Forced change: the user just authenticated at login, so no current password is required.
+            if (!user.MustChangePassword)
+            {
+                if (string.IsNullOrEmpty(req.CurrentPassword))
+                    return ProblemResults.From(IdentityErrors.CurrentPasswordRequired);
+                if (!await users.CheckPasswordAsync(user, req.CurrentPassword))
+                    return ProblemResults.From(IdentityErrors.WrongCurrentPassword);
+            }
+
+            var policy = await PasswordPolicy.ValidateAsync(users, user, req.NewPassword);
+            if (policy.IsError) return ProblemResults.From(policy.Errors);
+
+            Guid.TryParse(principal.FindFirstValue("sid"), out var currentFamily);
+            var passwordHash = users.PasswordHasher.HashPassword(user, req.NewPassword);
+            var commandId = Guid.CreateVersion7();
+            db.SubmitCommand(commandId, ChangePasswordCommand.Type,
+                new ChangePasswordCommand(userId, passwordHash, user.MustChangePassword, currentFamily), clock);
+            await db.SaveChangesAsync(ct);
+
+            return CommandEndpoints.AcceptedCommand(commandId, "/auth");
         })
         .RequireAuthorization()
         .WithName("ChangePassword")
-        .WithSummary("Change the signed-in user's password; revokes the user's other sessions.")
-        .Produces(StatusCodes.Status204NoContent)
+        .WithSummary("Change the signed-in user's password (async — poll the status URL); revokes other sessions.")
+        .Produces<CommandAccepted>(StatusCodes.Status202Accepted)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status403Forbidden);
-
-    private static async Task<ErrorOr<Success>> ChangeAsync(
-        UserManager<AppUser> users, SessionService sessions,
-        Guid userId, Guid currentFamily, ChangePasswordRequest req, CancellationToken ct)
-    {
-        var user = await users.FindByIdAsync(userId.ToString());
-        if (user is null) return IdentityErrors.UserGone;
-
-        IdentityResult result;
-        if (user.MustChangePassword)
-        {
-            // Forced change: the user just authenticated at login, so no current password.
-            var token = await users.GeneratePasswordResetTokenAsync(user);
-            result = await users.ResetPasswordAsync(user, token, req.NewPassword);
-        }
-        else
-        {
-            if (string.IsNullOrEmpty(req.CurrentPassword)) return IdentityErrors.CurrentPasswordRequired;
-            result = await users.ChangePasswordAsync(user, req.CurrentPassword, req.NewPassword);
-        }
-
-        if (!result.Succeeded)
-        {
-            if (result.Errors.Any(e => e.Code == "PasswordMismatch")) return IdentityErrors.WrongCurrentPassword;
-            // Password-policy failures → validation errors, grouped by Identity's error code.
-            return result.Errors.Select(e => Error.Validation($"auth.{e.Code}", e.Description)).ToList();
-        }
-
-        if (user.MustChangePassword)
-        {
-            user.MustChangePassword = false;
-            await users.UpdateAsync(user);
-        }
-        // Security: a password change revokes the user's other sessions (keep the current device).
-        await sessions.RevokeAllForUserAsync(user.Id, exceptFamilyId: currentFamily, ct);
-        return Result.Success;
-    }
 }
