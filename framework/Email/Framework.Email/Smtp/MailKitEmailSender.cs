@@ -3,27 +3,10 @@ using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
 
-namespace Iedora.Identity;
-
-/// <summary>SMTP settings, bound from the "Smtp" config section (env-overridable via Kamal).</summary>
-public sealed class SmtpSettings
-{
-    public string Host { get; set; } = "localhost";
-    public int Port { get; set; } = 1025;               // dev default: a local catcher (Mailpit/smtp4dev)
-    public bool UseStartTls { get; set; }               // true in prod
-    public string? User { get; set; }
-    public string? Password { get; set; }
-    public string From { get; set; } = "no-reply@iedora.com";
-    public string FromName { get; set; } = "iedora";
-}
-
-public interface IEmailSender
-{
-    Task SendAsync(string to, string subject, string htmlBody, CancellationToken ct);
-}
+namespace Framework.Email;
 
 /// <summary>MailKit SMTP sender (System.Net.Mail.SmtpClient is soft-deprecated). One client per
-/// send; the outbox owns retries, so this just does the transport.</summary>
+/// send; retries belong to the caller's outbox, so this just does the transport.</summary>
 public sealed class MailKitEmailSender(IOptions<SmtpSettings> options) : IEmailSender
 {
     private readonly SmtpSettings _smtp = options.Value;

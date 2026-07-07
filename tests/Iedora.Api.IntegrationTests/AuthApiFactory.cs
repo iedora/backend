@@ -1,3 +1,4 @@
+using Framework.Email;
 using Framework.Outbox;
 using Iedora.Identity;
 using Iedora.Tenancy;

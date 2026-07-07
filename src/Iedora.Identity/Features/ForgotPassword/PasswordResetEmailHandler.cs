@@ -1,3 +1,4 @@
+using Framework.Email;
 using System.Text.Json;
 using Framework.Outbox;
 

@@ -1,5 +1,8 @@
 <Solution>
   <Folder Name="/framework/" />
+  <Folder Name="/framework/Email/">
+    <Project Path="framework/Email/Framework.Email/Framework.Email.csproj" />
+  </Folder>
   <Folder Name="/framework/Commands/">
     <Project Path="framework/Commands/Framework.Commands.Tests/Framework.Commands.Tests.csproj" />
     <Project Path="framework/Commands/Framework.Commands/Framework.Commands.csproj" />

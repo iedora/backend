@@ -1,6 +1,8 @@
+using Framework.Email;
 using Framework.Inbox;
 using Framework.Outbox;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Iedora.Identity;
@@ -34,7 +36,7 @@ public static class IdentityMessagingExtensions
     public static IServiceCollection AddIdentityMessagingHandlers(this IServiceCollection services)
     {
         services.TryAddSingleton(TimeProvider.System);
-        services.AddSingleton<IEmailSender, MailKitEmailSender>();
+        services.AddSmtpEmail();
 
         services.AddOutbox<IdentityDbContext>();
         services.AddInbox<IdentityDbContext>();

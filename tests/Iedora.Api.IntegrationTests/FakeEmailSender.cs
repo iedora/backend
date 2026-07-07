@@ -1,3 +1,4 @@
+using Framework.Email;
 using Iedora.Identity;
 
 namespace Iedora.Api.IntegrationTests;
