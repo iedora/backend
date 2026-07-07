@@ -9,6 +9,7 @@ using Iedora.Api.Features.Logout;
 using Iedora.Api.Features.Refresh;
 using Iedora.Api.Features.Register;
 using Iedora.Api.Features.ResetPassword;
+using Iedora.Api.Features.Token;
 using Iedora.Api.Features.WhoAmI;
 using Iedora.Api.Observability;
 using Iedora.Api.Security;
@@ -60,6 +61,9 @@ public static class IdentityModule
         builder.Services.AddScoped<SessionService>();
         builder.Services.Configure<PasswordResetOptions>(builder.Configuration.GetSection("PasswordReset"));
 
+        // Internal service clients for the client-credentials grant (POST /auth/token).
+        builder.Services.Configure<ServiceTokenOptions>(builder.Configuration.GetSection("ServiceToken"));
+
         // ES256 JWT issuer/validator; JwtBearer reads its parameters from the same instance.
         builder.Services.AddSingleton<JwtTokenService>();
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
@@ -79,6 +83,7 @@ public static class IdentityModule
     {
         var group = app.MapGroup("/auth");
         group.MapRegister();
+        group.MapToken();
         group.MapLogin();
         group.MapRefresh();
         group.MapLogout();

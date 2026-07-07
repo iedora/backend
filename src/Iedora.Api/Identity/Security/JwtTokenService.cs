@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.Json.Serialization;
+using Iedora.Api.Shared;
 using Iedora.Data;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -22,6 +23,7 @@ public sealed class JwtTokenService
     private readonly string _issuer;
     private readonly string _audience;
     private readonly TimeSpan _ttl;
+    private readonly TimeSpan _serviceTtl;
 
     public string Kid { get; }
 
@@ -31,6 +33,7 @@ public sealed class JwtTokenService
         _issuer = cfg["API_JWT_ISSUER"] ?? "https://api.iedora.com";
         _audience = cfg["API_JWT_AUDIENCE"] ?? "iedora-api";
         _ttl = TimeSpan.FromMinutes(int.Parse(cfg["API_ACCESS_TTL_MIN"] ?? "15"));
+        _serviceTtl = TimeSpan.FromMinutes(int.Parse(cfg["API_SERVICE_TTL_MIN"] ?? "60"));
         Kid = cfg["API_JWT_KEY_ID"] ?? "k1";
 
         _ecdsa = ECDsa.Create(ECCurve.NamedCurves.nistP256);
@@ -55,13 +58,36 @@ public sealed class JwtTokenService
             ["sub"] = user.Id.ToString(),
             ["email"] = user.Email ?? "",
             ["roles"] = roles.ToArray(),
-            ["typ"] = "access",
+            ["typ"] = TokenTypes.Access,
             ["sid"] = sessionId.ToString(),
         };
         if (tenantId is { } tid) claims["tid"] = tid.ToString();
         if (mustChangePassword) claims["mcp"] = true;
 
-        var token = new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
+        return (Sign(claims, now, expiresAt), expiresAt);
+    }
+
+    /// <summary>
+    /// Mints an internal <b>service</b> token for the client-credentials grant — same ES256 key and
+    /// audience as user tokens (so the standard JwtBearer handler validates it), distinguished by
+    /// <c>typ=service</c> and <c>sub=clientId</c>. It carries no user id or roles, so it authenticates
+    /// service-to-service calls (gated by <see cref="Policies.Service"/>) but can't stand in for a user.
+    /// </summary>
+    public (string token, DateTimeOffset expiresAt) IssueService(string clientId)
+    {
+        var now = _clock.GetUtcNow();
+        var expiresAt = now.Add(_serviceTtl);
+        var claims = new Dictionary<string, object>
+        {
+            ["sub"] = clientId,
+            ["typ"] = TokenTypes.Service,
+            ["client_id"] = clientId,
+        };
+        return (Sign(claims, now, expiresAt), expiresAt);
+    }
+
+    private string Sign(Dictionary<string, object> claims, DateTimeOffset now, DateTimeOffset expiresAt) =>
+        new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
         {
             Issuer = _issuer,
             Audience = _audience,
@@ -70,8 +96,6 @@ public sealed class JwtTokenService
             Claims = claims,
             SigningCredentials = new SigningCredentials(_key, SecurityAlgorithms.EcdsaSha256),
         });
-        return (token, expiresAt);
-    }
 
     /// <summary>TokenValidationParameters for the built-in JwtBearer handler (same key).</summary>
     public TokenValidationParameters ValidationParameters() => new()

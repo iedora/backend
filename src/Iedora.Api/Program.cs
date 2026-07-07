@@ -17,7 +17,10 @@ builder.AddTenancyModule();
 // Host-level cross-cutting.
 builder.Services.AddSingleton(TimeProvider.System); // testable clock (session TTLs, token expiry)
 builder.Services.AddAuthorization(options =>
-    options.AddPolicy(Policies.Admin, policy => policy.RequireRole(Roles.Admin)));
+{
+    options.AddPolicy(Policies.Admin, policy => policy.RequireRole(Roles.Admin));
+    options.AddPolicy(Policies.Service, policy => policy.RequireClaim("typ", TokenTypes.Service));
+});
 builder.Services.AddValidation();     // built-in minimal-API DataAnnotations validation (.NET 10)
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();        // build-time source of truth for the generated frontend client

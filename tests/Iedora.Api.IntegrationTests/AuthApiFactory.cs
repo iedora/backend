@@ -21,6 +21,7 @@ public sealed class AuthApiFactory(string connectionString) : WebApplicationFact
     {
         builder.UseSetting("ConnectionStrings:authdb", connectionString);
         builder.UseSetting("Session:CookieSecure", "false");
+        builder.UseSetting("ServiceToken:Clients:test-client", "test-secret"); // client-credentials grant
 
         builder.ConfigureTestServices(services =>
         {
