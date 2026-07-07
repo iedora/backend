@@ -1,4 +1,5 @@
 using Iedora.Data;
+using Iedora.Kernel;
 
 namespace Iedora.Menus;
 
@@ -25,6 +26,7 @@ public static class MenuModule
     {
         var pub = app.MapGroup("/public").AllowAnonymous();
         pub.MapPublicMenu(); // GET /public/r/{slug}
+        pub.MapPublicQr();   // GET /public/qr/{code}
 
         var api = app.MapGroup("/api").RequireAuthorization();
         var restaurant = api.MapGroup("/restaurants/{slug}");
@@ -33,6 +35,10 @@ public static class MenuModule
         restaurant.MapMenuBuilder();      // menu create/update/delete
         restaurant.MapCategoryBuilder();  // category create/update/delete + reorder
         restaurant.MapItemBuilder();      // item create/update/delete + reorder
+
+        // Cross-tenant staff surface (platform admin role).
+        var staff = api.MapGroup("/staff").RequireAuthorization(Policies.Admin);
+        staff.MapStaffQr(); // /api/staff/qr-codes …
         return app;
     }
 }

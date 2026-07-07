@@ -19,6 +19,7 @@ public sealed class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbC
     public DbSet<Menu> Menus => Set<Menu>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Item> Items => Set<Item>();
+    public DbSet<QrCode> QrCodes => Set<QrCode>();
 
     // camelCase JSON so the jsonb keys match the Bun service's shape (labelI18n, priceCents, …).
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
@@ -95,6 +96,16 @@ public sealed class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbC
             item.Property(i => i.UpdatedAt).HasDefaultValueSql("now()");
             item.HasOne<Category>().WithMany().HasForeignKey(i => i.CategoryId).OnDelete(DeleteBehavior.Cascade);
             item.HasOne<Restaurant>().WithMany().HasForeignKey(i => i.RestaurantId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<QrCode>(qr =>
+        {
+            qr.ToTable("qr_codes");
+            qr.HasKey(q => q.Code);
+            qr.HasIndex(q => q.RestaurantId);
+            qr.Property(q => q.CreatedAt).HasDefaultValueSql("now()");
+            // A sticker outlives the restaurant it was bound to (reusable): SET NULL, not cascade.
+            qr.HasOne<Restaurant>().WithMany().HasForeignKey(q => q.RestaurantId).OnDelete(DeleteBehavior.SetNull);
         });
     }
 }
