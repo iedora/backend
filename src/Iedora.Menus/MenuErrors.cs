@@ -52,4 +52,7 @@ internal static class MenuErrors
 
     public static readonly Error TenantRequired = Error.Validation(
         "menu.tenant_required", "This endpoint needs a tenant-scoped token.");
+
+    public static readonly Error ForeignAssetUrl = Error.Validation(
+        "menu.foreign_asset_url", "The image URL must be one uploaded for this restaurant.");
 }

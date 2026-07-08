@@ -1,3 +1,4 @@
+using Framework.Media;
 using Iedora.Identity;
 using Iedora.Identity.Contracts;
 using Iedora.Menus;
@@ -14,6 +15,7 @@ builder.AddServiceDefaults();
 builder.AddIdentityModule();
 builder.AddTenancyModule();
 builder.AddMenuModule();
+builder.AddMediaModule();
 
 // Host-level cross-cutting.
 builder.Services.AddSingleton(TimeProvider.System); // testable clock (session TTLs, token expiry)
@@ -43,6 +45,7 @@ app.UseAuthorization();
 app.MapIdentityModule();
 app.MapTenancyModule();
 app.MapMenuModule();
+app.MapMediaModule();
 
 app.Run();
 

@@ -19,6 +19,7 @@
     <ProjectReference Include="..\Iedora.Identity\Iedora.Identity.csproj" />
     <ProjectReference Include="..\Iedora.Tenancy\Iedora.Tenancy.csproj" />
     <ProjectReference Include="..\Iedora.Menus\Iedora.Menus.csproj" />
+    <ProjectReference Include="..\..\framework\Media\Framework.Media\Framework.Media.csproj" />
     <ProjectReference Include="..\Iedora.Identity.Contracts\Iedora.Identity.Contracts.csproj" />
   </ItemGroup>
 
