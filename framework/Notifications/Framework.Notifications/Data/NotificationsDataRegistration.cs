@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 
-namespace Iedora.Notifications;
+namespace Framework.Notifications;
 
 /// <summary>Wires the Notifications service's <see cref="NotificationsDbContext"/> onto the shared
 /// <c>authdb</c> Postgres (Aspire Npgsql), pinning its migrations-history table into the

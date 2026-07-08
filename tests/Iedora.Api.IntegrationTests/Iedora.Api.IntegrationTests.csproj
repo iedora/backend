@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Iedora.Api\Iedora.Api.csproj" />
-    <ProjectReference Include="..\..\src\Iedora.Notifications\Iedora.Notifications.csproj" />
+    <ProjectReference Include="..\..\framework\Notifications\Framework.Notifications\Framework.Notifications.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Framework.Outbox;
-using Iedora.Notifications.Contracts;
+using Framework.Notifications.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 
