@@ -54,7 +54,9 @@ internal static class ViewTracking
     }
 
     /// <summary>Store one guest session's dwell time (clamped 1..3600s).</summary>
-    public static async Task RecordSessionAsync(
+    /// <summary>Store one guest session's dwell time (clamped 1..3600s); returns the clamped seconds
+    /// so the caller can record the engagement metric without re-deriving the clamp.</summary>
+    public static async Task<int> RecordSessionAsync(
         MenuDbContext db, Restaurant r, double durationSeconds, DateTimeOffset now, CancellationToken ct)
     {
         var clamped = (short)Math.Clamp((int)Math.Round(durationSeconds), 1, 3600);
@@ -64,5 +66,6 @@ internal static class ViewTracking
             Day = Day(now), DurationSeconds = clamped, CreatedAt = now,
         });
         await db.SaveChangesAsync(ct);
+        return clamped;
     }
 }

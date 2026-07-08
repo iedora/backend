@@ -42,6 +42,7 @@ public static class TrackingEndpoints
                             http.Request.Query["lang"].ToString(), http.Request.Headers.AcceptLanguage.ToString(),
                             rest.SupportedLanguages, rest.DefaultLanguage);
                         await ViewTracking.RecordViewAsync(db, rest, visitor, lang, clock.GetUtcNow(), ct);
+                        MenuMetrics.Views.Add(1, new KeyValuePair<string, object?>("language", lang)); // business insight
                     }
                 }
                 catch (Exception ex) { RecordFailure(loggerFactory, ex, "view", slug); }
@@ -62,14 +63,21 @@ public static class TrackingEndpoints
                 {
                     var now = clock.GetUtcNow();
                     if (body?.DurationSeconds is > 0)
-                        await ViewTracking.RecordSessionAsync(db, rest, body.DurationSeconds.Value, now, ct);
+                    {
+                        var dwell = await ViewTracking.RecordSessionAsync(db, rest, body.DurationSeconds.Value, now, ct);
+                        MenuMetrics.Dwell.Record(dwell); // business insight: guest engagement
+                    }
 
                     if (Guid.TryParse(http.Request.Cookies[VisitorCookie], out var visitor) && body?.Items is { Count: > 0 })
                     {
                         var ids = body.Items
                             .Select(s => Guid.TryParse(s, out var g) ? g : (Guid?)null)
                             .Where(g => g is not null).Select(g => g!.Value).Distinct().Take(100).ToArray();
-                        if (ids.Length > 0) await ViewTracking.RecordItemViewsAsync(db, rest, ids, visitor, now, ct);
+                        if (ids.Length > 0)
+                        {
+                            await ViewTracking.RecordItemViewsAsync(db, rest, ids, visitor, now, ct);
+                            MenuMetrics.ItemViews.Add(ids.Length);
+                        }
                     }
                 }
             }
@@ -85,6 +93,7 @@ public static class TrackingEndpoints
     private static void RecordFailure(ILoggerFactory loggerFactory, Exception ex, string beacon, string slug)
     {
         Activity.Current?.AddException(ex); // span EVENT only — the request itself still succeeds (200/204)
+        MenuMetrics.Errors.Add(1, new KeyValuePair<string, object?>("kind", $"tracking.{beacon}")); // error-rate metric
         loggerFactory.CreateLogger("Iedora.Menus.Tracking")
             .LogWarning(ex, "view tracking failed ({Beacon}) for {Slug}", beacon, slug);
     }
