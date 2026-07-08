@@ -40,8 +40,6 @@ public static class IdentityMessagingExtensions
         services.AddScoped<IOutboxHandler, RegisterUserHandler>();     // async write: create account
         services.AddScoped<IOutboxHandler, ChangePasswordHandler>();      // async write: change password
         services.AddScoped<IOutboxHandler, ResetPasswordHandler>();       // async write: reset password
-        services.AddScoped<IOutboxHandler, SetUserPasswordHandler>();     // admin: set temp password
-        services.AddScoped<IOutboxHandler, ForcePasswordChangeHandler>(); // admin: force change at next login
         services.AddScoped<IOutboxHandler, CreateUserRelay>();         // transfer saga: → Identity inbox
         services.AddScoped<IInboxHandler, CreateUserInboxHandler>(); //   creates the new owner user
         return services;
