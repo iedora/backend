@@ -540,189 +540,6 @@
         }
       }
     },
-    "/auth/admin/users/{id}/sessions": {
-      "get": {
-        "tags": [
-          "Iedora.Api"
-        ],
-        "summary": "A user's sessions / device history (service).",
-        "operationId": "AdminListUserSessions",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SessionsResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
-    "/auth/admin/users/{id}/sessions/{family}/revoke": {
-      "post": {
-        "tags": [
-          "Iedora.Api"
-        ],
-        "summary": "Kick one of a user's devices (service).",
-        "operationId": "AdminRevokeUserSession",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "family",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OkResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
-    "/auth/admin/users/{id}/force-password-change": {
-      "post": {
-        "tags": [
-          "Iedora.Api"
-        ],
-        "summary": "Force a user to change their password at next login (service, async — poll the status URL).",
-        "operationId": "AdminForcePasswordChange",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Accepted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CommandAccepted"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/admin/users/{id}/set-password": {
-      "post": {
-        "tags": [
-          "Iedora.Api"
-        ],
-        "summary": "Set a temporary password a user must change at next login (service, async — poll the status URL).",
-        "operationId": "AdminSetUserPassword",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AdminSetPasswordRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "202": {
-            "description": "Accepted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CommandAccepted"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/tenancy/tenants": {
       "post": {
         "tags": [
@@ -2655,6 +2472,203 @@
           }
         }
       }
+    },
+    "/api/staff/users": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Search/list users for the staff CRM.",
+        "operationId": "StaffListUsers",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffUserListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/users/{id}": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "A user's record + tenant memberships + sessions (staff).",
+        "operationId": "StaffUserDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffUserDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/staff/users/{id}/force-password-change": {
+      "post": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Force a password change at next login (staff).",
+        "operationId": "StaffForcePasswordChange",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/staff/users/{id}/set-password": {
+      "post": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Set a temporary password for a user (staff).",
+        "operationId": "StaffSetUserPassword",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetUserPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/users/{id}/sessions/{family}/revoke": {
+      "post": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Revoke one of a user's sessions (staff).",
+        "operationId": "StaffRevokeUserSession",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "family",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2675,16 +2689,63 @@
           }
         }
       },
-      "AdminSetPasswordRequest": {
+      "AdminUserView": {
         "required": [
-          "password"
+          "id",
+          "email",
+          "name",
+          "roles",
+          "createdAt",
+          "passwordChangedAt",
+          "emailConfirmed",
+          "mustChangePassword",
+          "tenantCount"
         ],
         "type": "object",
         "properties": {
-          "password": {
-            "maxLength": 128,
-            "minLength": 8,
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
             "type": "string"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "passwordChangedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "emailConfirmed": {
+            "type": "boolean"
+          },
+          "mustChangePassword": {
+            "type": "boolean"
+          },
+          "tenantCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -3340,6 +3401,22 @@
             "type": "string"
           },
           "password": {
+            "type": "string"
+          }
+        }
+      },
+      "MembershipRecord": {
+        "required": [
+          "tenantId",
+          "role"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
             "type": "string"
           }
         }
@@ -4154,6 +4231,18 @@
           }
         }
       },
+      "SetUserPasswordRequest": {
+        "required": [
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "password": {
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      },
       "StaffAlertsResponse": {
         "required": [
           "staleRestaurants",
@@ -4354,6 +4443,45 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "StaffUserDetail": {
+        "required": [
+          "user",
+          "memberships",
+          "sessions"
+        ],
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/AdminUserView"
+          },
+          "memberships": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MembershipRecord"
+            }
+          },
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserSessionRecord"
+            }
+          }
+        }
+      },
+      "StaffUserListResponse": {
+        "required": [
+          "users"
+        ],
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminUserView"
+            }
           }
         }
       },
@@ -4929,6 +5057,67 @@
             }
           },
           "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UserSessionRecord": {
+        "required": [
+          "id",
+          "familyId",
+          "tenantId",
+          "ip",
+          "userAgent",
+          "issuedAt",
+          "expiresAt",
+          "revokedAt",
+          "current"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "familyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "ip": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "userAgent": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "issuedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revokedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "current": {
             "type": "boolean"
           }
         }

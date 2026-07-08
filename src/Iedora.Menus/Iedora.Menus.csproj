@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Iedora.Identity.Contracts\Iedora.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\Iedora.Tenancy.Contracts\Iedora.Tenancy.Contracts.csproj" />
     <ProjectReference Include="..\..\framework\Web\Framework.Web\Framework.Web.csproj" />
     <ProjectReference Include="..\..\framework\Storage\Framework.Storage\Framework.Storage.csproj" />
   </ItemGroup>

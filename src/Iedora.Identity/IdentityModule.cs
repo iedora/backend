@@ -78,7 +78,6 @@ public static class IdentityModule
         group.MapResetPassword();
         group.MapWhoAmI();
         group.MapAccountSessions();
-        group.MapUsersAdmin();
         group.MapJwks();
         group.MapCommandStatus<IdentityDbContext>(); // GET /auth/commands/{id}
         return app;

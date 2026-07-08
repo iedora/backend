@@ -28,13 +28,17 @@ internal static class PasswordCredential
             return Error.Unauthorized("auth.user_gone", "The user no longer exists.");
 
         // Tracked mutation — committed by the CommandHandler's SaveChanges alongside the status flip.
-        if (passwordHash is not null) user.PasswordHash = passwordHash;
+        var now = clock.GetUtcNow();
+        if (passwordHash is not null)
+        {
+            user.PasswordHash = passwordHash;
+            user.PasswordChangedAt = now; // "last password change" for the staff CRM + owner settings
+        }
         user.SecurityStamp = Guid.NewGuid().ToString(); // invalidate stamp-derived tokens
         user.MustChangePassword = mustChangePassword;
 
         // Revoke live sessions (immediate bulk update). A voluntary change keeps the current device;
         // a reset / admin action severs everything.
-        var now = clock.GetUtcNow();
         var sessions = db.Sessions.Where(s => s.UserId == userId && s.RevokedAt == null);
         if (keepFamilyId is { } family) sessions = sessions.Where(s => s.FamilyId != family);
         await sessions.ExecuteUpdateAsync(u => u.SetProperty(s => s.RevokedAt, (DateTimeOffset?)now), ct);

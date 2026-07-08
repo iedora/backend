@@ -47,6 +47,7 @@ public static class MenuModule
         var staff = api.MapGroup("/staff").RequireAuthorization(Policies.Admin);
         staff.MapStaffConsole();    // /api/staff/{overview,directory,alerts,restaurants/{id}}
         staff.MapStaffMenuImport(); // /api/staff/restaurants/{id}/menus (JSON export/replace)
+        staff.MapStaffUsers();      // /api/staff/users … (users CRM: Identity + Tenancy BFF)
         staff.MapStaffQr();         // /api/staff/qr-codes …
         return app;
     }
