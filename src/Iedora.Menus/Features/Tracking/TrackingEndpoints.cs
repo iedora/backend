@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 
 namespace Iedora.Menus;
@@ -26,7 +27,8 @@ public static class TrackingEndpoints
     public static void MapTracking(this RouteGroupBuilder pub)
     {
         pub.MapGet("/track/{slug}", async (
-                string slug, HttpContext http, MenuDbContext db, TimeProvider clock, CancellationToken ct) =>
+                string slug, HttpContext http, MenuDbContext db, TimeProvider clock,
+                ILoggerFactory loggerFactory, CancellationToken ct) =>
         {
             if (!IsBot(http))
             {
@@ -42,7 +44,7 @@ public static class TrackingEndpoints
                         await ViewTracking.RecordViewAsync(db, rest, visitor, lang, clock.GetUtcNow(), ct);
                     }
                 }
-                catch { /* fire-and-forget: a tracking error never breaks the guest page */ }
+                catch (Exception ex) { RecordFailure(loggerFactory, ex, "view", slug); }
             }
             http.Response.Headers.CacheControl = "no-store";
             return Results.File(Pixel, "image/gif");
@@ -50,7 +52,8 @@ public static class TrackingEndpoints
         .WithName("TrackView").WithSummary("Count one public menu view (pixel beacon).");
 
         pub.MapPost("/track/{slug}/session", async (
-                string slug, SessionBeacon? body, HttpContext http, MenuDbContext db, TimeProvider clock, CancellationToken ct) =>
+                string slug, SessionBeacon? body, HttpContext http, MenuDbContext db, TimeProvider clock,
+                ILoggerFactory loggerFactory, CancellationToken ct) =>
         {
             try
             {
@@ -70,10 +73,20 @@ public static class TrackingEndpoints
                     }
                 }
             }
-            catch { /* fire-and-forget */ }
+            catch (Exception ex) { RecordFailure(loggerFactory, ex, "session", slug); }
             return Results.NoContent();
         })
         .WithName("TrackSession").WithSummary("Record a guest session's dwell time + viewed dishes.");
+    }
+
+    // Tracking stays fire-and-forget (a guest never sees an error), but the failure is no longer
+    // silent: record it on the request span (OTel exception event + semconv attrs) and as a structured
+    // warning log. Both flow to the collector, so a broken beacon shows up instead of counting nothing.
+    private static void RecordFailure(ILoggerFactory loggerFactory, Exception ex, string beacon, string slug)
+    {
+        Activity.Current?.AddException(ex); // span EVENT only — the request itself still succeeds (200/204)
+        loggerFactory.CreateLogger("Iedora.Menus.Tracking")
+            .LogWarning(ex, "view tracking failed ({Beacon}) for {Slug}", beacon, slug);
     }
 
     private static bool IsBot(HttpContext http)
