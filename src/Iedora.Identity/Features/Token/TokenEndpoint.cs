@@ -30,9 +30,15 @@ public static class TokenEndpoint
                 return TypedResults.Unauthorized();
 
             if (!options.Value.Clients.TryGetValue(clientId, out var expected) || !SecretsMatch(secret, expected))
+            {
+                Telemetry.TokensIssued.Add(1,
+                    new(Telemetry.Tags.Grant, Telemetry.Grant.ClientCredentials), new(Telemetry.Tags.Result, Telemetry.Result.Denied));
                 return TypedResults.Unauthorized();
+            }
 
             var (token, expiresAt) = jwt.IssueService(clientId);
+            Telemetry.TokensIssued.Add(1,
+                new(Telemetry.Tags.Grant, Telemetry.Grant.ClientCredentials), new(Telemetry.Tags.Result, Telemetry.Result.Issued));
             return TypedResults.Ok(new ServiceTokenResponse(token, expiresAt, "Bearer"));
         })
         .AllowAnonymous()

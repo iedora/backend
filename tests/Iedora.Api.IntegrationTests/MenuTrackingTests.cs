@@ -19,7 +19,7 @@ public sealed class MenuTrackingTests : IntegrationTestBase
         var got = new ConcurrentBag<(long, string?)>();
         using var listener = new MeterListener
         {
-            InstrumentPublished = (i, l) => { if (i.Meter.Name == "Iedora.Menus" && i.Name == instrument) l.EnableMeasurementEvents(i); },
+            InstrumentPublished = (i, l) => { if (i.Meter.Name == MenuMetrics.MeterName && i.Name == instrument) l.EnableMeasurementEvents(i); },
         };
         listener.SetMeasurementEventCallback<long>((i, m, tags, _) =>
         {
@@ -38,7 +38,7 @@ public sealed class MenuTrackingTests : IntegrationTestBase
         var got = new ConcurrentBag<int>();
         using var listener = new MeterListener
         {
-            InstrumentPublished = (i, l) => { if (i.Meter.Name == "Iedora.Menus" && i.Name == instrument) l.EnableMeasurementEvents(i); },
+            InstrumentPublished = (i, l) => { if (i.Meter.Name == MenuMetrics.MeterName && i.Name == instrument) l.EnableMeasurementEvents(i); },
         };
         listener.SetMeasurementEventCallback<int>((i, m, _, _) => got.Add(m));
         listener.Start();
@@ -182,7 +182,7 @@ public sealed class MenuTrackingTests : IntegrationTestBase
     {
         await Seed("tasca"); // supports en + pt
         // Ask for "pt" so the measurement's language tag is distinctive (other tests default to "en").
-        var measurements = await CaptureCounter("menu.views", "language",
+        var measurements = await CaptureCounter(MenuMetrics.Instruments.Views, MenuMetrics.Tags.Language,
             () => Client.GetAsync("/public/track/tasca?lang=pt"));
         Assert.IsTrue(measurements.Any(m => m is { Value: 1, Tag: "pt" }),
             "expected a menu.views measurement of 1 tagged language=pt");
@@ -193,7 +193,7 @@ public sealed class MenuTrackingTests : IntegrationTestBase
     {
         await Seed("tasca");
         // A distinctive duration so the histogram measurement is unambiguously ours.
-        var measurements = await CaptureHistogram("menu.session.dwell",
+        var measurements = await CaptureHistogram(MenuMetrics.Instruments.Dwell,
             async () => await PostSession("tasca", new { durationSeconds = 1234 }));
         Assert.IsTrue(measurements.Contains(1234), "expected a dwell measurement of 1234s");
     }
