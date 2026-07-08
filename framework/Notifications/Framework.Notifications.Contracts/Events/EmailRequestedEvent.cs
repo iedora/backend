@@ -1,4 +1,4 @@
-namespace Iedora.Notifications.Contracts;
+namespace Framework.Notifications.Contracts;
 
 /// <summary>A request to deliver one already-rendered email. Publishers (e.g. Identity's
 /// forgot-password) render the content and put this on THEIR outbox; the Notifications service

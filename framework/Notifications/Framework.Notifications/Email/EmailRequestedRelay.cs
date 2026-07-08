@@ -1,9 +1,9 @@
 using System.Text.Json;
 using Framework.Inbox;
 using Framework.Outbox;
-using Iedora.Notifications.Contracts;
+using Framework.Notifications.Contracts;
 
-namespace Iedora.Notifications;
+namespace Framework.Notifications;
 
 /// <summary>The outbox→inbox bridge: a publisher's OutboxProcessor dispatches <see cref="EmailRequested"/>
 /// (matched by Type across the global handler pool) and hands it here, which forwards it into the

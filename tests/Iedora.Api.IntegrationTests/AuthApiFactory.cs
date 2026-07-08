@@ -1,7 +1,7 @@
 using Framework.Email;
 using Framework.Outbox;
 using Iedora.Identity;
-using Iedora.Notifications;
+using Framework.Notifications;
 using Iedora.Tenancy;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;

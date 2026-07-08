@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Iedora.Notifications;
+namespace Framework.Notifications;
 
 /// <summary>Design-time factory for <c>dotnet ef migrations add … --context NotificationsDbContext</c>.</summary>
 public sealed class NotificationsDbContextFactory : IDesignTimeDbContextFactory<NotificationsDbContext>

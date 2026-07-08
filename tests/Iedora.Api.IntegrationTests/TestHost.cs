@@ -1,4 +1,4 @@
-using Iedora.Notifications;
+using Framework.Notifications;
 using Iedora.Identity;
 using Iedora.Menus;
 using Iedora.Tenancy;

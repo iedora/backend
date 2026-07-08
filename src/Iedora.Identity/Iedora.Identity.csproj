@@ -19,7 +19,7 @@
     <ProjectReference Include="..\..\framework\Inbox\Framework.Inbox\Framework.Inbox.csproj" />
     <ProjectReference Include="..\..\framework\Commands\Framework.Commands\Framework.Commands.csproj" />
     <ProjectReference Include="..\..\framework\Web\Framework.Web\Framework.Web.csproj" />
-    <ProjectReference Include="..\Iedora.Notifications.Contracts\Iedora.Notifications.Contracts.csproj" />
+    <ProjectReference Include="..\..\framework\Notifications\Framework.Notifications.Contracts\Framework.Notifications.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

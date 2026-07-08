@@ -1,9 +1,9 @@
 using System.Text.Json;
 using Framework.Email;
 using Framework.Inbox;
-using Iedora.Notifications.Contracts;
+using Framework.Notifications.Contracts;
 
-namespace Iedora.Notifications;
+namespace Framework.Notifications;
 
 /// <summary>Delivers a queued <see cref="EmailRequested"/> over SMTP, inside the inbox transaction
 /// (deduped on the correlation id, so redelivery never double-sends).</summary>

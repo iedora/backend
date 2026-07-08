@@ -1,5 +1,5 @@
 using Iedora.Identity;
-using Iedora.Notifications;
+using Framework.Notifications;
 using Iedora.Tenancy;
 
 // The single app-wide background worker. It composes each feature module's outbox-dispatch side —

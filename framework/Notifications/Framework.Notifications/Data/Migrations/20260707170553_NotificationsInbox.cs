@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Iedora.Notifications.Migrations
+namespace Framework.Notifications.Migrations
 {
     /// <inheritdoc />
     public partial class NotificationsInbox : Migration

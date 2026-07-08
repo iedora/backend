@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Iedora.Identity;
 using Iedora.Menus;
-using Iedora.Notifications;
+using Framework.Notifications;
 using Iedora.Tenancy;
 using Microsoft.EntityFrameworkCore;
 
