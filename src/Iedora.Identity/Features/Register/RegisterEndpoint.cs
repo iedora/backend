@@ -22,7 +22,10 @@ public static class RegisterEndpoint
                 IPasswordHasher<AppUser> hasher, TimeProvider clock, CancellationToken ct) =>
         {
             if (await users.FindByEmailAsync(req.Email) is not null)
+            {
+                Telemetry.Registrations.Add(1, new KeyValuePair<string, object?>("result", "rejected"));
                 return ProblemResults.From(IdentityErrors.EmailTaken);
+            }
 
             var passwordHash = hasher.HashPassword(new AppUser(), req.Password);
             var commandId = Guid.CreateVersion7();

@@ -27,6 +27,10 @@ public static class Telemetry
     public static readonly Counter<long> TokensIssued = Meter.CreateCounter<long>(
         "iedora.auth.tokens_issued", unit: "{token}", description: "Access/service tokens issued");
 
+    /// <summary>Account registrations (signups), by result (created / rejected) — the growth funnel.</summary>
+    public static readonly Counter<long> Registrations = Meter.CreateCounter<long>(
+        "iedora.auth.registrations", unit: "{account}", description: "Account registrations, by result");
+
     /// <summary>Refresh-token rotations (successful session renewals).</summary>
     public static readonly Counter<long> SessionsRotated = Meter.CreateCounter<long>(
         "iedora.auth.sessions_rotated", unit: "{session}", description: "Refresh-token rotations");

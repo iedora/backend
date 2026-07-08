@@ -30,9 +30,13 @@ public static class TokenEndpoint
                 return TypedResults.Unauthorized();
 
             if (!options.Value.Clients.TryGetValue(clientId, out var expected) || !SecretsMatch(secret, expected))
+            {
+                Telemetry.TokensIssued.Add(1, new("grant", "client_credentials"), new("result", "denied"));
                 return TypedResults.Unauthorized();
+            }
 
             var (token, expiresAt) = jwt.IssueService(clientId);
+            Telemetry.TokensIssued.Add(1, new("grant", "client_credentials"), new("result", "issued"));
             return TypedResults.Ok(new ServiceTokenResponse(token, expiresAt, "Bearer"));
         })
         .AllowAnonymous()
