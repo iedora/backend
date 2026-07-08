@@ -29,6 +29,9 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
         builder.MapInbox();    // + idempotent consumer (cross-module events, e.g. the transfer saga)
         builder.MapCommands(); // + async-write command-status tracking
 
+        // Account-age stamp for the staff Users CRM; PasswordChangedAt stays null until a first change.
+        builder.Entity<AppUser>(user => user.Property(u => u.CreatedAt).HasDefaultValueSql("now()"));
+
         builder.Entity<Session>(session =>
         {
             session.ToTable("sessions");
