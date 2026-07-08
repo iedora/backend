@@ -45,7 +45,8 @@ public static class MenuModule
 
         // Cross-tenant staff surface (platform admin role).
         var staff = api.MapGroup("/staff").RequireAuthorization(Policies.Admin);
-        staff.MapStaffQr(); // /api/staff/qr-codes …
+        staff.MapStaffConsole(); // /api/staff/{overview,directory,alerts,restaurants/{id}}
+        staff.MapStaffQr();      // /api/staff/qr-codes …
         return app;
     }
 }
