@@ -50,27 +50,7 @@ public static class RestaurantReadEndpoints
             var rest = await RestaurantAccess.LoadAsync(db, user, slug, ct);
             if (rest is null) return TypedResults.NotFound();
 
-            var menus = await db.Menus.AsNoTracking()
-                .Where(m => m.RestaurantId == rest.Id)
-                .OrderBy(m => m.Position).ThenBy(m => m.CreatedAt).ToListAsync(ct);
-            var menuIds = menus.Select(m => m.Id).ToList();
-
-            var categoryCounts = (await db.Categories.AsNoTracking()
-                .Where(c => menuIds.Contains(c.MenuId))
-                .GroupBy(c => c.MenuId).Select(g => new { g.Key, Count = g.Count() }).ToListAsync(ct))
-                .ToDictionary(x => x.Key, x => x.Count);
-            var dishCounts = (await (
-                from i in db.Items.AsNoTracking()
-                join c in db.Categories.AsNoTracking() on i.CategoryId equals c.Id
-                where menuIds.Contains(c.MenuId)
-                group i by c.MenuId into g
-                select new { g.Key, Count = g.Count() }).ToListAsync(ct))
-                .ToDictionary(x => x.Key, x => x.Count);
-
-            var summaries = menus.Select(m => new MenuSummary(
-                m.Id, m.Name, m.Active, m.Position, m.UpdatedAt,
-                categoryCounts.GetValueOrDefault(m.Id), dishCounts.GetValueOrDefault(m.Id))).ToList();
-
+            var summaries = await MenuSummaries.ForRestaurantAsync(db, rest.Id, ct);
             return TypedResults.Ok(new RestaurantOverview(RestaurantDetail.From(rest), summaries));
         })
         .WithName("RestaurantOverview")

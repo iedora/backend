@@ -2230,6 +2230,208 @@
         }
       }
     },
+    "/api/staff/overview": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Platform-wide oversight metrics + top restaurants (staff).",
+        "operationId": "StaffOverview",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffOverviewResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/directory": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Search the cross-tenant restaurant directory (staff).",
+        "operationId": "StaffDirectory",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffDirectoryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/alerts": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Restaurants needing attention + unbound QR count (staff).",
+        "operationId": "StaffAlerts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffAlertsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/restaurants/{id}": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "A restaurant's oversight detail: counts, menus, trend (staff).",
+        "operationId": "StaffRestaurantDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffRestaurantDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/staff/restaurants/{id}/menus": {
+      "get": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Export a restaurant's menu tree as JSON (staff).",
+        "operationId": "StaffExportMenus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuImportDocument"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Iedora.Api"
+        ],
+        "summary": "Replace a restaurant's menus from a JSON document (staff).",
+        "operationId": "StaffReplaceMenus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MenuImportDocument"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/staff/qr-codes": {
       "get": {
         "tags": [
@@ -2821,6 +3023,160 @@
           }
         }
       },
+      "ImportCategory": {
+        "required": [
+          "name",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "items": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ImportItem"
+            }
+          }
+        }
+      },
+      "ImportItem": {
+        "required": [
+          "name",
+          "nameI18n",
+          "description",
+          "descriptionI18n",
+          "priceCents",
+          "currency",
+          "available",
+          "tags",
+          "variants"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "nameI18n": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "descriptionI18n": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "priceCents": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currency": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "available": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "variants": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ImportVariant"
+            }
+          }
+        }
+      },
+      "ImportMenu": {
+        "required": [
+          "name",
+          "categories"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "categories": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ImportCategory"
+            }
+          }
+        }
+      },
+      "ImportVariant": {
+        "required": [
+          "label",
+          "labelI18n",
+          "priceCents"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "labelI18n": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "priceCents": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "ItemWriteRequest": {
         "required": [
           "name",
@@ -2985,6 +3341,20 @@
           },
           "password": {
             "type": "string"
+          }
+        }
+      },
+      "MenuImportDocument": {
+        "required": [
+          "menus"
+        ],
+        "type": "object",
+        "properties": {
+          "menus": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportMenu"
+            }
           }
         }
       },
@@ -3781,6 +4151,209 @@
           },
           "current": {
             "type": "boolean"
+          }
+        }
+      },
+      "StaffAlertsResponse": {
+        "required": [
+          "staleRestaurants",
+          "emptyMenus",
+          "unboundQr"
+        ],
+        "type": "object",
+        "properties": {
+          "staleRestaurants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffRestaurantRow"
+            }
+          },
+          "emptyMenus": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffRestaurantRow"
+            }
+          },
+          "unboundQr": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "StaffDirectoryResponse": {
+        "required": [
+          "restaurants"
+        ],
+        "type": "object",
+        "properties": {
+          "restaurants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffRestaurantRow"
+            }
+          }
+        }
+      },
+      "StaffOverviewResponse": {
+        "required": [
+          "restaurants",
+          "activeMenus",
+          "items",
+          "viewsToday",
+          "views30d",
+          "qrBound",
+          "qrUnbound",
+          "topByViews"
+        ],
+        "type": "object",
+        "properties": {
+          "restaurants": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "activeMenus": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "items": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "viewsToday": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "views30d": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "qrBound": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "qrUnbound": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "topByViews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffRestaurantRow"
+            }
+          }
+        }
+      },
+      "StaffRestaurantDetailResponse": {
+        "required": [
+          "restaurant",
+          "menus",
+          "trend"
+        ],
+        "type": "object",
+        "properties": {
+          "restaurant": {
+            "$ref": "#/components/schemas/StaffRestaurantRow"
+          },
+          "menus": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuSummary"
+            }
+          },
+          "trend": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DailyPoint"
+            }
+          }
+        }
+      },
+      "StaffRestaurantRow": {
+        "required": [
+          "id",
+          "tenantId",
+          "name",
+          "slug",
+          "menus",
+          "items",
+          "views30d",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "menus": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "items": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "views30d": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
