@@ -56,11 +56,19 @@ public static class Extensions
             {
                 metrics.AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddRuntimeInstrumentation();
+                    .AddRuntimeInstrumentation()
+                    // Our own Meters (Iedora.*): domain counters (e.g. error rates). Wildcard so a new
+                    // module Meter flows without touching this file. (DB metrics come from the Aspire
+                    // Npgsql component.)
+                    .AddMeter("Iedora.*");
             })
             .WithTracing(tracing =>
             {
                 tracing.AddSource(builder.Environment.ApplicationName)
+                    // Our own ActivitySources (Iedora.*) + set span status to Error on an unhandled
+                    // exception, so failures are visible without a manual SetStatus at every catch.
+                    .AddSource("Iedora.*")
+                    .SetErrorStatusOnException()
                     .AddAspNetCoreInstrumentation(tracing =>
                         // Exclude health check requests from tracing
                         tracing.Filter = context =>
