@@ -42,7 +42,7 @@ public static class TrackingEndpoints
                             http.Request.Query["lang"].ToString(), http.Request.Headers.AcceptLanguage.ToString(),
                             rest.SupportedLanguages, rest.DefaultLanguage);
                         await ViewTracking.RecordViewAsync(db, rest, visitor, lang, clock.GetUtcNow(), ct);
-                        MenuMetrics.Views.Add(1, new KeyValuePair<string, object?>("language", lang)); // business insight
+                        MenuMetrics.Views.Add(1, new KeyValuePair<string, object?>(MenuMetrics.Tags.Language, lang)); // business insight
                     }
                 }
                 catch (Exception ex) { RecordFailure(loggerFactory, ex, "view", slug); }
@@ -93,7 +93,7 @@ public static class TrackingEndpoints
     private static void RecordFailure(ILoggerFactory loggerFactory, Exception ex, string beacon, string slug)
     {
         Activity.Current?.AddException(ex); // span EVENT only — the request itself still succeeds (200/204)
-        MenuMetrics.Errors.Add(1, new KeyValuePair<string, object?>("kind", $"tracking.{beacon}")); // error-rate metric
+        MenuMetrics.Errors.Add(1, new KeyValuePair<string, object?>(MenuMetrics.Tags.Kind, $"tracking.{beacon}")); // error-rate metric
         loggerFactory.CreateLogger("Iedora.Menus.Tracking")
             .LogWarning(ex, "view tracking failed ({Beacon}) for {Slug}", beacon, slug);
     }

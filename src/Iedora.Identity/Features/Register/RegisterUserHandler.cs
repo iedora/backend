@@ -24,11 +24,11 @@ internal sealed class RegisterUserHandler(IdentityDbContext db, UserManager<AppU
         var result = await users.CreateAsync(user);
         if (result.Succeeded)
         {
-            Telemetry.Registrations.Add(1, new KeyValuePair<string, object?>("result", "created")); // a signup landed
+            Telemetry.Registrations.Add(1, new KeyValuePair<string, object?>(Telemetry.Tags.Result, Telemetry.Result.Created)); // a signup landed
             return $"/auth/users/{user.Id}";
         }
 
-        Telemetry.Registrations.Add(1, new KeyValuePair<string, object?>("result", "rejected")); // lost email-uniqueness race
+        Telemetry.Registrations.Add(1, new KeyValuePair<string, object?>(Telemetry.Tags.Result, Telemetry.Result.Rejected)); // lost race
         if (result.Errors.Any(e => e.Code is "DuplicateEmail" or "DuplicateUserName"))
             return Error.Conflict("auth.email_taken", "An account with that email already exists.");
         return result.Errors.Select(e => Error.Validation($"auth.{e.Code}", e.Description)).ToList();

@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.Metrics;
+using Iedora.Identity;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Iedora.Api.IntegrationTests;
@@ -16,7 +17,7 @@ public sealed class AuthMetricsTests : IntegrationTestBase
         var got = new ConcurrentBag<Dictionary<string, string?>>();
         using var listener = new MeterListener
         {
-            InstrumentPublished = (i, l) => { if (i.Meter.Name == "iedora-api" && i.Name == instrument) l.EnableMeasurementEvents(i); },
+            InstrumentPublished = (i, l) => { if (i.Meter.Name == Telemetry.MeterName && i.Name == instrument) l.EnableMeasurementEvents(i); },
         };
         listener.SetMeasurementEventCallback<long>((i, m, tags, _) =>
         {
@@ -33,8 +34,8 @@ public sealed class AuthMetricsTests : IntegrationTestBase
     [TestMethod]
     public async Task A_completed_registration_emits_a_created_signup_metric()
     {
-        var tags = await Capture("iedora.auth.registrations", () => RegisterAccount("signup@m.pt", Pw));
-        Assert.IsTrue(tags.Any(t => t.GetValueOrDefault("result") == "created"),
+        var tags = await Capture(Telemetry.Instruments.Registrations, () => RegisterAccount("signup@m.pt", Pw));
+        Assert.IsTrue(tags.Any(t => t.GetValueOrDefault(Telemetry.Tags.Result) == Telemetry.Result.Created),
             "expected an iedora.auth.registrations measurement tagged result=created");
     }
 
@@ -42,16 +43,17 @@ public sealed class AuthMetricsTests : IntegrationTestBase
     public async Task A_duplicate_email_emits_a_rejected_signup_metric()
     {
         await RegisterAccount("dupe@m.pt", Pw); // first one succeeds
-        var tags = await Capture("iedora.auth.registrations", async () => await Register("dupe@m.pt", Pw, "User"));
-        Assert.IsTrue(tags.Any(t => t.GetValueOrDefault("result") == "rejected"),
+        var tags = await Capture(Telemetry.Instruments.Registrations, async () => await Register("dupe@m.pt", Pw, "User"));
+        Assert.IsTrue(tags.Any(t => t.GetValueOrDefault(Telemetry.Tags.Result) == Telemetry.Result.Rejected),
             "expected an iedora.auth.registrations measurement tagged result=rejected");
     }
 
     [TestMethod]
     public async Task A_service_token_emits_a_tokens_issued_metric()
     {
-        var tags = await Capture("iedora.auth.tokens_issued", async () => await ServiceToken());
-        Assert.IsTrue(tags.Any(t => t.GetValueOrDefault("grant") == "client_credentials" && t.GetValueOrDefault("result") == "issued"),
+        var tags = await Capture(Telemetry.Instruments.TokensIssued, async () => await ServiceToken());
+        Assert.IsTrue(tags.Any(t => t.GetValueOrDefault(Telemetry.Tags.Grant) == Telemetry.Grant.ClientCredentials
+                && t.GetValueOrDefault(Telemetry.Tags.Result) == Telemetry.Result.Issued),
             "expected an iedora.auth.tokens_issued measurement tagged grant=client_credentials, result=issued");
     }
 }

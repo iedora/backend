@@ -26,8 +26,9 @@ public static class LoginEndpoint
             var user = await users.FindByEmailAsync(req.Email);
             if (user is null || !await users.CheckPasswordAsync(user, req.Password))
             {
-                activity?.SetTag("auth.result", "denied");
-                Telemetry.TokensIssued.Add(1, new("grant", "password"), new("result", "denied"));
+                activity?.SetTag("auth.result", Telemetry.Result.Denied);
+                Telemetry.TokensIssued.Add(1,
+                    new(Telemetry.Tags.Grant, Telemetry.Grant.Password), new(Telemetry.Tags.Result, Telemetry.Result.Denied));
                 return ProblemResults.From(IdentityErrors.InvalidCredentials);
             }
 
@@ -38,9 +39,10 @@ public static class LoginEndpoint
             var (session, rawToken) = await sessions.CreateAsync(user.Id, tenantId, RequestMeta.From(http), ct);
             var response = IdentityTokens.Issue(http.Response, user, roles, session, rawToken, jwt, cookie);
 
-            activity?.SetTag("auth.result", "issued");
+            activity?.SetTag("auth.result", Telemetry.Result.Issued);
             activity?.SetTag("user.id", user.Id.ToString());
-            Telemetry.TokensIssued.Add(1, new("grant", "password"), new("result", "issued"));
+            Telemetry.TokensIssued.Add(1,
+                new(Telemetry.Tags.Grant, Telemetry.Grant.Password), new(Telemetry.Tags.Result, Telemetry.Result.Issued));
             return TypedResults.Ok(response);
         })
         .WithName("Login")
