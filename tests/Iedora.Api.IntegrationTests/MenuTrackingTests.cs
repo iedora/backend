@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using System.Diagnostics.Metrics;
 using System.Net;
 using System.Net.Http.Json;
 using Iedora.Menus;
@@ -10,6 +12,41 @@ namespace Iedora.Api.IntegrationTests;
 [TestClass]
 public sealed class MenuTrackingTests : IntegrationTestBase
 {
+    // Capture measurements the app emits on one Iedora.Menus instrument while `action` runs. The
+    // WebApplicationFactory is in-process, so a MeterListener here sees the app's Meter directly.
+    private static async Task<List<(long Value, string? Tag)>> CaptureCounter(string instrument, string tagKey, Func<Task> action)
+    {
+        var got = new ConcurrentBag<(long, string?)>();
+        using var listener = new MeterListener
+        {
+            InstrumentPublished = (i, l) => { if (i.Meter.Name == "Iedora.Menus" && i.Name == instrument) l.EnableMeasurementEvents(i); },
+        };
+        listener.SetMeasurementEventCallback<long>((i, m, tags, _) =>
+        {
+            string? tag = null;
+            foreach (var t in tags) if (t.Key == tagKey) tag = t.Value as string;
+            got.Add((m, tag));
+        });
+        listener.Start();
+        await action();
+        listener.Dispose(); // flush
+        return [.. got];
+    }
+
+    private static async Task<List<int>> CaptureHistogram(string instrument, Func<Task> action)
+    {
+        var got = new ConcurrentBag<int>();
+        using var listener = new MeterListener
+        {
+            InstrumentPublished = (i, l) => { if (i.Meter.Name == "Iedora.Menus" && i.Name == instrument) l.EnableMeasurementEvents(i); },
+        };
+        listener.SetMeasurementEventCallback<int>((i, m, _, _) => got.Add(m));
+        listener.Start();
+        await action();
+        listener.Dispose();
+        return [.. got];
+    }
+
     private static async Task<(Guid restId, Guid itemId)> Seed(string slug)
     {
         await using var scope = TestHost.Factory.Services.CreateAsyncScope();
@@ -138,5 +175,26 @@ public sealed class MenuTrackingTests : IntegrationTestBase
 
         var itemCount = await Query(db => db.ItemViews.CountAsync());
         Assert.AreEqual(0, itemCount);
+    }
+
+    [TestMethod]
+    public async Task View_beacon_emits_the_menu_views_business_metric()
+    {
+        await Seed("tasca"); // supports en + pt
+        // Ask for "pt" so the measurement's language tag is distinctive (other tests default to "en").
+        var measurements = await CaptureCounter("menu.views", "language",
+            () => Client.GetAsync("/public/track/tasca?lang=pt"));
+        Assert.IsTrue(measurements.Any(m => m is { Value: 1, Tag: "pt" }),
+            "expected a menu.views measurement of 1 tagged language=pt");
+    }
+
+    [TestMethod]
+    public async Task Session_beacon_emits_the_dwell_business_metric()
+    {
+        await Seed("tasca");
+        // A distinctive duration so the histogram measurement is unambiguously ours.
+        var measurements = await CaptureHistogram("menu.session.dwell",
+            async () => await PostSession("tasca", new { durationSeconds = 1234 }));
+        Assert.IsTrue(measurements.Contains(1234), "expected a dwell measurement of 1234s");
     }
 }
