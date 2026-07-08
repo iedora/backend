@@ -46,4 +46,10 @@ internal static class MenuErrors
 
     public static readonly Error UnknownRestaurant = Error.Validation(
         "menu.unknown_restaurant", "No restaurant with that id.");
+
+    public static readonly Error UnknownRange = Error.Validation(
+        "menu.unknown_range", "range must be one of: today, 7d, 30d.");
+
+    public static readonly Error TenantRequired = Error.Validation(
+        "menu.tenant_required", "This endpoint needs a tenant-scoped token.");
 }
