@@ -1,3 +1,4 @@
+using Framework.Storage;
 using Iedora.Identity.Contracts;
 
 namespace Iedora.Menus;
@@ -12,6 +13,9 @@ public static class MenuModule
     public static IHostApplicationBuilder AddMenuModule(this IHostApplicationBuilder builder)
     {
         builder.AddMenuDb();
+        // The Media service owns uploads/serving; Menu only needs the store to validate an attached
+        // URL is ours and to delete the object it replaces (idempotent — Media registers it too).
+        builder.Services.AddLocalDiskStorage(builder.Configuration);
         // Call AddValidation() HERE (not in the host) so the .NET 10 validation source generator runs
         // in this assembly and discovers this module's endpoints' request DTOs.
         builder.Services.AddValidation();
@@ -37,6 +41,7 @@ public static class MenuModule
         restaurant.MapMenuBuilder();      // menu create/update/delete
         restaurant.MapCategoryBuilder();  // category create/update/delete + reorder
         restaurant.MapItemBuilder();      // item create/update/delete + reorder
+        restaurant.MapAssets();           // attach/clear logo, banner, item photo (URLs from /media/images)
 
         // Cross-tenant staff surface (platform admin role).
         var staff = api.MapGroup("/staff").RequireAuthorization(Policies.Admin);

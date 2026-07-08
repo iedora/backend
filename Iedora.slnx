@@ -19,6 +19,12 @@
     <Project Path="framework/Web/Framework.Web.Tests/Framework.Web.Tests.csproj" />
     <Project Path="framework/Web/Framework.Web/Framework.Web.csproj" />
   </Folder>
+  <Folder Name="/framework/Storage/">
+    <Project Path="framework/Storage/Framework.Storage/Framework.Storage.csproj" />
+  </Folder>
+  <Folder Name="/framework/Media/">
+    <Project Path="framework/Media/Framework.Media/Framework.Media.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Iedora.Identity.Contracts/Iedora.Identity.Contracts.csproj" />
     <Project Path="src/Iedora.Tenancy.Contracts/Iedora.Tenancy.Contracts.csproj" />
