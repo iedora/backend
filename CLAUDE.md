@@ -18,7 +18,7 @@ Architecture, module layout, and conventions are in [README.md](README.md) — r
 
 ## The one boundary to never break
 
-Modules don't touch each other's tables, errors, or internals. A cross-module call goes through the target module's `Contracts/` namespace **only** (`Iedora.Api.<Module>.Contracts`) — add the interface there, implement it `internal` in the owning module, resolve via DI. Each module owns its error catalog; cross-cutting errors/helpers live in `Iedora.Api/Shared`.
+Modules don't touch each other's tables, errors, or internals. A cross-module call goes through the target module's contracts project **only** (`Iedora.<Module>.Contracts`, e.g. `Iedora.Identity.Contracts`) — add the interface there, implement it `internal` in the owning module (`src/Iedora.<Module>`), resolve via DI. Each module owns its error catalog; shared auth primitives (errors, claim helpers) live in `Iedora.Identity.Contracts`.
 
 ## Writes — one pattern, every domain write
 
