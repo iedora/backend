@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Iedora.Menus;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -38,6 +39,31 @@ public sealed class MenuImportTests : IntegrationTestBase
     }
 
     private async Task<string> Admin(string email) => (await RegisterLoginAsAdmin(email, Pw)).accessToken;
+
+    // Record `count` views against the seeded "Soup" dish; returns its (soon-to-be-replaced) item id.
+    private static async Task<Guid> SeedSoupViews(Guid restId, int count)
+    {
+        await using var scope = TestHost.Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MenuDbContext>();
+        var soup = await db.Items.Where(i => i.RestaurantId == restId && i.Name == "Soup").Select(i => i.Id).SingleAsync();
+        var tenant = await db.Restaurants.Where(r => r.Id == restId).Select(r => r.TenantId).SingleAsync();
+        db.ItemViews.Add(new ItemView { RestaurantId = restId, TenantId = tenant, ItemId = soup, Day = DateOnly.FromDateTime(DateTimeOffset.UtcNow.UtcDateTime), Count = count });
+        await db.SaveChangesAsync();
+        return soup;
+    }
+
+    private static async Task<T> Query<T>(Func<MenuDbContext, Task<T>> q)
+    {
+        await using var scope = TestHost.Factory.Services.CreateAsyncScope();
+        return await q(scope.ServiceProvider.GetRequiredService<MenuDbContext>());
+    }
+
+    private static Task<int> ViewsOfDish(Guid restId, string name) => Query(async db =>
+        await (from iv in db.ItemViews join i in db.Items on iv.ItemId equals i.Id
+               where iv.RestaurantId == restId && i.Name == name select iv.Count).SumAsync());
+
+    private static Task<int> AllItemViews(Guid restId) =>
+        Query(async db => await db.ItemViews.Where(v => v.RestaurantId == restId).SumAsync(v => (int?)v.Count) ?? 0);
 
     private async Task<ImpDocWire> Export(Guid id, string token) =>
         (await (await Get($"/api/staff/restaurants/{id}/menus", token)).Content.ReadFromJsonAsync<ImpDocWire>())!;
@@ -152,5 +178,34 @@ public sealed class MenuImportTests : IntegrationTestBase
         var id = await Seed();
         var (owner, _) = await CreateOwnerWithTenant("owner@i.pt", Pw);
         Assert.AreEqual(HttpStatusCode.Forbidden, (await Get($"/api/staff/restaurants/{id}/menus", owner.accessToken)).StatusCode);
+    }
+
+    [TestMethod]
+    public async Task Re_importing_preserves_a_surviving_dishs_view_history()
+    {
+        var id = await Seed();
+        var oldSoup = await SeedSoupViews(id, 9);
+        var admin = await Admin("imp-keep@s.pt");
+
+        // Round-trip the live tree (still has "Soup") — a destructive replace with new item ids.
+        Assert.AreEqual(HttpStatusCode.NoContent, (await Replace(id, await Export(id, admin), admin)).StatusCode);
+
+        Assert.AreEqual(9, await ViewsOfDish(id, "Soup")); // history carried to the new Soup by name
+        var newSoup = await Query(db => db.Items.Where(i => i.RestaurantId == id && i.Name == "Soup").Select(i => i.Id).SingleAsync());
+        Assert.AreNotEqual(oldSoup, newSoup); // ...even though the item was recreated with a fresh id
+    }
+
+    [TestMethod]
+    public async Task Re_importing_drops_the_history_of_a_removed_dish()
+    {
+        var id = await Seed();
+        await SeedSoupViews(id, 9);
+        var admin = await Admin("imp-drop@s.pt");
+
+        // Replace with a tree that no longer contains "Soup".
+        var newDoc = new { menus = new[] { new { name = "Dinner", categories = new[] { new { name = "Mains", items = new[] { new { name = "Steak", priceCents = 2000 } } } } } } };
+        Assert.AreEqual(HttpStatusCode.NoContent, (await Replace(id, newDoc, admin)).StatusCode);
+
+        Assert.AreEqual(0, await AllItemViews(id)); // Soup is gone → its history goes too; Steak had none
     }
 }

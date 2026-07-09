@@ -145,8 +145,20 @@ internal static class MenuImport
         {
             db.ChangeTracker.Clear(); // drop anything a prior (retried) attempt left tracked, so we don't double-insert
             await using var tx = await db.Database.BeginTransactionAsync(ct);
+
+            // Snapshot per-dish view history keyed by name — the delete below cascades items → item_view,
+            // which would wipe "top dishes". We re-point the counts to the new item ids by name afterward
+            // (a dish that keeps its name keeps its history; a renamed/removed dish loses it). daily_view
+            // is keyed by restaurant, not item, so overall-view analytics are untouched either way.
+            var priorViews = await (
+                from iv in db.ItemViews.AsNoTracking()
+                join i in db.Items.AsNoTracking() on iv.ItemId equals i.Id
+                where iv.RestaurantId == rest.Id
+                select new { i.Name, iv.TenantId, iv.Day, iv.Count }).ToListAsync(ct);
+
             await db.Menus.Where(m => m.RestaurantId == rest.Id).ExecuteDeleteAsync(ct); // FK cascade drops categories + items
 
+            var newItemIdByName = new Dictionary<string, Guid>(); // first item per name carries the history
             var mPos = 0;
             foreach (var (menuName, cats) in built)
             {
@@ -159,15 +171,26 @@ internal static class MenuImport
                     db.Categories.Add(category);
                     var iPos = 0;
                     foreach (var f in catItems)
-                        db.Items.Add(new Item
+                    {
+                        var item = new Item
                         {
                             Id = Guid.CreateVersion7(), CategoryId = category.Id, RestaurantId = rest.Id,
                             Name = f.Name, NameI18n = f.NameI18n, Description = f.Description, DescriptionI18n = f.DescriptionI18n,
                             PriceCents = f.PriceCents, Currency = f.Currency, Available = f.Available, Tags = f.Tags,
                             Variants = f.Variants, Position = iPos++, CreatedAt = now, UpdatedAt = now,
-                        });
+                        };
+                        db.Items.Add(item);
+                        newItemIdByName.TryAdd(f.Name, item.Id);
+                    }
                 }
             }
+
+            // Restore the preserved view counts onto the surviving dishes (aggregated per name+day, so
+            // two old dishes sharing a name don't collide on item_view's (ItemId, Day) key).
+            foreach (var g in priorViews.GroupBy(v => new { v.Name, v.TenantId, v.Day }))
+                if (newItemIdByName.TryGetValue(g.Key.Name, out var newId))
+                    db.ItemViews.Add(new ItemView { RestaurantId = rest.Id, TenantId = g.Key.TenantId, ItemId = newId, Day = g.Key.Day, Count = g.Sum(x => x.Count) });
+
             await db.SaveChangesAsync(ct);
             await tx.CommitAsync(ct);
         });
