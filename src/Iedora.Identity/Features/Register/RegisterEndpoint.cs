@@ -19,7 +19,7 @@ public static class RegisterEndpoint
     public static void MapRegister(this RouteGroupBuilder group) =>
         group.MapPost("/register", async (
                 RegisterRequest req, IdentityDbContext db, UserManager<AppUser> users,
-                IPasswordHasher<AppUser> hasher, TimeProvider clock, CancellationToken ct) =>
+                TimeProvider clock, CancellationToken ct) =>
         {
             if (await users.FindByEmailAsync(req.Email) is not null)
             {
@@ -27,7 +27,7 @@ public static class RegisterEndpoint
                 return ProblemResults.From(IdentityErrors.EmailTaken);
             }
 
-            var passwordHash = hasher.HashPassword(new AppUser(), req.Password);
+            var passwordHash = users.PasswordHasher.HashPassword(new AppUser(), req.Password);
             var commandId = Guid.CreateVersion7();
             db.SubmitCommand(commandId, RegisterUserCommand.Type,
                 new RegisterUserCommand(req.Email, passwordHash, req.DisplayName), clock);

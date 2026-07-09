@@ -46,7 +46,7 @@ internal sealed class ItemViewSeenSweep(
 
     public Task<int> SweepAsync(CancellationToken ct)
     {
-        var utcToday = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+        var utcToday = Timezones.UtcToday(clock.GetUtcNow());
         var cutoff = utcToday.AddDays(-Math.Max(1, options.Value.ItemViewSeenDays));
         return db.ItemViewSeen.Where(v => v.Day < cutoff).ExecuteDeleteAsync(ct);
     }

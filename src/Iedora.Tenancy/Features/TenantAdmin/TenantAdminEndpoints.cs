@@ -111,12 +111,10 @@ public static class TenantAdminEndpoints
         var owners = (await identity.GetUsersAsync(owned.Select(o => o.OwnerId).Distinct().ToList(), ct))
             .ToDictionary(u => u.Id);
         return owned
-            .Where(o => owners.ContainsKey(o.OwnerId))
-            .Select(o =>
-            {
-                var u = owners[o.OwnerId];
-                return new TenantWithOwner(o.Id, o.Name, new OwnerSummary(u.Id, u.Email, u.Name));
-            })
+            .Select(o => owners.TryGetValue(o.OwnerId, out var u)
+                ? new TenantWithOwner(o.Id, o.Name, new OwnerSummary(u.Id, u.Email, u.Name))
+                : null)
+            .OfType<TenantWithOwner>()
             .ToList();
     }
 }

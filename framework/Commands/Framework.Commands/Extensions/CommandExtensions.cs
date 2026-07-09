@@ -32,8 +32,4 @@ public static class CommandExtensions
         db.EnqueueOutbox(type, new CommandEnvelope<T>(commandId, payload), clock);
         return command;
     }
-
-    /// <summary>The command's current tracking row, or null if unknown.</summary>
-    public static ValueTask<Command?> FindCommandAsync(this DbContext db, Guid id, CancellationToken ct) =>
-        db.Set<Command>().FindAsync([id], ct);
 }

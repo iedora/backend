@@ -15,6 +15,10 @@ public static class Timezones
         catch (Exception ex) when (ex is TimeZoneNotFoundException or InvalidTimeZoneException) { return TimeZoneInfo.Utc; }
     }
 
+    /// <summary>Today's calendar day in UTC — the server-day bucket used where a read isn't scoped to
+    /// one restaurant's zone (cross-tenant staff reads, retention windows).</summary>
+    public static DateOnly UtcToday(DateTimeOffset now) => DateOnly.FromDateTime(now.UtcDateTime);
+
     /// <summary>The calendar day <paramref name="instant"/> falls on in the given zone (UTC if unknown).</summary>
     public static DateOnly LocalDay(DateTimeOffset instant, string? tzId) =>
         DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(instant, Resolve(tzId)).DateTime);

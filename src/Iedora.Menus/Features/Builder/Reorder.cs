@@ -30,7 +30,7 @@ internal static class Reorder
 
     /// <summary>True iff <paramref name="ordered"/> names every id in <paramref name="existing"/> exactly
     /// once (same set, same count, no duplicates).</summary>
-    public static bool IsPermutation(IReadOnlyList<Guid> ordered, IEnumerable<Guid> existing)
+    private static bool IsPermutation(IReadOnlyList<Guid> ordered, IEnumerable<Guid> existing)
     {
         var existingSet = existing.ToHashSet();
         return ordered.Count == existingSet.Count && ordered.ToHashSet().SetEquals(existingSet);
