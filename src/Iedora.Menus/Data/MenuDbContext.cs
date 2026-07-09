@@ -33,6 +33,7 @@ public sealed class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbC
     {
         base.OnModelCreating(builder);
         builder.HasDefaultSchema(Schema);
+        builder.HasPostgresExtension("pg_trgm"); // GIN trigram indexes back the staff directory's ILIKE '%q%' search
 
         builder.Entity<Restaurant>(restaurant =>
         {
@@ -41,6 +42,10 @@ public sealed class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbC
             restaurant.Property(r => r.Id).HasDefaultValueSql("uuidv7()");
             restaurant.HasIndex(r => r.Slug).IsUnique();
             restaurant.HasIndex(r => r.TenantId);
+            // Trigram GIN indexes so the staff directory's name/slug substring search is index-backed,
+            // not a sequential scan. Named explicitly — Slug already carries a unique btree index.
+            restaurant.HasIndex(r => r.Name, "ix_restaurants_name_trgm").HasMethod("gin").HasOperators("gin_trgm_ops");
+            restaurant.HasIndex(r => r.Slug, "ix_restaurants_slug_trgm").HasMethod("gin").HasOperators("gin_trgm_ops");
             restaurant.Property(r => r.Name).IsRequired();
             restaurant.Property(r => r.Slug).IsRequired();
             restaurant.Property(r => r.DefaultLanguage).IsRequired().HasDefaultValue("en");

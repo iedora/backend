@@ -24,13 +24,20 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
     {
         base.OnModelCreating(builder);
         builder.HasDefaultSchema(Schema);
+        builder.HasPostgresExtension("pg_trgm"); // GIN trigram indexes back the staff Users CRM's ILIKE '%q%' search
 
         builder.MapOutbox();   // reusable outbox table (owned by this module)
         builder.MapInbox();    // + idempotent consumer (cross-module events, e.g. the transfer saga)
         builder.MapCommands(); // + async-write command-status tracking
 
-        // Account-age stamp for the staff Users CRM; PasswordChangedAt stays null until a first change.
-        builder.Entity<AppUser>(user => user.Property(u => u.CreatedAt).HasDefaultValueSql("now()"));
+        builder.Entity<AppUser>(user =>
+        {
+            // Account-age stamp for the staff Users CRM; PasswordChangedAt stays null until a first change.
+            user.Property(u => u.CreatedAt).HasDefaultValueSql("now()");
+            // Trigram GIN indexes so the staff Users CRM's email/name substring search is index-backed.
+            user.HasIndex(u => u.Email, "ix_users_email_trgm").HasMethod("gin").HasOperators("gin_trgm_ops");
+            user.HasIndex(u => u.DisplayName, "ix_users_displayname_trgm").HasMethod("gin").HasOperators("gin_trgm_ops");
+        });
 
         builder.Entity<Session>(session =>
         {
