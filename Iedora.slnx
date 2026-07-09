@@ -48,6 +48,7 @@
     <Project Path="tests/Iedora.Api.E2ETests/Iedora.Api.E2ETests.csproj" />
     <Project Path="tests/Iedora.Api.IntegrationTests/Iedora.Api.IntegrationTests.csproj" />
     <Project Path="tests/Iedora.Api.UnitTests/Iedora.Api.UnitTests.csproj" />
+    <Project Path="tests/Iedora.Dashboard.Tests/Iedora.Dashboard.Tests.csproj" />
   </Folder>
   <Project Path="Iedora.AppHost/Iedora.AppHost.csproj" />
   <Project Path="Iedora.ServiceDefaults/Iedora.ServiceDefaults.csproj" />
