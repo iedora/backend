@@ -1,3 +1,4 @@
+using System.Diagnostics.Metrics;
 using System.Text.Json;
 using ErrorOr;
 using Framework.Outbox;
@@ -132,6 +133,43 @@ public sealed class CommandPipelineTests
         var command = await check.Set<Command>().SingleAsync();
         Assert.AreEqual(CommandStatus.Failed, command.Status);
         Assert.AreEqual("test.rejected", command.ErrorCode);
+    }
+
+    [TestMethod]
+    public async Task A_failed_command_increments_the_failed_metric_tagged_by_command_and_code()
+    {
+        var id = Guid.NewGuid();
+        await using (var db = NewDb())
+        {
+            db.SubmitCommand(id, "test.command", new TestPayload("x"), _clock);
+            await db.SaveChangesAsync();
+        }
+
+        var captured = new List<Dictionary<string, string?>>();
+        using var listener = new MeterListener
+        {
+            InstrumentPublished = (i, l) =>
+            {
+                if (i.Meter.Name == CommandsTelemetry.MeterName && i.Name == CommandsTelemetry.Instruments.Failed)
+                    l.EnableMeasurementEvents(i);
+            },
+        };
+        listener.SetMeasurementEventCallback<long>((i, m, tags, _) =>
+        {
+            var d = new Dictionary<string, string?>();
+            foreach (var t in tags) d[t.Key] = t.Value as string;
+            captured.Add(d);
+        });
+        listener.Start();
+
+        await using (var db = NewDb())
+            await Processor(db, new TestCommandHandler(db, _clock, fail: true)).DispatchPendingAsync(CancellationToken.None);
+
+        listener.Dispose(); // flush
+        Assert.IsTrue(
+            captured.Any(t => t.GetValueOrDefault(CommandsTelemetry.Tags.Command) == "test.command"
+                && t.GetValueOrDefault(CommandsTelemetry.Tags.Code) == "test.rejected"),
+            "expected a commands.failed measurement tagged command=test.command, code=test.rejected");
     }
 
     [TestMethod]

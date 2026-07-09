@@ -34,6 +34,8 @@ public abstract class CommandHandler<TContext, TPayload>(TContext db, TimeProvid
         if (result.IsError)
         {
             var error = result.Errors[0];
+            CommandsTelemetry.Failed.Add(1,
+                new(CommandsTelemetry.Tags.Command, Type), new(CommandsTelemetry.Tags.Code, error.Code));
             command.Fail(error.Code, error.Description, Clock.GetUtcNow());
         }
         else
