@@ -18,7 +18,9 @@ public sealed record UpdateIdentityRequest(
     ThemeInput? Theme,
     [property: Required] string DefaultLanguage,
     [property: Required, MinLength(1)] IReadOnlyList<string> SupportedLanguages,
-    [property: Required] string DefaultCurrency);
+    [property: Required] string DefaultCurrency,
+    // IANA timezone for analytics bucketing; null leaves the current value unchanged.
+    string? TimeZone = null);
 
 public sealed record RenameSlugRequest([property: Required] string Slug);
 
@@ -59,6 +61,8 @@ public static partial class RestaurantWriteEndpoints
             if (descriptionI18n.IsError) return ProblemResults.From(descriptionI18n.Errors);
             var theme = ValidateTheme(req.Theme);
             if (theme.IsError) return ProblemResults.From(theme.Errors);
+            if (req.TimeZone is not null && !Timezones.IsValid(req.TimeZone))
+                return ProblemResults.From(MenuErrors.UnknownTimeZone);
 
             rest.Name = name.Value;
             rest.Description = description.Value;
@@ -66,6 +70,7 @@ public static partial class RestaurantWriteEndpoints
             rest.Theme = theme.Value;
             rest.SupportedLanguages = [.. req.SupportedLanguages];
             rest.DefaultCurrency = currency.Value;
+            if (req.TimeZone is not null) rest.TimeZone = req.TimeZone;
             rest.UpdatedAt = clock.GetUtcNow();
             await db.SaveChangesAsync(ct);
             return Results.Ok(RestaurantDetail.From(rest));

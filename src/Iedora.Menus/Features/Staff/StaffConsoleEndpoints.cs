@@ -91,7 +91,10 @@ public static class StaffConsoleEndpoints
             async Task<Results<Ok<StaffRestaurantDetailResponse>, NotFound>> (
                 Guid id, MenuDbContext db, TimeProvider clock, CancellationToken ct) =>
         {
-            var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+            // This restaurant's own timezone drives its "today" (also the existence check).
+            var tz = await db.Restaurants.AsNoTracking().Where(r => r.Id == id).Select(r => r.TimeZone).FirstOrDefaultAsync(ct);
+            if (tz is null) return TypedResults.NotFound();
+            var today = Timezones.LocalDay(clock.GetUtcNow(), tz);
             var since = StaffReads.Since30(today);
 
             var row = await StaffReads.Project(db.Restaurants.AsNoTracking().Where(r => r.Id == id), db, since)

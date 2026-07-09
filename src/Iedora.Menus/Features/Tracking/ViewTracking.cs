@@ -8,9 +8,8 @@ namespace Iedora.Menus;
 // Buckets are native types (date / hour-truncated timestamptz), passed as typed params.
 internal static class ViewTracking
 {
-    public static DateOnly Day(DateTimeOffset t) => DateOnly.FromDateTime(t.UtcDateTime);
-
-    // The UTC hour a view lands in — the dedup granularity for menu views.
+    // The UTC hour a view lands in — the dedup granularity for menu views. (Dedup only needs a stable
+    // hourly bucket; the per-restaurant LOCAL day, used for the counters below, is what analytics read.)
     private static DateTimeOffset HourStart(DateTimeOffset t)
     {
         var u = t.UtcDateTime;
@@ -21,7 +20,7 @@ internal static class ViewTracking
     public static Task RecordViewAsync(
         MenuDbContext db, Restaurant r, Guid visitorId, string language, DateTimeOffset now, CancellationToken ct)
     {
-        var (hour, day) = (HourStart(now), Day(now));
+        var (hour, day) = (HourStart(now), Timezones.LocalDay(now, r.TimeZone));
         return db.Database.ExecuteSqlInterpolatedAsync($"""
             WITH won AS (
               INSERT INTO menu.view_seen ("VisitorId", "RestaurantId", "HourStart")
@@ -37,7 +36,7 @@ internal static class ViewTracking
     public static Task RecordItemViewsAsync(
         MenuDbContext db, Restaurant r, Guid[] itemIds, Guid visitorId, DateTimeOffset now, CancellationToken ct)
     {
-        var day = Day(now);
+        var day = Timezones.LocalDay(now, r.TimeZone);
         return db.Database.ExecuteSqlInterpolatedAsync($"""
             WITH owned AS (
               SELECT i."Id" AS item_id FROM menu.items i
@@ -53,7 +52,6 @@ internal static class ViewTracking
             """, ct);
     }
 
-    /// <summary>Store one guest session's dwell time (clamped 1..3600s).</summary>
     /// <summary>Store one guest session's dwell time (clamped 1..3600s); returns the clamped seconds
     /// so the caller can record the engagement metric without re-deriving the clamp.</summary>
     public static async Task<int> RecordSessionAsync(
@@ -63,7 +61,7 @@ internal static class ViewTracking
         db.MenuSessions.Add(new MenuSession
         {
             Id = Guid.CreateVersion7(), RestaurantId = r.Id, TenantId = r.TenantId,
-            Day = Day(now), DurationSeconds = clamped, CreatedAt = now,
+            Day = Timezones.LocalDay(now, r.TimeZone), DurationSeconds = clamped, CreatedAt = now,
         });
         await db.SaveChangesAsync(ct);
         return clamped;

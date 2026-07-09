@@ -33,6 +33,11 @@ public sealed class Restaurant
     public string DefaultLanguage { get; set; } = "en";
     public List<string> SupportedLanguages { get; set; } = ["en"];
     public string DefaultCurrency { get; set; } = "EUR";
+
+    /// <summary>IANA timezone (e.g. "Europe/Lisbon") — analytics count by this zone's local day, so the
+    /// owner's "today" is their local day, not UTC. Defaults to "UTC".</summary>
+    public string TimeZone { get; set; } = "UTC";
+
     public DateTimeOffset? OnboardingCompletedAt { get; set; } // null = mid-wizard
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }

@@ -45,6 +45,7 @@ public sealed class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbC
             restaurant.Property(r => r.Slug).IsRequired();
             restaurant.Property(r => r.DefaultLanguage).IsRequired().HasDefaultValue("en");
             restaurant.Property(r => r.DefaultCurrency).IsRequired().HasDefaultValue("EUR");
+            restaurant.Property(r => r.TimeZone).IsRequired().HasDefaultValue("UTC");
             restaurant.Property(r => r.SupportedLanguages).HasColumnType("text[]");
             restaurant.Property(r => r.DescriptionI18n).HasJsonb(Json);
             restaurant.Property(r => r.Theme).HasJsonb(Json);

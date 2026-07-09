@@ -47,6 +47,9 @@ internal static class MenuErrors
     public static readonly Error UnknownRestaurant = Error.Validation(
         "menu.unknown_restaurant", "No restaurant with that id.");
 
+    public static readonly Error UnknownTimeZone = Error.Validation(
+        "menu.unknown_timezone", "timeZone must be a valid IANA timezone id (e.g. \"Europe/Lisbon\").");
+
     public static readonly Error UnknownRange = Error.Validation(
         "menu.unknown_range", "range must be one of: today, 7d, 30d.");
 
