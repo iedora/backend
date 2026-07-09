@@ -12,8 +12,8 @@ public sealed record ThemeInput(string? PrimaryColor, string? SecondaryColor, st
 // The full editable identity (a settings-form replace, not a sparse patch): every editable field is
 // sent each save. Optional fields (description, i18n, theme) may be null to clear.
 public sealed record UpdateIdentityRequest(
-    [property: Required, StringLength(80, MinimumLength = 1)] string Name,
-    [property: StringLength(1000)] string? Description,
+    [property: Required, StringLength(BuilderText.MaxShortName, MinimumLength = 1)] string Name,
+    [property: StringLength(BuilderText.MaxDescription)] string? Description,
     Dictionary<string, string>? DescriptionI18n,
     ThemeInput? Theme,
     [property: Required] string DefaultLanguage,

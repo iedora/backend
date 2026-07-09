@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Iedora.Menus;
 
-public sealed record CreateCategoryRequest([property: Required, StringLength(80, MinimumLength = 1)] string Name);
+public sealed record CreateCategoryRequest([property: Required, StringLength(BuilderText.MaxShortName, MinimumLength = 1)] string Name);
 public sealed record UpdateCategoryRequest(
-    [property: Required, StringLength(80, MinimumLength = 1)] string Name,
-    [property: StringLength(1000)] string? Description,
+    [property: Required, StringLength(BuilderText.MaxShortName, MinimumLength = 1)] string Name,
+    [property: StringLength(BuilderText.MaxDescription)] string? Description,
     Dictionary<string, string>? NameI18n,
     Dictionary<string, string>? DescriptionI18n);
 public sealed record ReorderRequest([property: Required] IReadOnlyList<Guid> OrderedIds);

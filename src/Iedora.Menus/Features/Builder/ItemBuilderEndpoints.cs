@@ -7,20 +7,20 @@ using Microsoft.EntityFrameworkCore;
 namespace Iedora.Menus;
 
 public sealed record VariantInput(
-    [property: Required, StringLength(120, MinimumLength = 1)] string Label,
+    [property: Required, StringLength(BuilderText.MaxItemName, MinimumLength = 1)] string Label,
     Dictionary<string, string>? LabelI18n,
-    [property: Range(0, 100_000_00)] int PriceCents);
+    [property: Range(0, BuilderText.MaxPriceCents)] int PriceCents);
 
 public sealed record ItemWriteRequest(
-    [property: Required, StringLength(120, MinimumLength = 1)] string Name,
+    [property: Required, StringLength(BuilderText.MaxItemName, MinimumLength = 1)] string Name,
     Dictionary<string, string>? NameI18n,
-    [property: StringLength(1000)] string? Description,
+    [property: StringLength(BuilderText.MaxDescription)] string? Description,
     Dictionary<string, string>? DescriptionI18n,
-    [property: Range(0, 100_000_00)] int PriceCents,
+    [property: Range(0, BuilderText.MaxPriceCents)] int PriceCents,
     string? Currency,
     bool? Available,
-    [property: MaxLength(20)] List<string>? Tags,
-    [property: MaxLength(20)] List<VariantInput>? Variants);
+    [property: MaxLength(BuilderText.MaxTags)] List<string>? Tags,
+    [property: MaxLength(BuilderText.MaxVariants)] List<VariantInput>? Variants);
 
 // Item writes under /api/restaurants/{slug} (owner/staff, scoped, synchronous). An item is created
 // under a category; updates/deletes/reorders are restaurant-scoped so a forged id → 404.

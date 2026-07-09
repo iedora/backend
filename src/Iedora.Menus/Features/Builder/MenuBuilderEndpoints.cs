@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Iedora.Menus;
 
-public sealed record CreateMenuRequest([property: Required, StringLength(80, MinimumLength = 1)] string Name);
+public sealed record CreateMenuRequest([property: Required, StringLength(BuilderText.MaxShortName, MinimumLength = 1)] string Name);
 public sealed record UpdateMenuRequest(
-    [property: Required, StringLength(80, MinimumLength = 1)] string Name,
-    [property: StringLength(1000)] string? Description,
+    [property: Required, StringLength(BuilderText.MaxShortName, MinimumLength = 1)] string Name,
+    [property: StringLength(BuilderText.MaxDescription)] string? Description,
     Dictionary<string, string>? NameI18n,
     Dictionary<string, string>? DescriptionI18n,
     bool Active);
