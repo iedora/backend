@@ -16,11 +16,9 @@ public static class IdentityModule
 {
     public static IHostApplicationBuilder AddIdentityModule(this IHostApplicationBuilder builder)
     {
-        // Business telemetry (auth.login span, session metrics) on top of ServiceDefaults' OTel.
-        builder.Services.AddOpenTelemetry()
-            .WithTracing(t => t.AddSource(Telemetry.ActivitySourceName))
-            .WithMetrics(m => m.AddMeter(Telemetry.MeterName));
-
+        // Telemetry (auth.login span, session/signup metrics) rides ServiceDefaults' AddSource/
+        // AddMeter("Iedora.*") — no per-module registration needed, and it reaches the Worker (where
+        // the outbox handlers emit) too, which a registration only in this method would miss.
         builder.AddIdentityDb();
 
         // Call AddValidation() HERE (not in the host) so the .NET 10 validation source generator runs

@@ -4,19 +4,19 @@ using System.Diagnostics.Metrics;
 namespace Iedora.Identity;
 
 /// <summary>
-/// The service's own <see cref="ActivitySource"/> (for manual business spans) and
+/// The module's own <see cref="ActivitySource"/> (for manual business spans) and
 /// <see cref="Meter"/> (for custom metrics). Both are BCL types — no OTel package
-/// needed to CREATE telemetry; the SDK only listens once these names are registered
-/// via <c>AddSource</c>/<c>AddMeter</c> (see <see cref="OpenTelemetryExtensions"/>).
-/// Named "iedora-api" so it matches the Bun service's <c>service.name</c> convention.
+/// needed to CREATE telemetry; the SDK listens because the name matches ServiceDefaults'
+/// <c>AddSource("Iedora.*")</c> / <c>AddMeter("Iedora.*")</c> — the same convention as
+/// <c>MenuMetrics</c>, and (unlike an explicit per-module registration) it flows from the
+/// Worker too, where the outbox handlers emit.
 /// <para>Every instrument name, tag key and tag value is a <c>const</c> here — the single source
 /// of truth shared by the emit sites and the tests (DRY: a rename is one edit, not a silent break).</para>
 /// </summary>
 public static class Telemetry
 {
-    public const string MeterName = "iedora-api";
+    public const string MeterName = "Iedora.Identity";
     public const string ActivitySourceName = MeterName;
-    public const string ServiceName = MeterName;
 
     /// <summary>Instrument names.</summary>
     public static class Instruments
