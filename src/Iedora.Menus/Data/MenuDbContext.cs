@@ -120,8 +120,9 @@ public sealed class MenuDbContext(DbContextOptions<MenuDbContext> options) : DbC
         });
 
         // The two "seen" tables are dedup markers only (no payload, no audit column): a row's mere
-        // existence gates the counter increment. They grow one row per visitor/bucket; a retention
-        // prune (+ its index) can be added later — until then, no extra index burdens the write path.
+        // existence gates the counter increment. They grow one row per visitor/bucket; expired markers
+        // are pruned by the worker's retention sweeps (see DedupRetention). No secondary index — the
+        // prune scans hourly over small tables, and none should burden the hot write path.
         builder.Entity<ViewSeen>(v =>
         {
             v.ToTable("view_seen");
