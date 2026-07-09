@@ -1,4 +1,5 @@
 using Framework.Media;
+using Iedora.Api;
 using Iedora.Identity;
 using Iedora.Identity.Contracts;
 using Iedora.Menus;
@@ -28,17 +29,23 @@ builder.Services.AddAuthorization(options =>
 // the .NET 10 validation source generator must run in the assembly that defines the endpoints.
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();        // build-time source of truth for the generated frontend client
+builder.AddIedoraRateLimiter();       // per-IP/per-user throttling (auth brute-force, upload/DoS)
 
 // NOTE: schema is applied by the Iedora.MigrationService worker (the AppHost gates this API on its
 // completion), so the API never migrates on startup — no DB access before serving.
 
 var app = builder.Build();
 
+// First: resolve the real client IP from a trusted proxy's X-Forwarded-For (so rate-limit
+// partitioning is per-client, not per-proxy). No-op unless a proxy is configured.
+app.UseForwardedHeaders();
+
 // Aspire health endpoints (/health, /alive) — filtered out of tracing by ServiceDefaults.
 app.MapDefaultEndpoints();
 app.MapOpenApi();
 
 app.UseAuthentication();
+app.UseRateLimiter();   // after auth so the per-user upload limit can read the caller's identity
 app.UseAuthorization();
 
 // Each module mounts its vertical slices under its own prefix (/auth, /tenancy).
