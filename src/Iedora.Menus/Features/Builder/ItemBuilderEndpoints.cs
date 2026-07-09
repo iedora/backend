@@ -109,16 +109,9 @@ public static class ItemBuilderEndpoints
                 return Results.NotFound();
 
             var items = await db.Items.Where(i => i.CategoryId == categoryId && i.RestaurantId == rest.Id).ToListAsync(ct);
-            if (!CategoryBuilderEndpoints.IsPermutation(req.OrderedIds, items.Select(i => i.Id)))
+            if (!Reorder.Apply(items, req.OrderedIds, clock.GetUtcNow()))
                 return ProblemResults.From(MenuErrors.InvalidReorder);
 
-            var byId = items.ToDictionary(i => i.Id);
-            var now = clock.GetUtcNow();
-            for (var i = 0; i < req.OrderedIds.Count; i++)
-            {
-                byId[req.OrderedIds[i]].Position = i;
-                byId[req.OrderedIds[i]].UpdatedAt = now;
-            }
             await db.SaveChangesAsync(ct);
             return Results.NoContent();
         })

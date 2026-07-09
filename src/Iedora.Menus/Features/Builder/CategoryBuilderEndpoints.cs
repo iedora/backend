@@ -98,28 +98,14 @@ public static class CategoryBuilderEndpoints
                 return Results.NotFound();
 
             var categories = await db.Categories.Where(c => c.MenuId == menuId && c.RestaurantId == rest.Id).ToListAsync(ct);
-            if (!IsPermutation(req.OrderedIds, categories.Select(c => c.Id)))
+            if (!Reorder.Apply(categories, req.OrderedIds, clock.GetUtcNow()))
                 return ProblemResults.From(MenuErrors.InvalidReorder);
 
-            var byId = categories.ToDictionary(c => c.Id);
-            var now = clock.GetUtcNow();
-            for (var i = 0; i < req.OrderedIds.Count; i++)
-            {
-                byId[req.OrderedIds[i]].Position = i;
-                byId[req.OrderedIds[i]].UpdatedAt = now;
-            }
             await db.SaveChangesAsync(ct);
             return Results.NoContent();
         })
         .WithName("ReorderCategories").WithSummary("Reorder the categories under a menu (owner/staff).")
         .Produces(StatusCodes.Status204NoContent)
         .ProducesProblem(StatusCodes.Status400BadRequest).ProducesProblem(StatusCodes.Status404NotFound);
-    }
-
-    // True iff ordered names every id in existing exactly once (same set, same count, no duplicates).
-    internal static bool IsPermutation(IReadOnlyList<Guid> ordered, IEnumerable<Guid> existing)
-    {
-        var existingSet = existing.ToHashSet();
-        return ordered.Count == existingSet.Count && ordered.ToHashSet().SetEquals(existingSet);
     }
 }

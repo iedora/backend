@@ -6,7 +6,6 @@ namespace Iedora.Menus;
 // range (ported from data/analytics.ts). All reads are over the tenant's restaurants; the analytics
 // buckets are native `date`, so the range filter is an index-native comparison, not a string compare.
 
-public sealed record DailyPoint(DateOnly Day, int Count);
 public sealed record MenuStats(int Total, int Active);
 public sealed record DishStats(int Total, DateTimeOffset? LastAddedAt);
 public sealed record TopDish(Guid ItemId, string ItemName, int ViewCount);
@@ -50,12 +49,7 @@ internal static class DashboardAnalytics
                 .ToListAsync(ct))
             .ToDictionary(x => x.Day, x => x.Count);
 
-        var breakdown = new List<DailyPoint>(days + 1);
-        for (var d = -days; d <= 0; d++)
-        {
-            var day = today.AddDays(d);
-            breakdown.Add(new DailyPoint(day, counts.GetValueOrDefault(day)));
-        }
+        var breakdown = DailyPoints.ZeroFilled(today, days, counts);
 
         // Content state: menu counts, dish count + last-added, across the tenant's restaurants.
         var menus = await (
