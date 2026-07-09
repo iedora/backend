@@ -56,6 +56,11 @@
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.16.0" />
     <!-- In-memory exporter — test-only, asserts the ServiceDefaults wildcard actually exports app signals. -->
     <PackageVersion Include="OpenTelemetry.Exporter.InMemory" Version="1.16.0" />
+
+    <!-- Admin dashboard (Blazor): a typed API client generated from openapi/Iedora.Api.json by
+         Refitter's source generator, over Refit + IHttpClientFactory. -->
+    <PackageVersion Include="Refit.HttpClientFactory" Version="13.1.0" />
+    <PackageVersion Include="Refitter.SourceGenerator" Version="2.1.0" />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.16.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.16.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.16.0" />

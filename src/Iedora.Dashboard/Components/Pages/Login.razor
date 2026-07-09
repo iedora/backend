@@ -1,0 +1,37 @@
+@page "/login"
+@using Microsoft.AspNetCore.Authorization
+@attribute [AllowAnonymous]
+@layout Iedora.Dashboard.Components.Layout.EmptyLayout
+
+<PageTitle>Sign in — iedora admin</PageTitle>
+
+<div class="login">
+    <h1>iedora admin</h1>
+    <form method="post" action="/login">
+        <AntiforgeryToken />
+        @if (ErrorText is not null)
+        {
+            <p class="error" role="alert">@ErrorText</p>
+        }
+        <label>
+            Email
+            <input name="email" type="email" autocomplete="username" required autofocus />
+        </label>
+        <label>
+            Password
+            <input name="password" type="password" autocomplete="current-password" required />
+        </label>
+        <button type="submit">Sign in</button>
+    </form>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "error")] public string? Error { get; set; }
+
+    private string? ErrorText => Error switch
+    {
+        "invalid" => "Incorrect email or password.",
+        "forbidden" => "That account isn't a platform admin.",
+        _ => null,
+    };
+}

@@ -1,0 +1,18 @@
+@page "/"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+<PageTitle>iedora admin</PageTitle>
+
+<h1>iedora admin console</h1>
+
+<AuthorizeView>
+    <p>Signed in as <strong>@context.User.Identity?.Name</strong>.</p>
+</AuthorizeView>
+
+<p>Cross-tenant staff screens (overview, directory, alerts, restaurants, users) land here next.</p>
+
+<form method="post" action="/logout">
+    <AntiforgeryToken />
+    <button type="submit">Sign out</button>
+</form>

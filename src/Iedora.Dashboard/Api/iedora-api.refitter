@@ -1,0 +1,7 @@
+{
+  "openApiPath": "../../../openapi/Iedora.Api.json",
+  "namespace": "Iedora.Dashboard.Api",
+  "useApiResponse": false,
+  "useCancellationTokens": true,
+  "generateMultipleFiles": false
+}
