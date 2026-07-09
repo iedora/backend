@@ -1,0 +1,9 @@
+<div class="tile">
+    <span class="tile-value">@Value</span>
+    <span class="tile-label">@Label</span>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+    [Parameter, EditorRequired] public int Value { get; set; }
+}

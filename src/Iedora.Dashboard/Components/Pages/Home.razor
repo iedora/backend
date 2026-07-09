@@ -1,18 +1,77 @@
 @page "/"
-@using Microsoft.AspNetCore.Authorization
+@using System.Net
+@using Iedora.Dashboard.Api
 @attribute [Authorize]
+@inject IIedoraApiv1 Api
 
-<PageTitle>iedora admin</PageTitle>
+<PageTitle>Overview — iedora admin</PageTitle>
 
-<h1>iedora admin console</h1>
+<h1>Platform overview</h1>
 
-<AuthorizeView>
-    <p>Signed in as <strong>@context.User.Identity?.Name</strong>.</p>
-</AuthorizeView>
+@if (error is not null)
+{
+    <p class="error" role="alert">@error</p>
+}
+else if (data is null)
+{
+    <p class="muted">Loading…</p>
+}
+else
+{
+    <div class="tiles">
+        <Tile Label="Restaurants" Value="data.Restaurants" />
+        <Tile Label="Active menus" Value="data.ActiveMenus" />
+        <Tile Label="Items" Value="data.Items" />
+        <Tile Label="Views today" Value="data.ViewsToday" />
+        <Tile Label="Views · 30d" Value="data.Views30d" />
+        <Tile Label="QR bound" Value="data.QrBound" />
+        <Tile Label="QR unbound" Value="data.QrUnbound" />
+    </div>
 
-<p>Cross-tenant staff screens (overview, directory, alerts, restaurants, users) land here next.</p>
+    <h2>Top restaurants by 30-day views</h2>
+    @if (data.TopByViews.Count == 0)
+    {
+        <p class="muted">No restaurants yet.</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr><th>Restaurant</th><th>Slug</th><th class="num">Menus</th><th class="num">Items</th><th class="num">Views · 30d</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var r in data.TopByViews)
+                {
+                    <tr>
+                        <td>@r.Name</td>
+                        <td class="muted">@r.Slug</td>
+                        <td class="num">@r.Menus</td>
+                        <td class="num">@r.Items</td>
+                        <td class="num">@r.Views30d</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
 
-<form method="post" action="/logout">
-    <AntiforgeryToken />
-    <button type="submit">Sign out</button>
-</form>
+@code {
+    private StaffOverviewResponse? data;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            data = await Api.StaffOverview();
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            error = "Your session expired — please sign out and back in.";
+        }
+        catch (Exception)
+        {
+            error = "Couldn't reach the API. Is it running?";
+        }
+    }
+}

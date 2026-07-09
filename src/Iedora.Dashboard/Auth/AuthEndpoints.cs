@@ -39,15 +39,14 @@ public static class AuthEndpoints
             {
                 new(ClaimTypes.NameIdentifier, me.UserId),
                 new(ClaimTypes.Name, me.Email ?? email),
+                new(AccessToken.ClaimType, tokens.AccessToken), // rides the cookie so later API calls carry it
             };
             claims.AddRange(me.Roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
-            var props = new AuthenticationProperties { IsPersistent = true };
-            props.StoreTokens([new AuthenticationToken { Name = "access_token", Value = tokens.AccessToken }]);
             await http.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
-                props);
+                new AuthenticationProperties { IsPersistent = true });
             return Results.Redirect("/");
         }).AllowAnonymous();
 
