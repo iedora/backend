@@ -101,18 +101,13 @@ public static class StaffConsoleEndpoints
             var menus = await MenuSummaries.ForRestaurantAsync(db, id, ct);
 
             // 14-day view trend (zero-filled, oldest first).
-            var start = today.AddDays(-13);
+            const int trendDays = 13; // 14 points incl. today
             var counts = (await db.DailyViews.AsNoTracking()
-                    .Where(d => d.RestaurantId == id && d.Day >= start)
+                    .Where(d => d.RestaurantId == id && d.Day >= today.AddDays(-trendDays))
                     .GroupBy(d => d.Day).Select(g => new { Day = g.Key, Count = g.Sum(x => x.Count) })
                     .ToListAsync(ct))
                 .ToDictionary(x => x.Day, x => x.Count);
-            var trend = new List<DailyPoint>(14);
-            for (var d = -13; d <= 0; d++)
-            {
-                var day = today.AddDays(d);
-                trend.Add(new DailyPoint(day, counts.GetValueOrDefault(day)));
-            }
+            var trend = DailyPoints.ZeroFilled(today, trendDays, counts);
 
             return TypedResults.Ok(new StaffRestaurantDetailResponse(row, menus, trend));
         })

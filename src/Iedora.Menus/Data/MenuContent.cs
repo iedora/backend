@@ -56,7 +56,7 @@ public sealed class Menu
 
 /// <summary>A section within a menu ("Starters", "Mains"). <see cref="RestaurantId"/> is denormalized
 /// so every mutation can scope its WHERE clause by restaurant (tenancy defense-in-depth).</summary>
-public sealed class Category
+public sealed class Category : IOrderable
 {
     public Guid Id { get; set; }
     public Guid MenuId { get; set; }
@@ -72,7 +72,7 @@ public sealed class Category
 }
 
 /// <summary>A dish. <see cref="Available"/> false hides it from guests. Prices are integer cents.</summary>
-public sealed class Item
+public sealed class Item : IOrderable
 {
     public Guid Id { get; set; }
     public Guid CategoryId { get; set; }
