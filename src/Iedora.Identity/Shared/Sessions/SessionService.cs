@@ -121,7 +121,7 @@ public sealed class SessionService(IdentityDbContext db, TimeProvider clock, IOp
     }
 
     /// <summary>Revoke every live session in a family (logout this device / reuse burn).</summary>
-    public Task<int> RevokeFamilyAsync(Guid familyId, CancellationToken ct)
+    private Task<int> RevokeFamilyAsync(Guid familyId, CancellationToken ct)
     {
         var now = clock.GetUtcNow();
         return db.Sessions

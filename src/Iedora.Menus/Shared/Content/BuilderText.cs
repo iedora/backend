@@ -9,9 +9,6 @@ internal static class BuilderText
     public const int MaxShortName = 80;   // menu + category names
     public const int MaxItemName = 120;   // item names + variant labels
     public const int MaxDescription = 1000;
-    public const int MaxPriceCents = 100_000_00; // €1,000.00
-    public const int MaxVariants = 20;
-    public const int MaxTags = 20;
 
     /// <summary>Trim a required name; validation error if empty or over the limit.</summary>
     public static ErrorOr<string> Name(string value, int limit, string field)
@@ -72,7 +69,7 @@ internal static class BuilderText
 
     /// <summary>Menus often print a trailing period on dish names ("Bacalhau à Brás."); drop it so
     /// titles read cleanly — but never down to empty (a lone "." keeps its dot).</summary>
-    public static string StripTrailingDots(string s)
+    private static string StripTrailingDots(string s)
     {
         var end = s.Length;
         while (end > 0 && (s[end - 1] == '.' || char.IsWhiteSpace(s[end - 1]))) end--;

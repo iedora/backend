@@ -26,10 +26,7 @@ public static class CommandEndpoints
     }
 
     /// <summary>Map <c>GET commands/{id}</c> on a module's group, backed by its <typeparamref name="TContext"/>.</summary>
-    public static RouteGroupBuilder MapCommandStatus<TContext>(this RouteGroupBuilder group) where TContext : DbContext =>
-        group.MapCommandStatusInternal<TContext>();
-
-    private static RouteGroupBuilder MapCommandStatusInternal<TContext>(this RouteGroupBuilder group) where TContext : DbContext
+    public static RouteGroupBuilder MapCommandStatus<TContext>(this RouteGroupBuilder group) where TContext : DbContext
     {
         group.MapGet("/commands/{id:guid}", async Task<Results<Ok<CommandStatusResponse>, NotFound>> (
                 Guid id, TContext db, CancellationToken ct) =>

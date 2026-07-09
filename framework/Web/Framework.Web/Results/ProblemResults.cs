@@ -36,13 +36,7 @@ public static class ProblemResults
             },
             extensions: new Dictionary<string, object?> { ["code"] = error.Code });
 
-    private static ValidationProblem Validation(List<Error> errors)
-    {
-        var byCode = new Dictionary<string, string[]>();
-        foreach (var e in errors)
-            byCode[e.Code] = byCode.TryGetValue(e.Code, out var existing)
-                ? [.. existing, e.Description]
-                : [e.Description];
-        return TypedResults.ValidationProblem(byCode);
-    }
+    private static ValidationProblem Validation(List<Error> errors) =>
+        TypedResults.ValidationProblem(
+            errors.GroupBy(e => e.Code).ToDictionary(g => g.Key, g => g.Select(e => e.Description).ToArray()));
 }
