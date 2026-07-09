@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Framework.Web;
 using Iedora.Identity.Contracts;
 using Iedora.Tenancy.Contracts;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -33,7 +34,7 @@ public static class StaffUserEndpoints
         users.MapGet("/", async (
                 string? q, int? limit, IIdentityApi identity, ITenancyApi tenancy, CancellationToken ct) =>
         {
-            var rows = await identity.ListUsersAsync(q, limit ?? 50, ct);
+            var rows = await identity.ListUsersAsync(q, limit ?? Paging.DefaultLimit, ct);
             var counts = await tenancy.TenantCountsAsync(rows.Select(u => u.Id).ToList(), ct);
             var views = rows.Select(u => AdminUserView.From(u, counts.GetValueOrDefault(u.Id))).ToList();
             return TypedResults.Ok(new StaffUserListResponse(views));

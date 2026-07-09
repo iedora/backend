@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Iedora.Api.IntegrationTests;
 
 public sealed record QrViewWire(string code, string? restaurantId, string? restaurantName, string? restaurantSlug, string? label, string? boundAt);
-public sealed record QrListWire(QrViewWire[] codes);
+public sealed record QrListWire(QrViewWire[] codes, int total);
 public sealed record CreateQrWire(int inserted);
 public sealed record QrTargetWire(string slug);
 
@@ -33,6 +33,24 @@ public sealed class MenuQrTests : IntegrationTestBase
 
     private async Task<QrViewWire[]> List(string staff) =>
         (await (await Get("/api/staff/qr-codes", staff)).Content.ReadFromJsonAsync<QrListWire>())!.codes;
+
+    private async Task<QrListWire> ListPage(string staff, int limit, int offset) =>
+        (await (await Get($"/api/staff/qr-codes?limit={limit}&offset={offset}", staff)).Content.ReadFromJsonAsync<QrListWire>())!;
+
+    [TestMethod]
+    public async Task Listing_is_paged_and_reports_the_unpaged_total()
+    {
+        var staff = await RegisterLoginAsAdmin("staff@iedora.com", Pw);
+        await PostJson("/api/staff/qr-codes", new { count = 5 }, staff.accessToken);
+
+        var first = await ListPage(staff.accessToken, limit: 2, offset: 0);
+        Assert.HasCount(2, first.codes); // one page
+        Assert.AreEqual(5, first.total); // ...of the full set
+
+        var last = await ListPage(staff.accessToken, limit: 2, offset: 4);
+        Assert.HasCount(1, last.codes); // the tail
+        Assert.AreEqual(5, last.total);
+    }
 
     [TestMethod]
     public async Task Staff_creates_an_explicit_code_and_it_appears_unbound()
