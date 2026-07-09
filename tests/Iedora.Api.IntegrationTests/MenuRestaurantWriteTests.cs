@@ -9,7 +9,7 @@ namespace Iedora.Api.IntegrationTests;
 
 public sealed record ThemeWire(string? primaryColor, string? secondaryColor, string? font, string? layout);
 public sealed record RestDetailWire(string id, string name, string slug, string? description, ThemeWire? theme,
-    string defaultLanguage, string[] supportedLanguages, string defaultCurrency, string? onboardingCompletedAt);
+    string defaultLanguage, string[] supportedLanguages, string defaultCurrency, string timeZone, string? onboardingCompletedAt);
 public sealed record RestOverviewWire(RestDetailWire restaurant);
 
 [TestClass]
@@ -65,6 +65,22 @@ public sealed class MenuRestaurantWriteTests : IntegrationTestBase
         Assert.AreEqual("USD", body.defaultCurrency);     // normalized to upper-case
         CollectionAssert.AreEqual(new[] { "en", "pt" }, body.supportedLanguages);
         Assert.AreEqual("cards", body.theme!.layout);
+        Assert.AreEqual("UTC", body.timeZone);            // default when the request omits it
+    }
+
+    [TestMethod]
+    public async Task Sets_a_valid_timezone_and_rejects_an_invalid_one()
+    {
+        var (token, slug) = await OwnerWithRestaurant("owner@tz.pt", "tz");
+        var identity = new { name = "Tasca", defaultLanguage = "en", supportedLanguages = new[] { "en" }, defaultCurrency = "EUR" };
+
+        var ok = await SendJson(HttpMethod.Patch, $"/api/restaurants/{slug}", new { identity.name, identity.defaultLanguage, identity.supportedLanguages, identity.defaultCurrency, timeZone = "Europe/Lisbon" }, token);
+        Assert.AreEqual(HttpStatusCode.OK, ok.StatusCode);
+        Assert.AreEqual("Europe/Lisbon", (await Overview(slug, token)).timeZone);
+
+        var bad = await SendJson(HttpMethod.Patch, $"/api/restaurants/{slug}", new { identity.name, identity.defaultLanguage, identity.supportedLanguages, identity.defaultCurrency, timeZone = "Middle/Earth" }, token);
+        Assert.AreEqual(HttpStatusCode.BadRequest, bad.StatusCode);
+        Assert.AreEqual("Europe/Lisbon", (await Overview(slug, token)).timeZone); // unchanged by the rejected update
     }
 
     [TestMethod]

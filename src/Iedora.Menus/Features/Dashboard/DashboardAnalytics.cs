@@ -23,13 +23,14 @@ internal static class DashboardAnalytics
     /// <summary>Resolve a range key to its span in days; false for an unknown/empty key.</summary>
     public static bool TryRange(string? key, out int days) => Ranges.TryGetValue(key ?? "", out days);
 
-    /// <summary>First day of the current UTC calendar month.</summary>
-    public static DateOnly MonthStart(DateTimeOffset now) => new(now.UtcDateTime.Year, now.UtcDateTime.Month, 1);
+    // The zone the tenant's analytics days are bucketed in (all its restaurants share one; UTC if none).
+    private static Task<string?> TenantZoneAsync(MenuDbContext db, Guid tenantId, CancellationToken ct) =>
+        db.Restaurants.AsNoTracking().Where(r => r.TenantId == tenantId).Select(r => r.TimeZone).FirstOrDefaultAsync(ct);
 
-    /// <summary>Sum the tenant's menu views for the current calendar month (UTC).</summary>
+    /// <summary>Sum the tenant's menu views for the current calendar month (the tenant's local month).</summary>
     public static async Task<int> MonthlyViewsAsync(MenuDbContext db, Guid tenantId, DateTimeOffset now, CancellationToken ct)
     {
-        var first = MonthStart(now);
+        var first = Timezones.LocalMonthStart(now, await TenantZoneAsync(db, tenantId, ct));
         return await db.DailyViews.AsNoTracking()
             .Where(d => d.TenantId == tenantId && d.Day >= first)
             .SumAsync(d => (int?)d.Count, ct) ?? 0;
@@ -39,7 +40,7 @@ internal static class DashboardAnalytics
     public static async Task<AnalyticsResponse> BuildAsync(
         MenuDbContext db, Guid tenantId, string rangeKey, int days, DateTimeOffset now, CancellationToken ct)
     {
-        var today = DateOnly.FromDateTime(now.UtcDateTime);
+        var today = Timezones.LocalDay(now, await TenantZoneAsync(db, tenantId, ct));
         var start = today.AddDays(-days);
 
         // Scans per day over the window → total, today's, and a zero-filled breakdown (oldest first).

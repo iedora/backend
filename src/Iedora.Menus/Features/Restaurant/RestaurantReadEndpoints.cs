@@ -13,12 +13,12 @@ public sealed record MenuSummary(
 public sealed record RestaurantDetail(
     Guid Id, Guid TenantId, string Name, string Slug, string? Description, LocalizedText? DescriptionI18n,
     string? LogoUrl, string? BannerUrl, Theme? Theme, string DefaultLanguage,
-    IReadOnlyList<string> SupportedLanguages, string DefaultCurrency,
+    IReadOnlyList<string> SupportedLanguages, string DefaultCurrency, string TimeZone,
     DateTimeOffset? OnboardingCompletedAt, DateTimeOffset UpdatedAt)
 {
     public static RestaurantDetail From(Restaurant r) => new(
         r.Id, r.TenantId, r.Name, r.Slug, r.Description, r.DescriptionI18n, r.LogoUrl, r.BannerUrl,
-        r.Theme, r.DefaultLanguage, r.SupportedLanguages, r.DefaultCurrency, r.OnboardingCompletedAt, r.UpdatedAt);
+        r.Theme, r.DefaultLanguage, r.SupportedLanguages, r.DefaultCurrency, r.TimeZone, r.OnboardingCompletedAt, r.UpdatedAt);
 }
 
 public sealed record RestaurantOverview(RestaurantDetail Restaurant, IReadOnlyList<MenuSummary> Menus);

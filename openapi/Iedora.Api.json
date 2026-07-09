@@ -4005,6 +4005,7 @@
           "defaultLanguage",
           "supportedLanguages",
           "defaultCurrency",
+          "timeZone",
           "onboardingCompletedAt",
           "updatedAt"
         ],
@@ -4071,6 +4072,9 @@
             }
           },
           "defaultCurrency": {
+            "type": "string"
+          },
+          "timeZone": {
             "type": "string"
           },
           "onboardingCompletedAt": {
@@ -5012,6 +5016,12 @@
           },
           "defaultCurrency": {
             "type": "string"
+          },
+          "timeZone": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
