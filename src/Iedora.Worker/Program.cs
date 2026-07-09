@@ -1,4 +1,5 @@
 using Iedora.Identity;
+using Iedora.Menus;
 using Framework.Notifications;
 using Iedora.Tenancy;
 
@@ -11,5 +12,6 @@ builder.AddServiceDefaults();
 builder.AddIdentityOutboxDispatch();
 builder.AddTenancyMessaging();
 builder.AddNotificationsMessaging();
+builder.AddMenuMaintenance(); // periodic dedup-marker pruning (view_seen, item_view_seen)
 
 builder.Build().Run();

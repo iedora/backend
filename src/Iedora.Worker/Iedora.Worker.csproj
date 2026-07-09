@@ -13,6 +13,7 @@
          dispatch registration) and calls only their outbox-dispatch composition. It maps no
          endpoints, so it runs no web surface even though the modules are web-capable. -->
     <ProjectReference Include="..\Iedora.Identity\Iedora.Identity.csproj" />
+    <ProjectReference Include="..\Iedora.Menus\Iedora.Menus.csproj" />
     <ProjectReference Include="..\Iedora.Tenancy\Iedora.Tenancy.csproj" />
     <ProjectReference Include="..\..\framework\Notifications\Framework.Notifications\Framework.Notifications.csproj" />
   </ItemGroup>

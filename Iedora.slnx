@@ -15,6 +15,10 @@
     <Project Path="framework/Outbox/Framework.Outbox.Tests/Framework.Outbox.Tests.csproj" />
     <Project Path="framework/Outbox/Framework.Outbox/Framework.Outbox.csproj" />
   </Folder>
+  <Folder Name="/framework/Maintenance/">
+    <Project Path="framework/Maintenance/Framework.Maintenance.Tests/Framework.Maintenance.Tests.csproj" />
+    <Project Path="framework/Maintenance/Framework.Maintenance/Framework.Maintenance.csproj" />
+  </Folder>
   <Folder Name="/framework/Web/">
     <Project Path="framework/Web/Framework.Web.Tests/Framework.Web.Tests.csproj" />
     <Project Path="framework/Web/Framework.Web/Framework.Web.csproj" />
