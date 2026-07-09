@@ -32,7 +32,7 @@ public static class StaffConsoleEndpoints
             var topSource = db.Restaurants.AsNoTracking()
                 .OrderByDescending(r => db.DailyViews.Where(d => d.RestaurantId == r.Id && d.Day >= since).Sum(d => (int?)d.Count) ?? 0)
                 .ThenByDescending(r => r.CreatedAt).Take(5);
-            var top = await StaffReads.Project(topSource, db, since).ToListAsync(ct);
+            var top = await StaffReads.ProjectAsync(topSource, db, since, ct);
 
             return TypedResults.Ok(new StaffOverviewResponse(
                 await db.Restaurants.CountAsync(ct),
@@ -58,8 +58,8 @@ public static class StaffConsoleEndpoints
                 source = source.Where(r => EF.Functions.ILike(r.Name, like) || EF.Functions.ILike(r.Slug, like));
             }
 
-            var rows = await StaffReads.Project(source.OrderByDescending(r => r.CreatedAt), db, since)
-                .Take(200).ToListAsync(ct);
+            var rows = await StaffReads.ProjectAsync(
+                source.OrderByDescending(r => r.CreatedAt).Take(200), db, since, ct);
             return TypedResults.Ok(new StaffDirectoryResponse(rows));
         })
         .WithName("StaffDirectory").WithSummary("Search the cross-tenant restaurant directory (staff).");
@@ -72,14 +72,14 @@ public static class StaffConsoleEndpoints
             var since = StaffReads.Since30(DateOnly.FromDateTime(now.UtcDateTime));
             var weekAgo = now.AddDays(-7);
 
-            var stale = await StaffReads.Project(
-                db.Restaurants.Where(r => r.CreatedAt < weekAgo
+            var stale = await StaffReads.ProjectAsync(
+                db.Restaurants.AsNoTracking().Where(r => r.CreatedAt < weekAgo
                     && !db.DailyViews.Any(d => d.RestaurantId == r.Id && d.Day >= since))
-                    .OrderBy(r => r.CreatedAt), db, since).Take(100).ToListAsync(ct);
+                    .OrderBy(r => r.CreatedAt).Take(100), db, since, ct);
 
-            var empty = await StaffReads.Project(
-                db.Restaurants.Where(r => !db.Items.Any(i => i.RestaurantId == r.Id))
-                    .OrderBy(r => r.CreatedAt), db, since).Take(100).ToListAsync(ct);
+            var empty = await StaffReads.ProjectAsync(
+                db.Restaurants.AsNoTracking().Where(r => !db.Items.Any(i => i.RestaurantId == r.Id))
+                    .OrderBy(r => r.CreatedAt).Take(100), db, since, ct);
 
             var unboundQr = await db.QrCodes.CountAsync(q => q.BoundAt == null, ct);
             return TypedResults.Ok(new StaffAlertsResponse(stale, empty, unboundQr));
@@ -97,8 +97,8 @@ public static class StaffConsoleEndpoints
             var today = Timezones.LocalDay(clock.GetUtcNow(), tz);
             var since = StaffReads.Since30(today);
 
-            var row = await StaffReads.Project(db.Restaurants.AsNoTracking().Where(r => r.Id == id), db, since)
-                .FirstOrDefaultAsync(ct);
+            var row = (await StaffReads.ProjectAsync(
+                db.Restaurants.AsNoTracking().Where(r => r.Id == id), db, since, ct)).FirstOrDefault();
             if (row is null) return TypedResults.NotFound();
 
             var menus = await MenuSummaries.ForRestaurantAsync(db, id, ct);
