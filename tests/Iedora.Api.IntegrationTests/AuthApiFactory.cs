@@ -25,6 +25,11 @@ public sealed class AuthApiFactory(string connectionString) : WebApplicationFact
         builder.UseSetting("ConnectionStrings:authdb", connectionString);
         builder.UseSetting("Session:CookieSecure", "false");
         builder.UseSetting("ServiceToken:Clients:test-client", "test-secret"); // client-credentials grant
+        // Raise rate limits far above anything the suite does, so shared-IP test traffic isn't
+        // throttled (RateLimitingTests lowers them per-host to assert the 429 path).
+        builder.UseSetting("RateLimiting:AuthPermitLimit", "1000000");
+        builder.UseSetting("RateLimiting:UploadPermitLimit", "1000000");
+        builder.UseSetting("RateLimiting:GlobalPermitLimit", "1000000");
 
         builder.ConfigureTestServices(services =>
         {
