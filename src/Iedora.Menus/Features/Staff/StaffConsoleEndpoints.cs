@@ -25,7 +25,7 @@ public static class StaffConsoleEndpoints
         // GET /api/staff/overview — platform totals + the top 5 restaurants by 30-day views.
         staff.MapGet("/overview", async (MenuDbContext db, TimeProvider clock, CancellationToken ct) =>
         {
-            var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+            var today = Timezones.UtcToday(clock.GetUtcNow());
             var since = StaffReads.Since30(today);
 
             // Order the source by the 30-day view subquery (EF can't sort by the projected alias),
@@ -50,7 +50,7 @@ public static class StaffConsoleEndpoints
         // GET /api/staff/directory?q= — searchable restaurant list (name/slug), newest first, capped.
         staff.MapGet("/directory", async (string? q, MenuDbContext db, TimeProvider clock, CancellationToken ct) =>
         {
-            var since = StaffReads.Since30(DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime));
+            var since = StaffReads.Since30(Timezones.UtcToday(clock.GetUtcNow()));
 
             var source = db.Restaurants.AsNoTracking();
             if (!string.IsNullOrWhiteSpace(q))
@@ -70,7 +70,7 @@ public static class StaffConsoleEndpoints
         staff.MapGet("/alerts", async (MenuDbContext db, TimeProvider clock, CancellationToken ct) =>
         {
             var now = clock.GetUtcNow();
-            var since = StaffReads.Since30(DateOnly.FromDateTime(now.UtcDateTime));
+            var since = StaffReads.Since30(Timezones.UtcToday(now));
             var weekAgo = now.AddDays(-7);
             const int alertLimit = 100; // most stale/empty restaurants surfaced per bucket
 
