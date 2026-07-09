@@ -4,6 +4,7 @@ using Iedora.Dashboard.Components;
 using Iedora.Identity.Contracts;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Refit;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/login";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
+        // Rotate the API access token (via /auth/refresh) shortly before it expires, on each request.
+        options.Events = new CookieAuthenticationEvents { OnValidatePrincipal = TokenRefresh.OnValidatePrincipalAsync };
     });
 // This is an admin console — [Authorize] (no named policy) requires the platform-admin role. Left as
 // the DEFAULT (not fallback) policy so the anonymous /login page is still reachable.
@@ -34,6 +37,14 @@ builder.Services.AddCascadingAuthenticationState();
 // "api" resource resolved by Aspire service discovery; the bearer handler attaches the admin's token.
 builder.Services.AddScoped<AccessToken>();
 builder.Services.AddTransient<BearerHandler>();
+builder.Services.TryAddSingleton(TimeProvider.System);
+builder.Services.Configure<ApiAuthOptions>(builder.Configuration.GetSection(ApiAuthOptions.SectionName));
+
+// Raw auth client: UseCookies=false so the API's HttpOnly refresh cookie is visible in Set-Cookie
+// (AuthApi manages it per-admin). Separate from the Refit data client, which carries the bearer.
+builder.Services.AddHttpClient<AuthApi>(c => c.BaseAddress = new Uri("https+http://api"))
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseCookies = false });
+
 builder.Services.AddRefitClient<IIedoraApiv1>()
     .ConfigureHttpClient(c => c.BaseAddress = new Uri("https+http://api"))
     .AddHttpMessageHandler<BearerHandler>();

@@ -1,48 +1,36 @@
-using System.Security.Claims;
 using Iedora.Dashboard.Api;
 using Iedora.Identity.Contracts;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using Refit;
+using System.Security.Claims;
 
 namespace Iedora.Dashboard;
 
 // The dashboard's own cookie sign-in/-out. Login is a static form POST (a cookie can only be set on a
-// real HTTP response, not over the interactive circuit), backed by the API's /auth/login.
+// real HTTP response, not over the interactive circuit), backed by the API's /auth/login + /auth/whoami.
 public static class AuthEndpoints
 {
     public static void MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        // POST /login — verify credentials with the API, require the platform-admin role, then open
-        // the dashboard's cookie session (stashing the API token in the auth ticket for later calls).
+        // POST /login — verify credentials with the API (capturing the refresh cookie), require the
+        // platform-admin role, then open the dashboard's cookie session with the access + refresh tokens.
         app.MapPost("/login", async (
             [FromForm] string email, [FromForm] string password,
-            IIedoraApiv1 api, AccessToken token, HttpContext http, CancellationToken ct) =>
+            AuthApi auth, IIedoraApiv1 api, AccessToken token, HttpContext http, CancellationToken ct) =>
         {
-            TokenResponse tokens;
-            try
-            {
-                tokens = await api.Login(new LoginRequest { Email = email, Password = password }, ct);
-            }
-            catch (ApiException)
-            {
-                return Results.Redirect("/login?error=invalid"); // 401 (bad credentials) or similar
-            }
+            var result = await auth.LoginAsync(email, password, ct);
+            if (result is null) return Results.Redirect("/login?error=invalid");
 
-            token.Value = tokens.AccessToken; // so the whoami call below is authenticated
-            var me = await api.WhoAmI(ct);
+            token.Value = result.AccessToken; // authenticate the whoami call below
+            WhoAmIResponse me;
+            try { me = await api.WhoAmI(ct); }
+            catch { return Results.Redirect("/login?error=invalid"); }
+
             if (me.Roles is null || !me.Roles.Contains(Roles.Admin))
                 return Results.Redirect("/login?error=forbidden"); // not a platform admin — no access
 
-            var claims = new List<Claim>
-            {
-                new(ClaimTypes.NameIdentifier, me.UserId),
-                new(ClaimTypes.Name, me.Email ?? email),
-                new(AccessToken.ClaimType, tokens.AccessToken), // rides the cookie so later API calls carry it
-            };
-            claims.AddRange(me.Roles.Select(r => new Claim(ClaimTypes.Role, r)));
-
+            var claims = TokenRefresh.BuildClaims(me.UserId, me.Email ?? email, me.Roles, result);
             await http.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
