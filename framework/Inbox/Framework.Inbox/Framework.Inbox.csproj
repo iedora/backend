@@ -18,4 +18,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Optional retention sweep for consumed rows (opt-in via AddInboxRetention). -->
+    <ProjectReference Include="..\..\Maintenance\Framework.Maintenance\Framework.Maintenance.csproj" />
+  </ItemGroup>
+
 </Project>

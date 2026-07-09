@@ -23,4 +23,9 @@
     <PackageReference Include="Npgsql" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Optional retention sweep for dispatched rows (opt-in via AddOutboxRetention). -->
+    <ProjectReference Include="..\..\Maintenance\Framework.Maintenance\Framework.Maintenance.csproj" />
+  </ItemGroup>
+
 </Project>

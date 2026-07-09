@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 using Testcontainers.PostgreSql;
 
@@ -126,5 +127,28 @@ public sealed class InboxProcessorTests
         await using var db = NewDb();
         await Assert.ThrowsExactlyAsync<InvalidOperationException>(() =>
             Processor(db, _clock, new RecordingHandler("known")).ProcessOnceAsync(Guid.NewGuid(), "unknown", "{}", CancellationToken.None));
+    }
+
+    private async Task SeedAsync(DateTimeOffset receivedAt)
+    {
+        await using var db = NewDb();
+        db.Set<InboxMessage>().Add(new InboxMessage { MessageId = Guid.NewGuid(), Type = "test", Payload = "{}", ReceivedAt = receivedAt });
+        await db.SaveChangesAsync();
+    }
+
+    [TestMethod]
+    public async Task Retention_sweep_prunes_only_rows_past_the_dedup_window()
+    {
+        var now = _clock.GetUtcNow();
+        await SeedAsync(now.AddDays(-20)); // past the 14-day default → pruned
+        await SeedAsync(now.AddDays(-1));  // still within the window → kept
+
+        int removed;
+        await using (var db = NewDb())
+            removed = await new InboxRetentionSweep<TestDbContext>(db, _clock, Options.Create(new InboxRetentionOptions())).SweepAsync(CancellationToken.None);
+
+        Assert.AreEqual(1, removed);
+        await using var check = NewDb();
+        Assert.AreEqual(1, await check.Set<InboxMessage>().CountAsync());
     }
 }

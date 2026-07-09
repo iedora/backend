@@ -199,4 +199,31 @@ public sealed class OutboxProcessorTests
         await using var check = NewDb();
         Assert.AreEqual(3, await check.Set<OutboxMessage>().CountAsync(m => m.ProcessedAt == null));
     }
+
+    private async Task SeedAsync(DateTimeOffset? processedAt)
+    {
+        await using var db = NewDb();
+        db.Set<OutboxMessage>().Add(new OutboxMessage
+        {
+            Id = Guid.CreateVersion7(), Type = "test", Payload = "{}", CreatedAt = Now.AddDays(-30), ProcessedAt = processedAt,
+        });
+        await db.SaveChangesAsync();
+    }
+
+    [TestMethod]
+    public async Task Retention_sweep_prunes_processed_rows_past_the_window_and_keeps_the_rest()
+    {
+        await SeedAsync(processedAt: Now.AddDays(-10)); // processed, past the 7-day default → pruned
+        await SeedAsync(processedAt: Now.AddDays(-1));  // processed, still within the window → kept
+        await SeedAsync(processedAt: null);             // still pending → never touched
+
+        int removed;
+        await using (var db = NewDb())
+            removed = await new OutboxRetentionSweep<TestDbContext>(db, _clock, Options.Create(new OutboxRetentionOptions())).SweepAsync(CancellationToken.None);
+
+        Assert.AreEqual(1, removed);
+        await using var check = NewDb();
+        Assert.AreEqual(2, await check.Set<OutboxMessage>().CountAsync());
+        Assert.AreEqual(1, await check.Set<OutboxMessage>().CountAsync(m => m.ProcessedAt == null)); // the pending one survives
+    }
 }
