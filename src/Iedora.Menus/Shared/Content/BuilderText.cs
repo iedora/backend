@@ -3,12 +3,17 @@ using ErrorOr;
 namespace Iedora.Menus;
 
 /// <summary>Shared normalization + limits for builder writes (ported from the Bun service's
-/// validate.ts). Names are trimmed; i18n maps are pruned to non-default overrides only.</summary>
+/// validate.ts). Names are trimmed; i18n maps are pruned to non-default overrides only. The limit
+/// consts are the single source of truth — the request DTOs' DataAnnotations reference them, so the
+/// up-front 400 and this normalization enforce identical bounds.</summary>
 internal static class BuilderText
 {
     public const int MaxShortName = 80;   // menu + category names
     public const int MaxItemName = 120;   // item names + variant labels
     public const int MaxDescription = 1000;
+    public const int MaxPriceCents = 100_000_00; // €1,000.00 — item + variant price ceiling
+    public const int MaxVariants = 20;    // variants per item
+    public const int MaxTags = 20;        // tags per item
 
     /// <summary>Trim a required name; validation error if empty or over the limit.</summary>
     public static ErrorOr<string> Name(string value, int limit, string field)
