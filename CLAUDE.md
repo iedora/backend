@@ -6,7 +6,7 @@ Architecture, module layout, and conventions are in [README.md](README.md) — r
 
 - Build: `dotnet build Iedora.slnx` — treat any warning as a failure (0 warnings is the bar).
 - Test: `dotnet test --solution Iedora.slnx` (MSTest 4 on the Microsoft Testing Platform, wired via `global.json` — not legacy VSTest). Integration + e2e tests need Docker (Testcontainers Postgres).
-- Migration: `dotnet ef migrations add <Name> --project src/Iedora.Data --context <Identity|Tenancy>DbContext --output-dir <Identity|Tenancy>/Migrations`. The API never self-migrates — `Iedora.MigrationService` owns the schema.
+- Migration: each module owns its migrations under `Data/Migrations` — `dotnet ef migrations add <Name> --project src/Iedora.<Module>/Iedora.<Module>.csproj --context <Module>DbContext --output-dir Data/Migrations` (e.g. `--project src/Iedora.Menus/Iedora.Menus.csproj --context MenuDbContext`). The API never self-migrates — `Iedora.MigrationService` owns the schema.
 
 ## Rules
 

@@ -20,8 +20,8 @@ Modules never reference each other's internals. Each module owns a **`Contracts/
 
 | Project | Purpose |
 |---|---|
-| `src/Iedora.Api` | The web API — modular monolith. Per-module vertical slices (`<Module>/Features/*`), ES256 JWTs, JWKS. |
-| `src/Iedora.Data` | The per-module EF Core models + migrations (`Identity/` → `identity` schema, `Tenancy/` → `tenancy` schema), shared by the API, migration worker, and outbox worker. Owns DB registration (`AddIdentityDb` / `AddTenancyDb`). |
+| `src/Iedora.Api` | The web-API host — composes the feature-module projects (`src/Iedora.<Module>`), ES256 JWTs, JWKS. |
+| `src/Iedora.<Module>` | Each feature module is its own project (`Iedora.Identity`, `Iedora.Tenancy`, `Iedora.Menus`, …): its vertical slices plus a `Data/` folder holding the EF model, `DbContext`, migrations (`Data/Migrations`), and DB registration (`Add<Module>Db`). |
 | `framework/Outbox/Framework.Outbox` | Reusable transactional-outbox library (entity, dispatcher, `IOutboxHandler`) — reliable message *production*. Dispatcher **woken by Postgres `NOTIFY`** (poll as the fallback), `FOR UPDATE SKIP LOCKED` claim (multi-replica-safe), schema-aware, retry/backoff, no broker. |
 | `framework/Inbox/Framework.Inbox` | Reusable idempotent-consumer library (`InboxProcessor`, `IInboxHandler`) — reliable message *consumption*: dedup + handler in one transaction, so at-least-once redelivery is safe. Transport-agnostic. |
 | `framework/Commands/Framework.Commands` | The async-write pipeline: `SubmitCommand` stages a `Pending` command + outbox message atomically; a `CommandHandler` runs the work off the outbox and records `Succeeded`/`Failed`, so a `202`-accepted write is pollable to completion. Every domain write uses it. |
@@ -51,8 +51,8 @@ dotnet run --project src/Iedora.MigrationService   # applies every module's migr
 dotnet run --project src/Iedora.Api
 ```
 
-Migrations live per module in `src/Iedora.Data` (`Identity/Migrations`, `Tenancy/Migrations`); add
-one with `dotnet ef migrations add <Name> --project src/Iedora.Data --context <Identity|Tenancy>DbContext --output-dir <Identity|Tenancy>/Migrations`.
+Migrations live per module under each module project's `Data/Migrations` (e.g. `src/Iedora.Menus/Data/Migrations`);
+add one with `dotnet ef migrations add <Name> --project src/Iedora.<Module>/Iedora.<Module>.csproj --context <Module>DbContext --output-dir Data/Migrations`.
 
 ## Auth endpoints
 
