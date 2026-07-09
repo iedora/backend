@@ -30,6 +30,10 @@ Every domain write is asynchronous and identical in shape (`Framework.Commands`)
 
 The only exception: **login/refresh stay synchronous** — they're an auth token exchange, not a domain command. Cross-module *reads* also stay synchronous (via `Contracts`).
 
+## Background maintenance — retention sweeps
+
+Unbounded tables (view-dedup markers, processed outbox/inbox rows) are pruned by `Framework.Maintenance`: an `IRetentionSweep` is one idempotent `WHERE`-bounded delete, and a single hosted service runs every registered sweep on a fixed interval, isolating per-sweep failures. Wire sweeps **only in `Iedora.Worker`** (`AddRetentionSweeper()` + `AddRetentionSweep<T>()`, or `AddOutboxRetention<T>()` / `AddInboxRetention<T>()`) — never in the API host, so pruning doesn't run on every web replica. Each retention window is its own options type (defaults are safe); a new unbounded table gets a new sweep, not a new timer.
+
 ## Gotchas (each already cost a debugging cycle)
 
 - Tests run on Testcontainers Postgres, never SQLite (SQLite can't translate `DateTimeOffset`).
