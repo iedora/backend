@@ -1,3 +1,4 @@
+using Framework.Web;
 using Iedora.Identity.Contracts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +22,7 @@ internal sealed class IdentityApi(
 
     public async Task<IReadOnlyList<AdminUserRecord>> ListUsersAsync(string? query, int limit, CancellationToken ct)
     {
-        var take = Math.Clamp(limit, 1, 200);
+        var take = Math.Clamp(limit, 1, Paging.MaxLimit);
         var q = db.Users.AsNoTracking();
         if (!string.IsNullOrWhiteSpace(query))
         {

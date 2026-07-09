@@ -1,3 +1,4 @@
+using Framework.Web;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
@@ -46,7 +47,7 @@ public static class StaffConsoleEndpoints
         })
         .WithName("StaffOverview").WithSummary("Platform-wide oversight metrics + top restaurants (staff).");
 
-        // GET /api/staff/directory?q= — searchable restaurant list (name/slug), newest first, capped 200.
+        // GET /api/staff/directory?q= — searchable restaurant list (name/slug), newest first, capped.
         staff.MapGet("/directory", async (string? q, MenuDbContext db, TimeProvider clock, CancellationToken ct) =>
         {
             var since = StaffReads.Since30(DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime));
@@ -59,7 +60,7 @@ public static class StaffConsoleEndpoints
             }
 
             var rows = await StaffReads.ProjectAsync(
-                source.OrderByDescending(r => r.CreatedAt).Take(200), db, since, ct);
+                source.OrderByDescending(r => r.CreatedAt).Take(Paging.MaxLimit), db, since, ct);
             return TypedResults.Ok(new StaffDirectoryResponse(rows));
         })
         .WithName("StaffDirectory").WithSummary("Search the cross-tenant restaurant directory (staff).");
@@ -71,15 +72,16 @@ public static class StaffConsoleEndpoints
             var now = clock.GetUtcNow();
             var since = StaffReads.Since30(DateOnly.FromDateTime(now.UtcDateTime));
             var weekAgo = now.AddDays(-7);
+            const int alertLimit = 100; // most stale/empty restaurants surfaced per bucket
 
             var stale = await StaffReads.ProjectAsync(
                 db.Restaurants.AsNoTracking().Where(r => r.CreatedAt < weekAgo
                     && !db.DailyViews.Any(d => d.RestaurantId == r.Id && d.Day >= since))
-                    .OrderBy(r => r.CreatedAt).Take(100), db, since, ct);
+                    .OrderBy(r => r.CreatedAt).Take(alertLimit), db, since, ct);
 
             var empty = await StaffReads.ProjectAsync(
                 db.Restaurants.AsNoTracking().Where(r => !db.Items.Any(i => i.RestaurantId == r.Id))
-                    .OrderBy(r => r.CreatedAt).Take(100), db, since, ct);
+                    .OrderBy(r => r.CreatedAt).Take(alertLimit), db, since, ct);
 
             var unboundQr = await db.QrCodes.CountAsync(q => q.BoundAt == null, ct);
             return TypedResults.Ok(new StaffAlertsResponse(stale, empty, unboundQr));

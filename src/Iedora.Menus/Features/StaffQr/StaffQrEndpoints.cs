@@ -8,7 +8,7 @@ namespace Iedora.Menus;
 public sealed record QrCodeView(
     string Code, Guid? RestaurantId, string? RestaurantName, string? RestaurantSlug,
     string? Label, DateTimeOffset? BoundAt, DateTimeOffset CreatedAt);
-public sealed record QrCodeListResponse(IReadOnlyList<QrCodeView> Codes);
+public sealed record QrCodeListResponse(IReadOnlyList<QrCodeView> Codes, int Total);
 
 // Create either one explicit code, or `Count` generated stickers (default 1, capped). Optionally
 // pre-bound to a restaurant + labelled.
@@ -23,9 +23,12 @@ public static class StaffQrEndpoints
 {
     public static void MapStaffQr(this RouteGroupBuilder staff)
     {
-        // GET /api/staff/qr-codes — every sticker with its bound restaurant, newest binds first.
-        staff.MapGet("/qr-codes", async (MenuDbContext db, CancellationToken ct) =>
+        // GET /api/staff/qr-codes?limit=&offset= — one page of stickers with their bound restaurant,
+        // newest binds first, plus the unpaged total. Paged so the platform-wide list stays bounded.
+        staff.MapGet("/qr-codes", async (int? limit, int? offset, MenuDbContext db, CancellationToken ct) =>
         {
+            var (take, skip) = Paging.Clamp(limit, offset);
+            var total = await db.QrCodes.CountAsync(ct);
             var codes = await (
                 from q in db.QrCodes.AsNoTracking()
                 join r in db.Restaurants.AsNoTracking() on q.RestaurantId equals r.Id into rj
@@ -33,10 +36,10 @@ public static class StaffQrEndpoints
                 orderby q.BoundAt == null, q.BoundAt descending, q.CreatedAt descending
                 select new QrCodeView(
                     q.Code, q.RestaurantId, r != null ? r.Name : null, r != null ? r.Slug : null,
-                    q.Label, q.BoundAt, q.CreatedAt)).ToListAsync(ct);
-            return TypedResults.Ok(new QrCodeListResponse(codes));
+                    q.Label, q.BoundAt, q.CreatedAt)).Skip(skip).Take(take).ToListAsync(ct);
+            return TypedResults.Ok(new QrCodeListResponse(codes, total));
         })
-        .WithName("ListQrCodes").WithSummary("List all QR stickers with their bound restaurant (staff).");
+        .WithName("ListQrCodes").WithSummary("List a page of QR stickers with their bound restaurant (staff).");
 
         // POST /api/staff/qr-codes — mint an explicit code or a batch; optionally pre-bind + label.
         staff.MapPost("/qr-codes", async (
