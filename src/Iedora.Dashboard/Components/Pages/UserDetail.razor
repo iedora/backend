@@ -1,7 +1,9 @@
 @page "/users/{Id:guid}"
+@using System.Net
 @using Iedora.Dashboard.Api
 @attribute [Authorize]
 @inject IIedoraApiv1 Api
+@inject Microsoft.JSInterop.IJSRuntime JS
 
 <PageTitle>User — iedora admin</PageTitle>
 
@@ -20,6 +22,22 @@ else
     <h1>@data.User.Email</h1>
     <p class="muted">@data.User.Name — joined @data.User.CreatedAt.ToString("MMM d, yyyy")</p>
     <p>Roles: <strong>@(data.User.Roles.Count == 0 ? "none" : string.Join(", ", data.User.Roles))</strong></p>
+
+    <div class="actions-bar">
+        <button class="btn" disabled="@busy" @onclick="ForcePasswordChangeAsync">Force password change</button>
+        <form class="inline-form" @onsubmit="SetPasswordAsync" @onsubmit:preventDefault>
+            <input type="password" placeholder="Temporary password" autocomplete="new-password" @bind="newPassword" />
+            <button class="btn" type="submit" disabled="@busy">Set password</button>
+        </form>
+    </div>
+    @if (actionMessage is not null)
+    {
+        <p class="muted">@actionMessage</p>
+    }
+    @if (actionError is not null)
+    {
+        <p class="error" role="alert">@actionError</p>
+    }
 
     <h2>Tenants</h2>
     @if (data.Memberships.Count == 0)
@@ -47,7 +65,7 @@ else
     else
     {
         <table>
-            <thead><tr><th>Device</th><th>IP</th><th>Issued</th><th>Status</th></tr></thead>
+            <thead><tr><th>Device</th><th>IP</th><th>Issued</th><th>Status</th><th></th></tr></thead>
             <tbody>
                 @foreach (var s in data.Sessions)
                 {
@@ -56,6 +74,12 @@ else
                         <td class="muted">@s.Ip</td>
                         <td class="muted">@s.IssuedAt.ToString("MMM d, HH:mm")</td>
                         <td>@(s.RevokedAt is null ? "Active" : "Revoked")</td>
+                        <td class="num">
+                            @if (s.RevokedAt is null)
+                            {
+                                <button class="link danger" disabled="@busy" @onclick="() => RevokeAsync(s.FamilyId)">Revoke</button>
+                            }
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -68,12 +92,61 @@ else
 
     private StaffUserDetail? data;
     private string? error;
+    private bool busy;
+    private string newPassword = "";
+    private string? actionMessage;
+    private string? actionError;
 
-    protected override async Task OnParametersSetAsync()
+    protected override Task OnParametersSetAsync() => LoadAsync();
+
+    private async Task LoadAsync()
     {
         data = null;
         error = null;
         try { data = await Api.StaffUserDetail(Id); }
         catch (Exception ex) { error = ApiError.Describe(ex); }
     }
+
+    private async Task ForcePasswordChangeAsync()
+    {
+        if (!await Confirm("Force this user to change their password at next login? It signs them out of every device."))
+            return;
+        await ActAsync(() => Api.StaffForcePasswordChange(Id), "Password change forced — the user is signed out.");
+    }
+
+    private async Task SetPasswordAsync()
+    {
+        if (string.IsNullOrEmpty(newPassword))
+        {
+            actionError = "Enter a temporary password.";
+            return;
+        }
+        await ActAsync(
+            () => Api.StaffSetUserPassword(Id, new SetUserPasswordRequest { Password = newPassword }),
+            "Temporary password set — the user must change it at next login.");
+        newPassword = "";
+    }
+
+    private Task RevokeAsync(Guid family) => ActAsync(() => Api.StaffRevokeUserSession(Id, family), "Session revoked.");
+
+    private async Task ActAsync(Func<Task> action, string success)
+    {
+        busy = true;
+        actionError = null;
+        actionMessage = null;
+        try
+        {
+            await action();
+            actionMessage = success;
+            await LoadAsync(); // reflect revoked sessions etc.
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == HttpStatusCode.BadRequest)
+        {
+            actionError = "That password doesn't meet the requirements.";
+        }
+        catch (Exception ex) { actionError = ApiError.Describe(ex); }
+        finally { busy = false; }
+    }
+
+    private ValueTask<bool> Confirm(string message) => JS.InvokeAsync<bool>("confirm", message);
 }
