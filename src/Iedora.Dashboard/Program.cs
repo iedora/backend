@@ -12,8 +12,9 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// The API base URL — same for auth and data. From wwwroot/appsettings.json (Aspire injects it in dev),
-// falling back to the app's own origin (if the dashboard is ever served same-origin as the API).
+// The API base URL — same for auth and data, from wwwroot/appsettings*.json (a deploy sets its own),
+// falling back to the app's own origin. Must be HTTPS cross-origin: the refresh cookie is
+// SameSite=None; Secure, which browsers only send over TLS (dev runs the API on https://localhost:8091).
 var apiBase = new Uri(builder.Configuration["Api:BaseUrl"] ?? builder.HostEnvironment.BaseAddress);
 
 // Client-side auth: the access token lives in memory; the refresh token is the API's HttpOnly cookie,
