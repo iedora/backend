@@ -18,7 +18,7 @@ else if (data is null)
 else
 {
     <h1>@data.Restaurant.Name</h1>
-    <p class="muted">@data.Restaurant.Slug</p>
+    <p class="muted">@data.Restaurant.Slug · <a href="/restaurants/@Id/menus">Edit menu JSON</a></p>
 
     <div class="tiles">
         <Tile Label="Menus" Value="data.Restaurant.Menus" />
