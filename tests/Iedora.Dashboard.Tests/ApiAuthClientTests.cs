@@ -40,4 +40,14 @@ public sealed class ApiAuthClientTests
         var (api, _) = Build(_ => new HttpResponseMessage(HttpStatusCode.Unauthorized));
         Assert.IsNull(await api.LoginAsync("a@b.pt", "bad", CancellationToken.None));
     }
+
+    [TestMethod]
+    public async Task An_unreachable_api_returns_null_rather_than_throwing()
+    {
+        // A fetch failure (API down / CORS / network) must NOT bubble out — it once crashed the whole
+        // app when the silent refresh threw through GetAuthenticationStateAsync.
+        var (api, _) = Build(_ => throw new HttpRequestException("Failed to fetch"));
+        Assert.IsNull(await api.RefreshAsync(CancellationToken.None));
+        Assert.IsNull(await api.LoginAsync("a@b.pt", "pw", CancellationToken.None));
+    }
 }
