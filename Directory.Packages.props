@@ -57,10 +57,13 @@
     <!-- In-memory exporter — test-only, asserts the ServiceDefaults wildcard actually exports app signals. -->
     <PackageVersion Include="OpenTelemetry.Exporter.InMemory" Version="1.16.0" />
 
-    <!-- Admin dashboard (Blazor): a typed API client generated from openapi/Iedora.Api.json by
-         Refitter's source generator, over Refit + IHttpClientFactory. -->
+    <!-- Admin dashboard (Blazor WebAssembly, a pure API consumer): a typed API client generated from
+         openapi/Iedora.Api.json by Refitter's source generator, over Refit. -->
     <PackageVersion Include="Refit.HttpClientFactory" Version="13.1.0" />
     <PackageVersion Include="Refitter.SourceGenerator" Version="2.1.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.8" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.8" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.8" />
     <!-- Dashboard component + handler tests: bUnit renders Razor components; NSubstitute mocks the
          generated API client. -->
     <PackageVersion Include="bunit" Version="2.7.2" />

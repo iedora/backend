@@ -1,24 +1,25 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Iedora.Dashboard</RootNamespace>
-    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Aspire defaults (OpenTelemetry, health, resilience) — same as every other service. -->
-    <ProjectReference Include="..\..\Iedora.ServiceDefaults\Iedora.ServiceDefaults.csproj" />
-    <!-- The auth vocabulary (Roles.Admin / Policies.Admin) — the only cross-project type the
-         dashboard reuses; the rest of the API it reaches over HTTP via the generated client. -->
-    <ProjectReference Include="..\Iedora.Identity.Contracts\Iedora.Identity.Contracts.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" />
+    <PackageReference Include="Refit.HttpClientFactory" />
+    <PackageReference Include="Refitter.SourceGenerator" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Refit.HttpClientFactory" />
-    <PackageReference Include="Refitter.SourceGenerator" />
+    <!-- The auth vocabulary (Roles.Admin) — the only shared type; the rest of the API is reached over
+         HTTP via the generated client, exactly like the front-office will consume it. -->
+    <ProjectReference Include="..\Iedora.Identity.Contracts\Iedora.Identity.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -19,7 +19,7 @@ public sealed class RefreshCookie(IOptions<SessionSettings> options)
         {
             HttpOnly = true,
             Secure = _opt.CookieSecure,
-            SameSite = SameSiteMode.Lax,
+            SameSite = Enum.TryParse<SameSiteMode>(_opt.CookieSameSite, ignoreCase: true, out var mode) ? mode : SameSiteMode.Lax,
             Path = Path,
             Expires = expiresAt,
             Domain = string.IsNullOrEmpty(_opt.CookieDomain) ? null : _opt.CookieDomain,

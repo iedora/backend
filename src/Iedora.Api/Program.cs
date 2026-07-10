@@ -30,6 +30,7 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();        // build-time source of truth for the generated frontend client
 builder.AddIedoraRateLimiter();       // per-IP/per-user throttling (auth brute-force, upload/DoS)
+builder.AddIedoraCors();              // browser SPA consumers (admin dashboard, front-office)
 
 // NOTE: schema is applied by the Iedora.MigrationService worker (the AppHost gates this API on its
 // completion), so the API never migrates on startup — no DB access before serving.
@@ -39,6 +40,7 @@ var app = builder.Build();
 // First: resolve the real client IP from a trusted proxy's X-Forwarded-For (so rate-limit
 // partitioning is per-client, not per-proxy). No-op unless a proxy is configured.
 app.UseForwardedHeaders();
+app.UseCors(CorsExtensions.PolicyName); // allow the configured SPA origins (before auth/endpoints)
 
 // Aspire health endpoints (/health, /alive) — filtered out of tracing by ServiceDefaults.
 app.MapDefaultEndpoints();

@@ -1,14 +1,13 @@
 @inherits LayoutComponentBase
+@inject ApiAuthStateProvider AuthState
+@inject NavigationManager Nav
 
 <header class="topbar">
     <a class="brand" href="/">iedora <span>admin</span></a>
     <AuthorizeView>
         <div class="session">
             <span class="who">@context.User.Identity?.Name</span>
-            <form method="post" action="/logout">
-                <AntiforgeryToken />
-                <button type="submit" class="link">Sign out</button>
-            </form>
+            <button type="button" class="link" @onclick="SignOutAsync">Sign out</button>
         </div>
     </AuthorizeView>
 </header>
@@ -22,3 +21,11 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private async Task SignOutAsync()
+    {
+        await AuthState.SignOutAsync();
+        Nav.NavigateTo("/login");
+    }
+}

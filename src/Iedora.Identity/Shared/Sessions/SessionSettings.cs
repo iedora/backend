@@ -15,6 +15,11 @@ public sealed class SessionSettings
     /// <summary>Secure attribute — true in prod, relax for plain-HTTP local dev/tests.</summary>
     public bool CookieSecure { get; set; } = true;
 
+    /// <summary>SameSite for the refresh cookie: <c>Lax</c> (same-origin, default) or <c>None</c> (a
+    /// cross-origin browser SPA — the dashboard / front-office; requires <see cref="CookieSecure"/>).
+    /// Config-bound so a cross-origin deployment sets it without a code change.</summary>
+    public string CookieSameSite { get; set; } = "Lax";
+
     /// <summary>Sliding refresh TTL, renewed on every rotation. Default 30 days.</summary>
     public TimeSpan RefreshTtl { get; set; } = TimeSpan.FromDays(30);
 
