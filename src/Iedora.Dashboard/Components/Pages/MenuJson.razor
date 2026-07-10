@@ -1,0 +1,93 @@
+@page "/restaurants/{Id:guid}/menus"
+@using System.Net
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using Iedora.Dashboard.Api
+@attribute [Authorize]
+@inject IIedoraApiv1 Api
+@inject Microsoft.JSInterop.IJSRuntime JS
+
+<PageTitle>Menu JSON — iedora admin</PageTitle>
+
+<p class="muted"><a href="/restaurants/@Id">← Restaurant</a></p>
+<h1>Menu JSON</h1>
+<p class="muted">Export the live menu tree, edit it, and replace it. Importing overwrites the whole tree.</p>
+
+<div class="json-actions">
+    <button class="btn" disabled="@busy" @onclick="ExportAsync">Re-export</button>
+    <button class="btn danger" disabled="@(busy || json is null)" @onclick="ImportAsync">Import (replace)</button>
+</div>
+
+@if (error is not null)
+{
+    <p class="error" role="alert">@error</p>
+}
+@if (message is not null)
+{
+    <p class="muted">@message</p>
+}
+
+<textarea class="json" spellcheck="false" disabled="@(json is null)" @bind="json" @bind:event="oninput"></textarea>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private string? json;
+    private string? error;
+    private string? message;
+    private bool busy;
+
+    // Match the API's export shape: indented, camelCase (via the contracts' JsonPropertyName), nulls omitted.
+    private static readonly JsonSerializerOptions Pretty = new()
+    {
+        WriteIndented = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
+
+    protected override Task OnParametersSetAsync() => ExportAsync();
+
+    private async Task ExportAsync()
+    {
+        busy = true;
+        error = null;
+        message = null;
+        try
+        {
+            var document = await Api.StaffExportMenus(Id);
+            json = JsonSerializer.Serialize(document, Pretty);
+        }
+        catch (Exception ex) { error = ApiError.Describe(ex); }
+        finally { busy = false; }
+    }
+
+    private async Task ImportAsync()
+    {
+        if (json is null) return;
+
+        MenuImportDocument? document;
+        try { document = JsonSerializer.Deserialize<MenuImportDocument>(json, Pretty); }
+        catch (JsonException) { error = "That isn't valid JSON."; message = null; return; }
+        if (document is null) { error = "That isn't a menu document."; message = null; return; }
+
+        if (!await Confirm("Replace this restaurant's entire menu tree with the JSON above? This can't be undone."))
+            return;
+
+        busy = true;
+        error = null;
+        message = null;
+        try
+        {
+            await Api.StaffReplaceMenus(Id, document);
+            await ExportAsync();          // re-export to show the normalized result
+            message = "Menu replaced.";   // after the re-export (which clears messages)
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == HttpStatusCode.BadRequest)
+        {
+            error = "The import was rejected — check the menu / category / item counts and translation languages.";
+        }
+        catch (Exception ex) { error = ApiError.Describe(ex); }
+        finally { busy = false; }
+    }
+
+    private ValueTask<bool> Confirm(string prompt) => JS.InvokeAsync<bool>("confirm", prompt);
+}
