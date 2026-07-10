@@ -1,0 +1,86 @@
+@page "/restaurants/{Id:guid}"
+@using Iedora.Dashboard.Api
+@attribute [Authorize]
+@inject IIedoraApiv1 Api
+
+<PageTitle>Restaurant — iedora admin</PageTitle>
+
+<p class="muted"><a href="/directory">← Directory</a></p>
+
+@if (error is not null)
+{
+    <p class="error" role="alert">@error</p>
+}
+else if (data is null)
+{
+    <p class="muted">Loading…</p>
+}
+else
+{
+    <h1>@data.Restaurant.Name</h1>
+    <p class="muted">@data.Restaurant.Slug</p>
+
+    <div class="tiles">
+        <Tile Label="Menus" Value="data.Restaurant.Menus" />
+        <Tile Label="Items" Value="data.Restaurant.Items" />
+        <Tile Label="Views · 30d" Value="data.Restaurant.Views30d" />
+    </div>
+
+    <h2>Views · last 14 days</h2>
+    @if (data.Trend.Count == 0)
+    {
+        <p class="muted">No views yet.</p>
+    }
+    else
+    {
+        <div class="spark">
+            @foreach (var point in data.Trend)
+            {
+                <div class="spark-bar" style="height:@BarHeight(point.Count)%" title="@point.Day.ToString("MMM d"): @point.Count"></div>
+            }
+        </div>
+    }
+
+    <h2>Menus</h2>
+    @if (data.Menus.Count == 0)
+    {
+        <p class="muted">No menus.</p>
+    }
+    else
+    {
+        <table>
+            <thead><tr><th>Menu</th><th>Status</th><th class="num">Categories</th></tr></thead>
+            <tbody>
+                @foreach (var menu in data.Menus)
+                {
+                    <tr>
+                        <td>@menu.Name</td>
+                        <td>@(menu.Active ? "Active" : "Hidden")</td>
+                        <td class="num">@menu.CategoryCount</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private StaffRestaurantDetailResponse? data;
+    private string? error;
+
+    private int BarHeight(int count)
+    {
+        var max = Math.Max(1, data!.Trend.Max(p => p.Count));
+        return (int)Math.Round(100.0 * count / max);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        data = null;
+        error = null;
+        try { data = await Api.StaffRestaurantDetail(Id); }
+        catch (Exception ex) { error = ApiError.Describe(ex); }
+    }
+}

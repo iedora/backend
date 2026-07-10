@@ -1,0 +1,42 @@
+@page "/alerts"
+@using Iedora.Dashboard.Api
+@attribute [Authorize]
+@inject IIedoraApiv1 Api
+
+<PageTitle>Alerts — iedora admin</PageTitle>
+
+<h1>Needs attention</h1>
+
+@if (error is not null)
+{
+    <p class="error" role="alert">@error</p>
+}
+else if (data is null)
+{
+    <p class="muted">Loading…</p>
+}
+else
+{
+    <div class="tiles">
+        <Tile Label="Unbound QR" Value="data.UnboundQr" />
+        <Tile Label="Stale" Value="data.StaleRestaurants.Count" />
+        <Tile Label="Empty menus" Value="data.EmptyMenus.Count" />
+    </div>
+
+    <h2>Stale restaurants <span class="muted">(a week old, no recent views)</span></h2>
+    <RestaurantList Rows="data.StaleRestaurants" Empty="Nothing stale." />
+
+    <h2>Empty menus <span class="muted">(no dishes yet)</span></h2>
+    <RestaurantList Rows="data.EmptyMenus" Empty="Every restaurant has dishes." />
+}
+
+@code {
+    private StaffAlertsResponse? data;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { data = await Api.StaffAlerts(); }
+        catch (Exception ex) { error = ApiError.Describe(ex); }
+    }
+}

@@ -1,0 +1,44 @@
+@page "/directory"
+@using Iedora.Dashboard.Api
+@attribute [Authorize]
+@inject IIedoraApiv1 Api
+
+<PageTitle>Directory — iedora admin</PageTitle>
+
+<h1>Restaurant directory</h1>
+
+<form class="search" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+    <input placeholder="Search name or slug…" @bind="query" @bind:event="oninput" />
+    <button type="submit">Search</button>
+</form>
+
+@if (error is not null)
+{
+    <p class="error" role="alert">@error</p>
+}
+else if (rows is null)
+{
+    <p class="muted">Loading…</p>
+}
+else
+{
+    <RestaurantList Rows="rows" Empty="No restaurants match." />
+}
+
+@code {
+    private string query = "";
+    private ICollection<StaffRestaurantRow>? rows;
+    private string? error;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private Task SearchAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        rows = null;
+        error = null;
+        try { rows = (await Api.StaffDirectory(query)).Restaurants; }
+        catch (Exception ex) { error = ApiError.Describe(ex); }
+    }
+}

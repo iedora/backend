@@ -1,0 +1,61 @@
+@page "/users"
+@using Iedora.Dashboard.Api
+@attribute [Authorize]
+@inject IIedoraApiv1 Api
+
+<PageTitle>Users — iedora admin</PageTitle>
+
+<h1>Users</h1>
+
+<form class="search" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+    <input placeholder="Search email or name…" @bind="query" @bind:event="oninput" />
+    <button type="submit">Search</button>
+</form>
+
+@if (error is not null)
+{
+    <p class="error" role="alert">@error</p>
+}
+else if (users is null)
+{
+    <p class="muted">Loading…</p>
+}
+else if (users.Count == 0)
+{
+    <p class="muted">No users match.</p>
+}
+else
+{
+    <table>
+        <thead><tr><th>Email</th><th>Name</th><th>Roles</th><th>Joined</th></tr></thead>
+        <tbody>
+            @foreach (var u in users)
+            {
+                <tr>
+                    <td><a href="/users/@u.Id">@u.Email</a></td>
+                    <td>@u.Name</td>
+                    <td class="muted">@string.Join(", ", u.Roles)</td>
+                    <td class="muted">@u.CreatedAt.ToString("MMM d, yyyy")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private string query = "";
+    private ICollection<AdminUserView>? users;
+    private string? error;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private Task SearchAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        users = null;
+        error = null;
+        try { users = (await Api.StaffListUsers(query, null)).Users; }
+        catch (Exception ex) { error = ApiError.Describe(ex); }
+    }
+}

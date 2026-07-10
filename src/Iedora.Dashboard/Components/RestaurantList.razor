@@ -1,0 +1,31 @@
+@using Iedora.Dashboard.Api
+
+@if (Rows.Count == 0)
+{
+    <p class="muted">@Empty</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr><th>Restaurant</th><th>Slug</th><th class="num">Menus</th><th class="num">Items</th><th class="num">Views · 30d</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Rows)
+            {
+                <tr>
+                    <td><a href="/restaurants/@r.Id">@r.Name</a></td>
+                    <td class="muted">@r.Slug</td>
+                    <td class="num">@r.Menus</td>
+                    <td class="num">@r.Items</td>
+                    <td class="num">@r.Views30d</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter, EditorRequired] public ICollection<StaffRestaurantRow> Rows { get; set; } = default!;
+    [Parameter] public string Empty { get; set; } = "No restaurants.";
+}
