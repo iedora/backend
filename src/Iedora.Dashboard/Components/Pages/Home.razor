@@ -1,5 +1,4 @@
 @page "/"
-@using System.Net
 @using Iedora.Dashboard.Api
 @attribute [Authorize]
 @inject IIedoraApiv1 Api
@@ -61,17 +60,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            data = await Api.StaffOverview();
-        }
-        catch (Refit.ApiException ex) when (ex.StatusCode == HttpStatusCode.Unauthorized)
-        {
-            error = "Your session expired — please sign out and back in.";
-        }
-        catch (Exception)
-        {
-            error = "Couldn't reach the API. Is it running?";
-        }
+        try { data = await Api.StaffOverview(); }
+        catch (Exception ex) { error = ApiError.Describe(ex); }
     }
 }

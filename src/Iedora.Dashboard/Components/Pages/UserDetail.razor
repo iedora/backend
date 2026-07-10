@@ -1,0 +1,79 @@
+@page "/users/{Id:guid}"
+@using Iedora.Dashboard.Api
+@attribute [Authorize]
+@inject IIedoraApiv1 Api
+
+<PageTitle>User — iedora admin</PageTitle>
+
+<p class="muted"><a href="/users">← Users</a></p>
+
+@if (error is not null)
+{
+    <p class="error" role="alert">@error</p>
+}
+else if (data is null)
+{
+    <p class="muted">Loading…</p>
+}
+else
+{
+    <h1>@data.User.Email</h1>
+    <p class="muted">@data.User.Name — joined @data.User.CreatedAt.ToString("MMM d, yyyy")</p>
+    <p>Roles: <strong>@(data.User.Roles.Count == 0 ? "none" : string.Join(", ", data.User.Roles))</strong></p>
+
+    <h2>Tenants</h2>
+    @if (data.Memberships.Count == 0)
+    {
+        <p class="muted">No tenant memberships.</p>
+    }
+    else
+    {
+        <table>
+            <thead><tr><th>Tenant</th><th>Role</th></tr></thead>
+            <tbody>
+                @foreach (var m in data.Memberships)
+                {
+                    <tr><td class="muted">@m.TenantId</td><td>@m.Role</td></tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <h2>Sessions</h2>
+    @if (data.Sessions.Count == 0)
+    {
+        <p class="muted">No sessions.</p>
+    }
+    else
+    {
+        <table>
+            <thead><tr><th>Device</th><th>IP</th><th>Issued</th><th>Status</th></tr></thead>
+            <tbody>
+                @foreach (var s in data.Sessions)
+                {
+                    <tr>
+                        <td class="muted">@s.UserAgent</td>
+                        <td class="muted">@s.Ip</td>
+                        <td class="muted">@s.IssuedAt.ToString("MMM d, HH:mm")</td>
+                        <td>@(s.RevokedAt is null ? "Active" : "Revoked")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private StaffUserDetail? data;
+    private string? error;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        data = null;
+        error = null;
+        try { data = await Api.StaffUserDetail(Id); }
+        catch (Exception ex) { error = ApiError.Describe(ex); }
+    }
+}
