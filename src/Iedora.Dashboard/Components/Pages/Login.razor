@@ -1,37 +1,62 @@
 @page "/login"
-@using Microsoft.AspNetCore.Authorization
-@attribute [AllowAnonymous]
 @layout Iedora.Dashboard.Components.Layout.EmptyLayout
+@using System.Security.Claims
+@using Iedora.Identity.Contracts
+@attribute [AllowAnonymous]
+@inject ApiAuthClient Auth
+@inject ApiAuthStateProvider AuthState
+@inject NavigationManager Nav
 
 <PageTitle>Sign in — iedora admin</PageTitle>
 
 <div class="login">
     <h1>iedora admin</h1>
-    <form method="post" action="/login">
-        <AntiforgeryToken />
-        @if (ErrorText is not null)
+    <form @onsubmit="SubmitAsync" @onsubmit:preventDefault>
+        @if (error is not null)
         {
-            <p class="error" role="alert">@ErrorText</p>
+            <p class="error" role="alert">@error</p>
         }
         <label>
             Email
-            <input name="email" type="email" autocomplete="username" required autofocus />
+            <input type="email" autocomplete="username" @bind="email" @bind:event="oninput" />
         </label>
         <label>
             Password
-            <input name="password" type="password" autocomplete="current-password" required />
+            <input type="password" autocomplete="current-password" @bind="password" @bind:event="oninput" />
         </label>
-        <button type="submit">Sign in</button>
+        <button type="submit" disabled="@busy">@(busy ? "Signing in…" : "Sign in")</button>
     </form>
 </div>
 
 @code {
-    [SupplyParameterFromQuery(Name = "error")] public string? Error { get; set; }
+    private string email = "";
+    private string password = "";
+    private string? error;
+    private bool busy;
 
-    private string? ErrorText => Error switch
+    private async Task SubmitAsync()
     {
-        "invalid" => "Incorrect email or password.",
-        "forbidden" => "That account isn't a platform admin.",
-        _ => null,
-    };
+        busy = true;
+        error = null;
+
+        var token = await Auth.LoginAsync(email, password, CancellationToken.None);
+        if (token is null)
+        {
+            error = "Incorrect email or password.";
+            busy = false;
+            return;
+        }
+
+        // Admin console — only platform admins may enter. Don't leave a live session for a non-admin.
+        if (!Jwt.ReadClaims(token).Any(c => c.Type == ClaimTypes.Role && c.Value == Roles.Admin))
+        {
+            await Auth.LogoutAsync(CancellationToken.None);
+            error = "That account isn't a platform admin.";
+            busy = false;
+            return;
+        }
+
+        AuthState.SignedIn(token);
+        Nav.NavigateTo("/");
+    }
 }

@@ -23,7 +23,7 @@ var migrations = builder.AddProject<Projects.Iedora_MigrationService>("migration
     .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf")
     .WithEnvironment("OTEL_SERVICE_NAME", "iedora-migrations");
 
-var api = builder.AddProject<Projects.Iedora_Api>("api")
+builder.AddProject<Projects.Iedora_Api>("api")
     .WithReference(authdb)                 // injects ConnectionStrings__authdb
     .WaitForCompletion(migrations)         // don't start serving until the schema is migrated
     .WithHttpEndpoint(port: 8090, name: "apihttp") // pinned port for the e2e test
@@ -34,14 +34,9 @@ var api = builder.AddProject<Projects.Iedora_Api>("api")
     .WithEnvironment("API_JWT_ISSUER", "https://api.iedora.com")
     .WithEnvironment("API_JWT_AUDIENCE", "iedora-api");
 
-// Blazor admin console — a pure client of the API's admin surface (service discovery resolves
-// "https+http://api"), holding the admin's JWT server-side. It owns no database.
-builder.AddProject<Projects.Iedora_Dashboard>("dashboard")
-    .WithReference(api)
-    .WaitFor(api)
-    .WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")
-    .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf")
-    .WithEnvironment("OTEL_SERVICE_NAME", "iedora-dashboard");
+// The admin dashboard is NOT orchestrated here — it's a standalone browser SPA that consumes this API
+// exactly like the front-office will (run it with `dotnet run --project src/Iedora.Dashboard`, pointing
+// its Api:BaseUrl at the API). The AppHost stays the backend's concern.
 
 // Single app-wide background worker (drains every service's outbox — auth email, …). Scales
 // independently of the APIs; multi-replica-safe via FOR UPDATE SKIP LOCKED.

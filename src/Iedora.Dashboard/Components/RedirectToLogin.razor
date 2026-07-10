@@ -1,6 +1,6 @@
 @inject NavigationManager Nav
 
-@* Bounce an unauthenticated visitor to the login page (full load, so the cookie flow runs). *@
+@* Bounce an unauthenticated visitor to the login page (client-side — no full reload in the SPA). *@
 @code {
-    protected override void OnInitialized() => Nav.NavigateTo("/login", forceLoad: true);
+    protected override void OnInitialized() => Nav.NavigateTo("/login");
 }
