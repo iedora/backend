@@ -1,0 +1,158 @@
+@page "/qr-codes"
+@using Iedora.Dashboard.Api
+@attribute [Authorize]
+@inject IIedoraApiv1 Api
+
+<PageTitle>QR codes — iedora admin</PageTitle>
+
+<h1>QR stickers</h1>
+
+<form class="mint" @onsubmit="MintAsync" @onsubmit:preventDefault>
+    <label>Mint <input type="number" min="1" max="500" @bind="mintCount" /> stickers</label>
+    <input placeholder="Label (optional)" @bind="mintLabel" />
+    <button type="submit" disabled="@busy">Mint</button>
+</form>
+@if (message is not null)
+{
+    <p class="muted">@message</p>
+}
+
+@if (error is not null)
+{
+    <p class="error" role="alert">@error</p>
+}
+else if (data is null)
+{
+    <p class="muted">Loading…</p>
+}
+else if (data.Codes.Count == 0)
+{
+    <p class="muted">No stickers yet — mint some above.</p>
+}
+else
+{
+    <table>
+        <thead><tr><th>Code</th><th>Restaurant</th><th>Label</th><th></th></tr></thead>
+        <tbody>
+            @foreach (var qr in data.Codes)
+            {
+                <tr>
+                    <td><code>@qr.Code</code></td>
+                    <td>
+                        @if (qr.RestaurantId is not null)
+                        {
+                            <span>@qr.RestaurantName <span class="muted">(@qr.RestaurantSlug)</span></span>
+                        }
+                        else
+                        {
+                            <span class="muted">—</span>
+                        }
+                    </td>
+                    <td class="muted">@qr.Label</td>
+                    <td class="row-actions">
+                        @if (qr.RestaurantId is null)
+                        {
+                            <input class="bind-input" placeholder="restaurant id"
+                                   value="@bindIds.GetValueOrDefault(qr.Code)"
+                                   @oninput="e => bindIds[qr.Code] = e.Value?.ToString() ?? string.Empty" />
+                            <button class="link" disabled="@busy" @onclick="() => BindAsync(qr.Code)">Bind</button>
+                        }
+                        else
+                        {
+                            <button class="link" disabled="@busy" @onclick="() => UnbindAsync(qr.Code)">Unbind</button>
+                        }
+                        <button class="link danger" disabled="@busy" @onclick="() => DeleteAsync(qr.Code)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="pager">
+        <button class="link" disabled="@(offset == 0 || busy)" @onclick="PrevAsync">← Prev</button>
+        <span class="muted">@(offset + 1)–@(offset + data.Codes.Count) of @data.Total</span>
+        <button class="link" disabled="@(offset + PageSize >= data.Total || busy)" @onclick="NextAsync">Next →</button>
+    </div>
+}
+
+@code {
+    private const int PageSize = 50;
+
+    private QrCodeListResponse? data;
+    private string? error;
+    private string? message;
+    private bool busy;
+    private int offset;
+    private int mintCount = 10;
+    private string mintLabel = "";
+    private readonly Dictionary<string, string> bindIds = new();
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        error = null;
+        try { data = await Api.ListQrCodes(PageSize, offset); }
+        catch (Exception ex) { error = ApiError.Describe(ex); }
+    }
+
+    private async Task MintAsync()
+    {
+        busy = true;
+        error = null;
+        message = null;
+        try
+        {
+            var result = await Api.CreateQrCodes(new CreateQrRequest
+            {
+                Count = mintCount,
+                Label = mintLabel.Trim(), // the API treats a blank label as none
+            });
+            message = $"Minted {result.Inserted} sticker(s).";
+            offset = 0; // newest land on the first page
+            await LoadAsync();
+        }
+        catch (Exception ex) { error = ApiError.Describe(ex); }
+        finally { busy = false; }
+    }
+
+    private Task BindAsync(string code)
+    {
+        if (!Guid.TryParse(bindIds.GetValueOrDefault(code), out var restaurantId))
+        {
+            error = "Enter a valid restaurant id to bind.";
+            return Task.CompletedTask;
+        }
+        return WriteAsync(() => Api.BindQrCode(code, new BindQrRequest { RestaurantId = restaurantId }));
+    }
+
+    private Task UnbindAsync(string code) => WriteAsync(() => Api.UnbindQrCode(code));
+
+    private Task DeleteAsync(string code) => WriteAsync(() => Api.DeleteQrCode(code));
+
+    private async Task WriteAsync(Func<Task> action)
+    {
+        busy = true;
+        error = null;
+        message = null;
+        try
+        {
+            await action();
+            await LoadAsync();
+        }
+        catch (Exception ex) { error = ApiError.Describe(ex); }
+        finally { busy = false; }
+    }
+
+    private Task PrevAsync()
+    {
+        offset = Math.Max(0, offset - PageSize);
+        return LoadAsync();
+    }
+
+    private Task NextAsync()
+    {
+        offset += PageSize;
+        return LoadAsync();
+    }
+}
