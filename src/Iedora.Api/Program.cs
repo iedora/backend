@@ -28,6 +28,10 @@ builder.Services.AddAuthorization(options =>
 // NOTE: AddValidation() is called inside each module (AddIdentityModule/AddTenancyModule), not here —
 // the .NET 10 validation source generator must run in the assembly that defines the endpoints.
 builder.Services.AddProblemDetails();
+// Harden inbound JSON (.NET 10): refuse a body with duplicate property names. A repeated key is
+// ambiguous — which value wins is silent — so we reject rather than guess. Matters most for the staff
+// menu-JSON import (untrusted admin-pasted documents); applies to every request body binding.
+builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.AllowDuplicateProperties = false);
 builder.Services.AddOpenApi();        // build-time source of truth for the generated frontend client
 builder.AddIedoraRateLimiter();       // per-IP/per-user throttling (auth brute-force, upload/DoS)
 builder.AddIedoraCors();              // browser SPA consumers (admin dashboard, front-office)
