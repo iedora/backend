@@ -109,4 +109,25 @@ public sealed class JwtTokenServiceTests
         var result = await ValidateClaims(token, Build(new FakeTimeProvider(Now), pem));
         Assert.IsTrue(result.IsValid);
     }
+
+    // A throwaway P-256 key whose PKCS8 PEM carries EXPLICIT curve parameters (openssl
+    // `ec_param_enc:explicit`) — no named-curve OID. Test-only; not a secret.
+    private const string ExplicitParamsKeyBase64 =
+        "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUJlUUlCQURDQ0FRTUdCeXFHU000OUFnRXdnZmNDQVFFd0xBWUhLb1pJemowQkFRSWhBUC8vLy84QUFBQUIKQUFBQUFBQUFBQUFBQUFBQS8vLy8vLy8vLy8vLy8vLy9NRnNFSVAvLy8vOEFBQUFCQUFBQUFBQUFBQUFBQUFBQQovLy8vLy8vLy8vLy8vLy84QkNCYXhqWFlxanFUNTdQcnZWVjJtSWE4WlIwR3NNeFRzUFk3emp3K0o5SmdTd01WCkFNU2ROZ2lHNXdTVGFtWjQ0Uk9kSnJlQm4zNlFCRUVFYXhmUjh1RXNRa2Y0dk9ibFk2UkE4bmNEZllFdDZ6T2cKOUtFNVJkaVl3cFpQNDBMaS9ocC9tNDduNjBwOEQ1NFdLODR6VjJzeFhzN0x0a0JvTjc5UjlRSWhBUC8vLy84QQpBQUFBLy8vLy8vLy8vLys4NXZxdHB4ZWVoUE81eXNMOFl5VlJBZ0VCQkcwd2F3SUJBUVFndCtsdzBWUUVrZDFZClVHR005UWF6MHFvM05NQXpyTHhGZlZaMGYxaVVibitoUkFOQ0FBVFRocTZwV0Z6UFVUR1JPNGRRZzNKbjhNQnIKVS9WYXIvWFhNU0hyd0pNOThzRjhIK3ZkRlF2QTNSZ09tSTg1andpcXZxRU9aS1VPVkpHSlFvWTVNbC9nCi0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K";
+
+    // Such a key imports without the named-curve OID, and ES256 signing then throws IDX10000 in
+    // ComputeJwkThumbprint — the exact failure that 500'd login in the first deploy. The service
+    // re-stamps the named curve, so issuing must not throw. Only Linux's OpenSSL backend can import
+    // explicit-parameter keys (prod runs on Linux); macOS supports named curves only, so skip there.
+    [TestMethod]
+    public async Task An_explicit_curve_parameter_key_still_signs()
+    {
+        JwtTokenService jwt;
+        try { jwt = Build(new FakeTimeProvider(Now), ExplicitParamsKeyBase64); }
+        catch (PlatformNotSupportedException) { Assert.Inconclusive("explicit EC params import unsupported here (macOS); covered on Linux/CI"); return; }
+
+        var (token, _) = jwt.Issue(new AppUser { Id = Guid.NewGuid() }, [], Guid.NewGuid(), null, false);
+        var result = await ValidateClaims(token, Build(new FakeTimeProvider(Now), ExplicitParamsKeyBase64));
+        Assert.IsTrue(result.IsValid);
+    }
 }
