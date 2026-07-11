@@ -36,6 +36,7 @@ Unbounded tables (view-dedup markers, processed outbox/inbox rows) are pruned by
 
 ## Gotchas (each already cost a debugging cycle)
 
+- Inbound JSON binding is globally strict: a body with a duplicate property name is rejected at binding (`400`), not silently resolved last-wins. Set once in `Program.cs` via `ConfigureHttpJsonOptions(o => o.SerializerOptions.AllowDuplicateProperties = false)` — matters most for untrusted admin-pasted documents (the staff menu-JSON import).
 - Tests run on Testcontainers Postgres, never SQLite (SQLite can't translate `DateTimeOffset`).
 - EF Core can't compose `.Where(...)` over a `select new Record(...)` projection — filter/order on the entities first, project last.
 - For an enum column with a DB default, make the intended default the enum's **zero** value — EF reads a 0-valued enum as "unset" and silently applies the DB default.
