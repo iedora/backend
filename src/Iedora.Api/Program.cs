@@ -47,7 +47,11 @@ app.UseForwardedHeaders();
 app.UseCors(CorsExtensions.PolicyName); // allow the configured SPA origins (before auth/endpoints)
 
 // Aspire health endpoints (/health, /alive) — filtered out of tracing by ServiceDefaults.
+// NOTE: MapDefaultEndpoints only maps those in Development, so production needs its own probe:
 app.MapDefaultEndpoints();
+// Liveness for the edge proxy (kamal-proxy) — always 200, unauthenticated, and kept out of the
+// OpenAPI contract so it never leaks into the generated frontend client. Mirrors the infra `/up`.
+app.MapGet("/up", () => Results.Ok(new { ok = true })).ExcludeFromDescription();
 app.MapOpenApi();
 
 app.UseAuthentication();

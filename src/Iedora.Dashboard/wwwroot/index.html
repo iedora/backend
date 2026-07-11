@@ -21,7 +21,10 @@
         <a href="." class="reload">Reload</a>
         <span class="dismiss">🗙</span>
     </div>
-    <script src="_framework/blazor.webassembly.js"></script>
+    <!-- Fingerprint placeholder: OverrideHtmlAssetPlaceholders (csproj) rewrites this to the hashed
+         filename at publish, so the bootstrapper resolves on a static host (a plain <script src> isn't
+         remapped by the importmap). Without it, published static hosting 404s and the app never boots. -->
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
 </body>
 
 </html>

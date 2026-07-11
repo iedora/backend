@@ -12,16 +12,28 @@ namespace Iedora.Api.UnitTests;
 public sealed class JwtTokenServiceTests
 {
     private static readonly DateTimeOffset Now = new(2026, 7, 5, 12, 0, 0, TimeSpan.Zero);
+    private const string Issuer = "https://api.iedora.com";
+    private const string Audience = "iedora-api";
 
-    private static JwtTokenService Build(TimeProvider clock)
+    private static JwtTokenService Build(TimeProvider clock, string? ecPrivateKey = null)
     {
         var cfg = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["API_JWT_ISSUER"] = "https://api.iedora.com",
-            ["API_JWT_AUDIENCE"] = "iedora-api",
+            ["API_JWT_ISSUER"] = Issuer,
+            ["API_JWT_AUDIENCE"] = Audience,
             ["API_ACCESS_TTL_MIN"] = "15",
+            ["API_JWT_EC_PRIVATE_KEY"] = ecPrivateKey,
         }).Build();
         return new JwtTokenService(cfg, clock);
+    }
+
+    // A P-256 private key as PEM, and as the single-line base64 of that PEM (how Kamal/Docker
+    // secrets carry it, since --env-file can't hold the PEM's newlines).
+    private static (string pem, string base64) NewKey()
+    {
+        using var ec = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
+        var pem = ec.ExportPkcs8PrivateKeyPem();
+        return (pem, Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(pem)));
     }
 
     // Validate signature + claims without wall-clock lifetime (issuance uses a fixed fake time;
@@ -71,5 +83,30 @@ public sealed class JwtTokenServiceTests
 
         Assert.IsFalse(jwtToken.TryGetPayloadValue<string>("tid", out _)); // no tenant ⇒ no tid
         Assert.IsFalse(jwtToken.TryGetPayloadValue<bool>("mcp", out _));   // not forced ⇒ no mcp
+    }
+
+    // A configured key must be loaded (not regenerated per instance), so a token from one instance
+    // verifies under another built from the SAME key — the property a deployment relies on across
+    // API replicas. With an ephemeral key each instance would differ and validation would fail.
+    [TestMethod]
+    public async Task A_base64_encoded_key_is_loaded_and_stable_across_instances()
+    {
+        var (_, base64) = NewKey();
+        var (token, _) = Build(new FakeTimeProvider(Now), base64)
+            .Issue(new AppUser { Id = Guid.NewGuid() }, [], Guid.NewGuid(), null, false);
+
+        var result = await ValidateClaims(token, Build(new FakeTimeProvider(Now), base64));
+        Assert.IsTrue(result.IsValid);
+    }
+
+    [TestMethod]
+    public async Task A_raw_pem_key_is_still_accepted()
+    {
+        var (pem, _) = NewKey();
+        var (token, _) = Build(new FakeTimeProvider(Now), pem)
+            .Issue(new AppUser { Id = Guid.NewGuid() }, [], Guid.NewGuid(), null, false);
+
+        var result = await ValidateClaims(token, Build(new FakeTimeProvider(Now), pem));
+        Assert.IsTrue(result.IsValid);
     }
 }
