@@ -45,6 +45,13 @@ public sealed class JwtTokenService
             if (!pem.Contains("-----BEGIN", StringComparison.Ordinal))
                 pem = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(pem.Trim()));
             _ecdsa.ImportFromPem(pem);
+            // Re-stamp the named curve so its OID is present. A PEM carrying EXPLICIT curve
+            // parameters (e.g. openssl's default EC encoding) imports without the named-curve
+            // OID, and ES256 signing then throws IDX10000 in ComputeJwkThumbprint. Re-importing
+            // the same key material under the named curve is a no-op on the key, OID restored.
+            var p = _ecdsa.ExportParameters(includePrivateParameters: true);
+            p.Curve = ECCurve.NamedCurves.nistP256;
+            _ecdsa.ImportParameters(p);
         }
         _key = new ECDsaSecurityKey(_ecdsa) { KeyId = Kid };
     }
