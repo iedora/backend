@@ -173,6 +173,25 @@ public sealed class MenuImportTests : IntegrationTestBase
     }
 
     [TestMethod]
+    public async Task Import_with_a_duplicate_json_key_is_rejected_and_nothing_changes()
+    {
+        var id = await Seed();
+        var admin = await Admin("i-dup@s.pt");
+
+        // The menu object repeats "name" — last-wins would silently pick "Dinner". Strict inbound JSON
+        // (AllowDuplicateProperties = false) refuses the ambiguous document at binding instead.
+        var raw = """{"menus":[{"name":"Lunch","name":"Dinner","categories":[]}]}""";
+        var req = new HttpRequestMessage(HttpMethod.Put, $"/api/staff/restaurants/{id}/menus")
+        {
+            Content = new StringContent(raw, System.Text.Encoding.UTF8, "application/json"),
+        };
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", admin);
+
+        Assert.AreEqual(HttpStatusCode.BadRequest, (await Client.SendAsync(req)).StatusCode);
+        Assert.AreEqual("Lunch", (await Export(id, admin)).menus[0].name); // original tree untouched
+    }
+
+    [TestMethod]
     public async Task Import_is_admin_only()
     {
         var id = await Seed();
