@@ -37,7 +37,15 @@ public sealed class JwtTokenService
 
         _ecdsa = ECDsa.Create(ECCurve.NamedCurves.nistP256);
         var pem = cfg["API_JWT_EC_PRIVATE_KEY"];
-        if (!string.IsNullOrWhiteSpace(pem)) _ecdsa.ImportFromPem(pem);
+        if (!string.IsNullOrWhiteSpace(pem))
+        {
+            // Accept either a raw PEM or a single-line base64 of the PEM. Kamal/Docker deliver
+            // secrets through --env-file, which can't carry the PEM's newlines, so deploys pass
+            // the key base64-encoded; dev/config can still use a literal PEM.
+            if (!pem.Contains("-----BEGIN", StringComparison.Ordinal))
+                pem = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(pem.Trim()));
+            _ecdsa.ImportFromPem(pem);
+        }
         _key = new ECDsaSecurityKey(_ecdsa) { KeyId = Kid };
     }
 
