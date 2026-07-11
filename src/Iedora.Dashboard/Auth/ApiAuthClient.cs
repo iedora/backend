@@ -37,9 +37,16 @@ public sealed class ApiAuthClient(IHttpClientFactory factory)
 
     private async Task<string?> SendForTokenAsync(HttpRequestMessage request, CancellationToken ct)
     {
-        using var response = await Http.SendAsync(request, ct);
-        if (!response.IsSuccessStatusCode) return null; // bad credentials / expired / reuse-burned
-        var body = await response.Content.ReadFromJsonAsync<TokenResponse>(ct);
-        return body?.AccessToken;
+        try
+        {
+            using var response = await Http.SendAsync(request, ct);
+            if (!response.IsSuccessStatusCode) return null; // bad credentials / expired / reuse-burned
+            var body = await response.Content.ReadFromJsonAsync<TokenResponse>(ct);
+            return body?.AccessToken;
+        }
+        catch (HttpRequestException)
+        {
+            return null; // API unreachable / CORS / network — treat as "not signed in", never crash the app
+        }
     }
 }

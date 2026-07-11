@@ -200,3 +200,6 @@ tbody tr:last-child td { border-bottom: none; }
     font-size: 1rem;
     cursor: pointer;
 }
+
+.login-status { min-height: 1.2rem; margin: 0.75rem 0 0; font-size: 0.9rem; color: var(--muted); }
+.login-status.error { color: #a12020; }

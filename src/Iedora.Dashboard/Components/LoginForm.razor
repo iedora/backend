@@ -1,0 +1,33 @@
+@* Renders the sign-in form EXACTLY ONCE and never re-renders it. Password-manager extensions inject
+   DOM into these inputs; if Blazor later re-diffs this subtree it hits `insertBefore` on nodes the
+   extension moved and the whole app crashes. Suppressing re-render keeps the form Blazor's untouched
+   territory — the parent owns all the reactive UI (busy / error) outside this component. *@
+<form @onsubmit="SubmitAsync" @onsubmit:preventDefault>
+    <label>
+        Email
+        <input type="email" autocomplete="username" @bind="email" @bind:event="oninput" />
+    </label>
+    <label>
+        Password
+        <input type="password" autocomplete="current-password" @bind="password" @bind:event="oninput" />
+    </label>
+    <button type="submit">Sign in</button>
+</form>
+
+@code {
+    [Parameter, EditorRequired] public EventCallback<(string Email, string Password)> OnSubmit { get; set; }
+
+    private string email = "";
+    private string password = "";
+    private bool _rendered;
+
+    // Render once; after that, ignore every state change so Blazor never re-diffs the extension-mutated form.
+    protected override bool ShouldRender() => !_rendered;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender) _rendered = true;
+    }
+
+    private Task SubmitAsync() => OnSubmit.InvokeAsync((email, password));
+}

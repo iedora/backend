@@ -11,35 +11,26 @@
 
 <div class="login">
     <h1>iedora admin</h1>
-    <form @onsubmit="SubmitAsync" @onsubmit:preventDefault>
-        @if (error is not null)
-        {
-            <p class="error" role="alert">@error</p>
-        }
-        <label>
-            Email
-            <input type="email" autocomplete="username" @bind="email" @bind:event="oninput" />
-        </label>
-        <label>
-            Password
-            <input type="password" autocomplete="current-password" @bind="password" @bind:event="oninput" />
-        </label>
-        <button type="submit" disabled="@busy">@(busy ? "Signing in…" : "Sign in")</button>
-    </form>
+
+    @* The form is a render-once child (extensions mutate its DOM); status lives out here in the parent,
+       which is free to re-render without ever re-diffing the form subtree. *@
+    <LoginForm OnSubmit="HandleSubmitAsync" />
+
+    <p class="login-status @(error is not null ? "error" : "")" role="@(error is not null ? "alert" : null)">
+        @(busy ? "Signing in…" : error)
+    </p>
 </div>
 
 @code {
-    private string email = "";
-    private string password = "";
     private string? error;
     private bool busy;
 
-    private async Task SubmitAsync()
+    private async Task HandleSubmitAsync((string Email, string Password) credentials)
     {
         busy = true;
         error = null;
 
-        var token = await Auth.LoginAsync(email, password, CancellationToken.None);
+        var token = await Auth.LoginAsync(credentials.Email, credentials.Password, CancellationToken.None);
         if (token is null)
         {
             error = "Incorrect email or password.";
