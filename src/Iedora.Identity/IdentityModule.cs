@@ -48,6 +48,11 @@ public static class IdentityModule
         // Internal service clients for the client-credentials grant (POST /auth/token).
         builder.Services.Configure<ServiceTokenOptions>(builder.Configuration.GetSection("ServiceToken"));
 
+        // Declarative role grants (ROLE_GRANTS) — reconciled at login so a configured email holds its
+        // role without a code change or a manual DB grant (and it survives a disposable-staging reset).
+        builder.Services.AddSingleton(new RoleGrants(builder.Configuration["ROLE_GRANTS"]));
+        builder.Services.AddScoped<RoleGrantReconciler>();
+
         // ES256 JWT issuer/validator; JwtBearer reads its parameters from the same instance.
         builder.Services.AddSingleton<JwtTokenService>();
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();

@@ -19,7 +19,8 @@ public static class LoginEndpoint
     public static void MapLogin(this RouteGroupBuilder group) =>
         group.MapPost("/login", async (
                 LoginRequest req, HttpContext http, UserManager<AppUser> users, ITenancyApi tenancy,
-                SessionService sessions, JwtTokenService jwt, RefreshCookie cookie, CancellationToken ct) =>
+                SessionService sessions, JwtTokenService jwt, RefreshCookie cookie,
+                RoleGrantReconciler roleGrants, CancellationToken ct) =>
         {
             using var activity = Telemetry.ActivitySource.StartActivity("auth.login");
 
@@ -32,6 +33,7 @@ public static class LoginEndpoint
                 return ProblemResults.From(IdentityErrors.InvalidCredentials);
             }
 
+            await roleGrants.ApplyAsync(user); // declarative ROLE_GRANTS, before roles are read into the token
             var roles = await users.GetRolesAsync(user);
             // Pin the user's default tenant as the session's (null until they join/create one).
             // Cross-module read via the Tenancy public API — login never touches tenancy tables.
