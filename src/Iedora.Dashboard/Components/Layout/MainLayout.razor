@@ -5,13 +5,7 @@
 <header class="topbar">
     <a class="brand" href="/">iedora <span>admin</span></a>
     <AuthorizeView>
-        <nav class="nav">
-            <NavLink href="/" Match="NavLinkMatch.All">Overview</NavLink>
-            <NavLink href="/directory">Directory</NavLink>
-            <NavLink href="/alerts">Alerts</NavLink>
-            <NavLink href="/qr-codes">QR</NavLink>
-            <NavLink href="/users">Users</NavLink>
-        </nav>
+        <NavMenu />
         <div class="session">
             <span class="who">@context.User.Identity?.Name</span>
             <button type="button" class="link" @onclick="SignOutAsync">Sign out</button>

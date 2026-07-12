@@ -1,33 +1,30 @@
-@* Renders the sign-in form EXACTLY ONCE and never re-renders it. Password-manager extensions inject
-   DOM into these inputs; if Blazor later re-diffs this subtree it hits `insertBefore` on nodes the
-   extension moved and the whole app crashes. Suppressing re-render keeps the form Blazor's untouched
-   territory — the parent owns all the reactive UI (busy / error) outside this component. *@
-<form @onsubmit="SubmitAsync" @onsubmit:preventDefault>
+@using System.ComponentModel.DataAnnotations
+@* Idiomatic sign-in form: DataAnnotations validate before submit (an empty or malformed email is
+   caught client-side), and OnValidSubmit only fires when the model is valid. The parent owns the
+   busy/error UI outside this component. *@
+<EditForm Model="_model" OnValidSubmit="Submit">
+    <DataAnnotationsValidator />
     <label>
         Email
-        <input type="email" autocomplete="username" @bind="email" @bind:event="oninput" />
+        <InputText type="email" autocomplete="username" @bind-Value="_model.Email" />
     </label>
     <label>
         Password
-        <input type="password" autocomplete="current-password" @bind="password" @bind:event="oninput" />
+        <InputText type="password" autocomplete="current-password" @bind-Value="_model.Password" />
     </label>
     <button type="submit">Sign in</button>
-</form>
+</EditForm>
 
 @code {
     [Parameter, EditorRequired] public EventCallback<(string Email, string Password)> OnSubmit { get; set; }
 
-    private string email = "";
-    private string password = "";
-    private bool _rendered;
+    private readonly Credentials _model = new();
 
-    // Render once; after that, ignore every state change so Blazor never re-diffs the extension-mutated form.
-    protected override bool ShouldRender() => !_rendered;
+    private Task Submit() => OnSubmit.InvokeAsync((_model.Email, _model.Password));
 
-    protected override void OnAfterRender(bool firstRender)
+    private sealed class Credentials
     {
-        if (firstRender) _rendered = true;
+        [Required, EmailAddress] public string Email { get; set; } = "";
+        [Required] public string Password { get; set; } = "";
     }
-
-    private Task SubmitAsync() => OnSubmit.InvokeAsync((email, password));
 }

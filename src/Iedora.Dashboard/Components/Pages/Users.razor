@@ -2,17 +2,18 @@
 @using Iedora.Dashboard.Api
 @attribute [Authorize]
 @inject IIedoraApiv1 Api
+@inject NavigationManager Nav
 
 <PageTitle>Users — iedora admin</PageTitle>
 
 <h1>Users</h1>
 
-<form class="search" @onsubmit="Reload" @onsubmit:preventDefault>
-    <input placeholder="Search email or name…" @bind="query" @bind:event="oninput" />
+<form class="search" @onsubmit="Search" @onsubmit:preventDefault>
+    <input placeholder="Search email or name…" @bind="_q" @bind:event="oninput" />
     <button type="submit">Search</button>
 </form>
 
-<AsyncData T="StaffUserListResponse" Load="() => Api.StaffListUsers(query, null)" @ref="_data" Context="d">
+<AsyncData T="StaffUserListResponse" Key="@Q" Load="() => Api.StaffListUsers(Q ?? string.Empty, null)" Context="d">
     @if (d.Users.Count == 0)
     {
         <p class="muted">No users match.</p>
@@ -40,8 +41,10 @@
 </AsyncData>
 
 @code {
-    private string query = "";
-    private AsyncData<StaffUserListResponse> _data = default!;
+    [Parameter, SupplyParameterFromQuery(Name = "q")] public string? Q { get; set; }
+    private string _q = "";
 
-    private Task Reload() => _data.ReloadAsync();
+    protected override void OnParametersSet() => _q = Q ?? "";
+
+    private void Search() => Nav.NavigateTo(_q.Length == 0 ? "users" : $"users?q={Uri.EscapeDataString(_q)}");
 }

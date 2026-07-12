@@ -19,11 +19,22 @@ else
     [Parameter, EditorRequired] public Func<Task<T>> Load { get; set; } = default!;
     [Parameter, EditorRequired] public RenderFragment<T> ChildContent { get; set; } = default!;
     [Parameter] public string LoadingText { get; set; } = "Loading…";
+    /// <summary>Refetch whenever this changes (e.g. a search query). Loads once on first render.</summary>
+    [Parameter] public object? Key { get; set; }
 
     public T? Value { get; private set; }
     public string? Error { get; private set; }
 
-    protected override Task OnInitializedAsync() => ReloadAsync();
+    private bool _loaded;
+    private object? _lastKey;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loaded && Equals(Key, _lastKey)) return;
+        _loaded = true;
+        _lastKey = Key;
+        await ReloadAsync();
+    }
 
     /// <summary>Fetch (or refetch) — shows the loading state, then the value, or the described error.</summary>
     public async Task ReloadAsync()

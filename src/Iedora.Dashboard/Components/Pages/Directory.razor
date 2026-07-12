@@ -2,23 +2,27 @@
 @using Iedora.Dashboard.Api
 @attribute [Authorize]
 @inject IIedoraApiv1 Api
+@inject NavigationManager Nav
 
 <PageTitle>Directory — iedora admin</PageTitle>
 
 <h1>Restaurant directory</h1>
 
-<form class="search" @onsubmit="Reload" @onsubmit:preventDefault>
-    <input placeholder="Search name or slug…" @bind="query" @bind:event="oninput" />
+<form class="search" @onsubmit="Search" @onsubmit:preventDefault>
+    <input placeholder="Search name or slug…" @bind="_q" @bind:event="oninput" />
     <button type="submit">Search</button>
 </form>
 
-<AsyncData T="StaffDirectoryResponse" Load="() => Api.StaffDirectory(query)" @ref="_data" Context="d">
+<AsyncData T="StaffDirectoryResponse" Key="@Q" Load="() => Api.StaffDirectory(Q ?? string.Empty)" Context="d">
     <RestaurantList Rows="d.Restaurants" Empty="No restaurants match." />
 </AsyncData>
 
 @code {
-    private string query = "";
-    private AsyncData<StaffDirectoryResponse> _data = default!;
+    [Parameter, SupplyParameterFromQuery(Name = "q")] public string? Q { get; set; }
+    private string _q = "";
 
-    private Task Reload() => _data.ReloadAsync();
+    protected override void OnParametersSet() => _q = Q ?? "";
+
+    // Reflect the search in the URL (bookmarkable/shareable); the ?q param drives the reload via Key.
+    private void Search() => Nav.NavigateTo(_q.Length == 0 ? "directory" : $"directory?q={Uri.EscapeDataString(_q)}");
 }

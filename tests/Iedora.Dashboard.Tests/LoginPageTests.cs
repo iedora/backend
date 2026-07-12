@@ -12,30 +12,34 @@ namespace Iedora.Dashboard.Tests;
 [TestClass]
 public sealed class LoginPageTests : BunitContext
 {
-    // ── LoginForm: the render-once hardening ─────────────────────────────────
+    // ── LoginForm: EditForm + DataAnnotations ────────────────────────────────
     [TestMethod]
-    public void The_form_renders_once_and_ignores_later_state_changes()
-    {
-        var cut = Render<LoginForm>(p => p.Add(x => x.OnSubmit, EventCallback.Factory.Create<(string, string)>(this, _ => { })));
-
-        Assert.AreEqual(1, cut.RenderCount);
-        cut.Find("input[type=email]").Input("typing"); // @bind:oninput → StateHasChanged
-        Assert.AreEqual(1, cut.RenderCount, "the form must not re-render, so Blazor never re-diffs extension-mutated DOM");
-    }
-
-    [TestMethod]
-    public void Submitting_the_form_reports_the_typed_credentials()
+    public void Submitting_valid_credentials_reports_them()
     {
         (string Email, string Password)? captured = null;
         var cut = Render<LoginForm>(p => p.Add(x => x.OnSubmit,
             EventCallback.Factory.Create<(string Email, string Password)>(this, c => captured = c)));
 
-        cut.Find("input[type=email]").Input("a@b.pt");
-        cut.Find("input[type=password]").Input("pw");
+        cut.Find("input[type=email]").Change("a@b.pt");       // InputText binds on change
+        cut.Find("input[type=password]").Change("pw");
         cut.Find("form").Submit();
 
         Assert.AreEqual("a@b.pt", captured?.Email);
         Assert.AreEqual("pw", captured?.Password);
+    }
+
+    [TestMethod]
+    public void An_invalid_email_is_rejected_client_side_and_does_not_submit()
+    {
+        (string, string)? captured = null;
+        var cut = Render<LoginForm>(p => p.Add(x => x.OnSubmit,
+            EventCallback.Factory.Create<(string, string)>(this, c => captured = c)));
+
+        cut.Find("input[type=email]").Change("not-an-email");
+        cut.Find("input[type=password]").Change("pw");
+        cut.Find("form").Submit();
+
+        Assert.IsNull(captured, "OnValidSubmit must not fire when the email is invalid");
     }
 
     // ── Login page: the flow around the form ─────────────────────────────────
@@ -62,8 +66,8 @@ public sealed class LoginPageTests : BunitContext
 
     private void SignIn(IRenderedComponent<Login> cut)
     {
-        cut.Find("input[type=email]").Input("a@b.pt");
-        cut.Find("input[type=password]").Input("Sup3rSecret!");
+        cut.Find("input[type=email]").Change("a@b.pt");
+        cut.Find("input[type=password]").Change("Sup3rSecret!");
         cut.Find("form").Submit();
     }
 
