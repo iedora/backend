@@ -6,6 +6,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Iedora.Dashboard</RootNamespace>
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+    <!-- Blazor WASM Release trims IL by default, which stripped metadata the form pages need at
+         runtime: the published build threw an unhandled exception on any page with a <form> (Users,
+         Directory, QR) while `dotnet run` (untrimmed) worked. Disable trimming — this is a low-traffic
+         admin tool, so the larger download is a fine trade for correctness. Re-enable only after
+         auditing dynamic/reflection access with the trimmer warnings. -->
+    <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 
   <ItemGroup>
