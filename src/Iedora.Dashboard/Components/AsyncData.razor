@@ -1,7 +1,7 @@
 @typeparam T
 @* Loading / error / loaded states for an async API read, so pages don't repeat the boilerplate.
    ChildContent renders the loaded value (and owns its own empty-state); to refetch (e.g. after a
-   search) grab the component with @@ref and call ReloadAsync. *@
+   search) set Key to the query — it reloads whenever Key changes. *@
 @if (Error is not null)
 {
     <p class="error" role="alert">@Error</p>

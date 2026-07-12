@@ -12,8 +12,8 @@
 <div class="login">
     <h1>iedora admin</h1>
 
-    @* The form is a render-once child (extensions mutate its DOM); status lives out here in the parent,
-       which is free to re-render without ever re-diffing the form subtree. *@
+    @* LoginForm owns its own validation (EditForm + DataAnnotations); this page owns the busy/error
+       status below it and the admin-only gate in HandleSubmitAsync. *@
     <LoginForm OnSubmit="HandleSubmitAsync" />
 
     <p class="login-status @(error is not null ? "error" : "")" role="@(error is not null ? "alert" : null)">
