@@ -9,15 +9,16 @@ namespace Iedora.Dashboard;
 public sealed class ApiAuthStateProvider(TokenStore tokens, ApiAuthClient auth) : AuthenticationStateProvider
 {
     private static readonly AuthenticationState Anonymous = new(new ClaimsPrincipal(new ClaimsIdentity()));
-    private bool _triedSilentRefresh;
+    private Task<string?>? _silentRefresh;
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        if (tokens.AccessToken is null && !_triedSilentRefresh)
-        {
-            _triedSilentRefresh = true;
-            tokens.AccessToken = await auth.RefreshAsync(CancellationToken.None);
-        }
+        // On first load with no token, attempt ONE silent refresh — the browser may still hold the
+        // API's refresh cookie from a prior visit. Concurrent auth checks (the router, the layout's
+        // AuthorizeView, and each page's) share the cached Task, so it fires exactly once rather than
+        // once per caller, and a failed refresh never retries on every subsequent check.
+        if (tokens.AccessToken is null)
+            tokens.AccessToken = await (_silentRefresh ??= auth.RefreshAsync(CancellationToken.None));
         return tokens.AccessToken is { } token ? new AuthenticationState(Principal(token)) : Anonymous;
     }
 
