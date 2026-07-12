@@ -7,38 +7,18 @@
 
 <h1>Restaurant directory</h1>
 
-<form class="search" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+<form class="search" @onsubmit="Reload" @onsubmit:preventDefault>
     <input placeholder="Search name or slug…" @bind="query" @bind:event="oninput" />
     <button type="submit">Search</button>
 </form>
 
-@if (error is not null)
-{
-    <p class="error" role="alert">@error</p>
-}
-else if (rows is null)
-{
-    <p class="muted">Loading…</p>
-}
-else
-{
-    <RestaurantList Rows="rows" Empty="No restaurants match." />
-}
+<AsyncData T="StaffDirectoryResponse" Load="() => Api.StaffDirectory(query)" @ref="_data" Context="d">
+    <RestaurantList Rows="d.Restaurants" Empty="No restaurants match." />
+</AsyncData>
 
 @code {
     private string query = "";
-    private ICollection<StaffRestaurantRow>? rows;
-    private string? error;
+    private AsyncData<StaffDirectoryResponse> _data = default!;
 
-    protected override Task OnInitializedAsync() => LoadAsync();
-
-    private Task SearchAsync() => LoadAsync();
-
-    private async Task LoadAsync()
-    {
-        rows = null;
-        error = null;
-        try { rows = (await Api.StaffDirectory(query)).Restaurants; }
-        catch (Exception ex) { error = ApiError.Describe(ex); }
-    }
+    private Task Reload() => _data.ReloadAsync();
 }
