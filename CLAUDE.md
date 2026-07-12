@@ -34,8 +34,13 @@ The only exception: **login/refresh stay synchronous** — they're an auth token
 
 Unbounded tables (view-dedup markers, processed outbox/inbox rows) are pruned by `Framework.Maintenance`: an `IRetentionSweep` is one idempotent `WHERE`-bounded delete, and a single hosted service runs every registered sweep on a fixed interval, isolating per-sweep failures. Wire sweeps **only in `Iedora.Worker`** (`AddRetentionSweeper()` + `AddRetentionSweep<T>()`, or `AddOutboxRetention<T>()` / `AddInboxRetention<T>()`) — never in the API host, so pruning doesn't run on every web replica. Each retention window is its own options type (defaults are safe); a new unbounded table gets a new sweep, not a new timer.
 
+## Roles — declarative grants
+
+Roles aren't seeded, and who holds one is a **deploy setting, not code or a manual DB grant**: the `ROLE_GRANTS` config string (`admin=me@x.com; staff=@x.com` — an exact email or a `@domain` suffix) is reconciled **at login** by `RoleGrantReconciler`, creating the role if it doesn't exist and adding the user if missing. So a grant survives a DB reset, and making someone admin means editing `ROLE_GRANTS`, not touching `AspNetUserRoles`. The admin role string is `Roles.Admin` (`"admin"`) in `Iedora.Identity.Contracts`; staff endpoints gate on `Policies.Admin`.
+
 ## Gotchas (each already cost a debugging cycle)
 
+- The JWT signing key must carry a **named-curve OID**. An EC private-key PEM with *explicit* curve parameters (openssl's default `genpkey` encoding) imports without one, and ES256 signing then throws `IDX10000: The parameter 'Oid' cannot be a 'null'` in `ComputeJwkThumbprint` — login 500s while JWKS still works (it reads x/y, not the OID). `JwtTokenService` re-stamps `ECCurve.NamedCurves.nistP256` after `ImportFromPem`; keep that in mind for any new ECDsa key handling. (`API_JWT_EC_PRIVATE_KEY` also accepts single-line base64 of the PEM — Kamal's `--env-file` can't carry newlines.)
 - Inbound JSON binding is globally strict: a body with a duplicate property name is rejected at binding (`400`), not silently resolved last-wins. Set once in `Program.cs` via `ConfigureHttpJsonOptions(o => o.SerializerOptions.AllowDuplicateProperties = false)` — matters most for untrusted admin-pasted documents (the staff menu-JSON import).
 - Tests run on Testcontainers Postgres, never SQLite (SQLite can't translate `DateTimeOffset`).
 - EF Core can't compose `.Where(...)` over a `select new Record(...)` projection — filter/order on the entities first, project last.
