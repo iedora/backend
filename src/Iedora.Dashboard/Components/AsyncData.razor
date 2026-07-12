@@ -1,0 +1,37 @@
+@typeparam T
+@* Loading / error / loaded states for an async API read, so pages don't repeat the boilerplate.
+   ChildContent renders the loaded value (and owns its own empty-state); to refetch (e.g. after a
+   search) grab the component with @@ref and call ReloadAsync. *@
+@if (Error is not null)
+{
+    <p class="error" role="alert">@Error</p>
+}
+else if (Value is null)
+{
+    <p class="muted">@LoadingText</p>
+}
+else
+{
+    @ChildContent(Value)
+}
+
+@code {
+    [Parameter, EditorRequired] public Func<Task<T>> Load { get; set; } = default!;
+    [Parameter, EditorRequired] public RenderFragment<T> ChildContent { get; set; } = default!;
+    [Parameter] public string LoadingText { get; set; } = "Loading…";
+
+    public T? Value { get; private set; }
+    public string? Error { get; private set; }
+
+    protected override Task OnInitializedAsync() => ReloadAsync();
+
+    /// <summary>Fetch (or refetch) — shows the loading state, then the value, or the described error.</summary>
+    public async Task ReloadAsync()
+    {
+        Value = default;
+        Error = null;
+        StateHasChanged();
+        try { Value = await Load(); }
+        catch (Exception ex) { Error = ApiError.Describe(ex); }
+    }
+}

@@ -11,16 +11,17 @@ else
             <tr><th>Restaurant</th><th>Slug</th><th class="num">Menus</th><th class="num">Items</th><th class="num">Views · 30d</th></tr>
         </thead>
         <tbody>
-            @foreach (var r in Rows)
-            {
-                <tr>
-                    <td><a href="/restaurants/@r.Id">@r.Name</a></td>
-                    <td class="muted">@r.Slug</td>
-                    <td class="num">@r.Menus</td>
-                    <td class="num">@r.Items</td>
-                    <td class="num">@r.Views30d</td>
-                </tr>
-            }
+            <Virtualize Items="Rows" SpacerElement="tr">
+                <ItemContent Context="r">
+                    <tr>
+                        <td><a href="/restaurants/@r.Id">@r.Name</a></td>
+                        <td class="muted">@r.Slug</td>
+                        <td class="num">@r.Menus</td>
+                        <td class="num">@r.Items</td>
+                        <td class="num">@r.Views30d</td>
+                    </tr>
+                </ItemContent>
+            </Virtualize>
         </tbody>
     </table>
 }

@@ -7,16 +7,7 @@
 
 <h1>Platform overview</h1>
 
-@if (error is not null)
-{
-    <p class="error" role="alert">@error</p>
-}
-else if (data is null)
-{
-    <p class="muted">Loading…</p>
-}
-else
-{
+<AsyncData T="StaffOverviewResponse" Load="() => Api.StaffOverview()" Context="data">
     <div class="tiles">
         <Tile Label="Restaurants" Value="data.Restaurants" />
         <Tile Label="Active menus" Value="data.ActiveMenus" />
@@ -52,15 +43,4 @@ else
             </tbody>
         </table>
     }
-}
-
-@code {
-    private StaffOverviewResponse? data;
-    private string? error;
-
-    protected override async Task OnInitializedAsync()
-    {
-        try { data = await Api.StaffOverview(); }
-        catch (Exception ex) { error = ApiError.Describe(ex); }
-    }
-}
+</AsyncData>
