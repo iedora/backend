@@ -1,6 +1,0 @@
-.nav { display: flex; gap: 1.1rem; margin: 0 auto 0 2rem; }
-
-/* NavLink renders the <a>, so it's a descendant component — reach it with ::deep. */
-.nav ::deep a { color: var(--muted); text-decoration: none; font-size: 0.9rem; padding: 0.2rem 0; border-bottom: 2px solid transparent; }
-.nav ::deep a:hover { color: var(--ink); }
-.nav ::deep a.active { color: var(--accent); border-bottom-color: var(--accent); }

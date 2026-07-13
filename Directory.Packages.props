@@ -64,6 +64,9 @@
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.8" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.8" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.8" />
+    <!-- MudBlazor: the dashboard's component + design system (Material, C#-first). Multi-targets
+         net10.0 as of 9.7.0. -->
+    <PackageVersion Include="MudBlazor" Version="9.7.0" />
     <!-- Dashboard component + handler tests: bUnit renders Razor components; NSubstitute mocks the
          generated API client. -->
     <PackageVersion Include="bunit" Version="2.7.2" />
