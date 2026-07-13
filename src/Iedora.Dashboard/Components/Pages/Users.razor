@@ -13,7 +13,7 @@
 <AsyncData T="StaffUserListResponse" Key="@Q" Load="() => Api.StaffListUsers(Q ?? string.Empty, null)" Context="d">
     @if (d.Users.Count == 0)
     {
-        <MudText Typo="Typo.body2" Color="Color.Secondary">No users match.</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">No users match.</MudText>
     }
     else
     {

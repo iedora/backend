@@ -19,7 +19,7 @@ else if (data is null)
 else
 {
     <MudText Typo="Typo.h4" HtmlTag="h1">@data.Restaurant.Name</MudText>
-    <MudText Typo="Typo.body2" Color="Color.Secondary" GutterBottom="true">
+    <MudText Typo="Typo.body2" Class="mud-text-secondary" GutterBottom="true">
         @data.Restaurant.Slug · <MudLink Href="@($"/restaurants/{Id}/menus")">Edit menu JSON</MudLink>
     </MudText>
 
@@ -32,7 +32,7 @@ else
     <MudText Typo="Typo.h6" Class="mt-8 mb-2">Views · last 14 days</MudText>
     @if (data.Trend.Count == 0)
     {
-        <MudText Typo="Typo.body2" Color="Color.Secondary">No views yet.</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">No views yet.</MudText>
     }
     else
     {
@@ -47,7 +47,7 @@ else
     <MudText Typo="Typo.h6" Class="mt-8 mb-2">Menus</MudText>
     @if (data.Menus.Count == 0)
     {
-        <MudText Typo="Typo.body2" Color="Color.Secondary">No menus.</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">No menus.</MudText>
     }
     else
     {

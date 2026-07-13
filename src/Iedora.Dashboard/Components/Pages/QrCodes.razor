@@ -33,7 +33,7 @@ else if (data is null)
 }
 else if (data.Codes.Count == 0)
 {
-    <MudText Typo="Typo.body2" Color="Color.Secondary">No stickers yet — mint some above.</MudText>
+    <MudText Typo="Typo.body2" Class="mud-text-secondary">No stickers yet — mint some above.</MudText>
 }
 else
 {
@@ -78,7 +78,7 @@ else
 
     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="mt-3">
         <MudButton Disabled="@(offset == 0 || busy)" OnClick="PrevAsync" StartIcon="@Icons.Material.Filled.ChevronLeft">Prev</MudButton>
-        <MudText Typo="Typo.body2" Color="Color.Secondary">@(offset + 1)–@(offset + data.Codes.Count) of @data.Total</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">@(offset + 1)–@(offset + data.Codes.Count) of @data.Total</MudText>
         <MudButton Disabled="@(offset + PageSize >= data.Total || busy)" OnClick="NextAsync" EndIcon="@Icons.Material.Filled.ChevronRight">Next</MudButton>
     </MudStack>
 }
