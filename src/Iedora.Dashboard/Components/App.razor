@@ -5,7 +5,8 @@
                 <RedirectToLogin />
             </NotAuthorized>
             <Authorizing>
-                <p class="booting">Loading…</p>
+                @* Explicit color: this can render before MudThemeProvider, so the palette isn't set yet. *@
+                <div class="app-loading"><MudProgressCircular Indeterminate="true" Style="color:#594AE2" /></div>
             </Authorizing>
         </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />

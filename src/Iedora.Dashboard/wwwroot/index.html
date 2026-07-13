@@ -12,14 +12,26 @@
     <!-- ?v bust: app.css isn't fingerprinted, and Cloudflare caches it by extension — so a CSS change
          is masked at the edge until TTL. index.html is served no-cache, so bumping this version forces
          a fresh fetch. Bump it whenever app.css changes (or add a Cloudflare cache rule for the host). -->
-    <link rel="stylesheet" href="app.css?v=4" />
+    <link rel="stylesheet" href="app.css?v=5" />
     <link href="Iedora.Dashboard.styles.css" rel="stylesheet" />
     <script type="importmap"></script>
 </head>
 
 <body>
     <div id="app">
-        <div class="booting">Loading…</div>
+        <!-- Boot splash shown while the WASM runtime downloads, before Blazor takes over #app. Reuses
+             MudBlazor's own spinner markup + animation (MudBlazor.min.css is loaded first in <head>);
+             the color is hard-set to MudBlazor's default primary because the theme palette variables
+             aren't available until MudThemeProvider renders post-boot. -->
+        <div class="app-loading">
+            <div role="progressbar" aria-label="Loading" style="color:#594AE2"
+                 class="mud-progress-circular mud-progress-medium mud-progress-indeterminate">
+                <svg class="mud-progress-circular-svg" viewBox="22.5 22.5 43 43">
+                    <circle class="mud-progress-circular-circle mud-progress-indeterminate"
+                            cx="44" cy="44" r="20" fill="none" stroke-width="3"></circle>
+                </svg>
+            </div>
+        </div>
     </div>
 
     <div id="blazor-error-ui" data-nosnippet>
