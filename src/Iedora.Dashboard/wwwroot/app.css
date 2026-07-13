@@ -95,15 +95,7 @@ button.link.danger { color: #a12020; }
 
 code { background: var(--bg); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.9em; }
 
-/* Stat tiles grid — still used by RestaurantDetail (Home + Alerts moved to MudGrid) */
-.tiles {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 1rem;
-    margin: 1rem 0 2rem;
-}
-
-/* Tables — every list/detail page */
+/* Tables — the not-yet-migrated custom pages (UserDetail) */
 table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 th, td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line); }
 th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }

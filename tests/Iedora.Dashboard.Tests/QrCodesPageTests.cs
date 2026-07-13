@@ -8,7 +8,7 @@ using NSubstitute;
 namespace Iedora.Dashboard.Tests;
 
 [TestClass]
-public sealed class QrCodesPageTests : BunitContext
+public sealed class QrCodesPageTests : MudBunitContext
 {
     private IIedoraApiv1 RegisterApi(params QrCodeView[] codes)
     {
@@ -38,7 +38,7 @@ public sealed class QrCodesPageTests : BunitContext
             .Returns(new CreateQrResponse { Inserted = 10 });
 
         var cut = Render<QrCodes>();
-        cut.Find("form.mint").Submit();
+        cut.FindAll("button").First(b => b.TextContent.Contains("Mint")).Click();
 
         await api.Received().CreateQrCodes(Arg.Is<CreateQrRequest>(r => r.Count == 10), Arg.Any<CancellationToken>());
         Assert.IsTrue(cut.Markup.Contains("Minted 10"));
@@ -51,7 +51,7 @@ public sealed class QrCodesPageTests : BunitContext
         api.DeleteQrCode("gone", Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
 
         var cut = Render<QrCodes>();
-        cut.Find("button.danger").Click();
+        cut.FindAll("button").First(b => b.TextContent.Trim() == "Delete").Click();
 
         await api.Received().DeleteQrCode("gone", Arg.Any<CancellationToken>());
     }
@@ -62,7 +62,7 @@ public sealed class QrCodesPageTests : BunitContext
         var api = RegisterApi(new QrCodeView { Code = "unbound" }); // RestaurantId null → shows the bind input
 
         var cut = Render<QrCodes>();
-        cut.FindAll("button.link").First(b => b.TextContent.Trim() == "Bind").Click();
+        cut.FindAll("button").First(b => b.TextContent.Trim() == "Bind").Click();
 
         Assert.IsTrue(cut.Markup.Contains("valid restaurant id", StringComparison.OrdinalIgnoreCase));
         api.DidNotReceive().BindQrCode(Arg.Any<string>(), Arg.Any<BindQrRequest>(), Arg.Any<CancellationToken>());

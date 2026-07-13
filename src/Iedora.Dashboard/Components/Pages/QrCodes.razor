@@ -5,74 +5,82 @@
 
 <PageTitle>QR codes — iedora admin</PageTitle>
 
-<h1>QR stickers</h1>
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">QR stickers</MudText>
 
-<form class="mint" @onsubmit="MintAsync" @onsubmit:preventDefault>
-    <label>Mint <input type="number" min="1" max="500" @bind="mintCount" /> stickers</label>
-    <input placeholder="Label (optional)" @bind="mintLabel" />
-    <button type="submit" disabled="@busy">Mint</button>
-</form>
+<MudPaper Outlined="true" Elevation="0" Class="pa-4 mb-4">
+    <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+        <MudNumericField T="int" @bind-Value="mintCount" Min="1" Max="500" Label="Count"
+                         Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width:120px" />
+        <MudTextField @bind-Value="mintLabel" Label="Label (optional)"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width:240px" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="MintAsync" Disabled="busy"
+                   StartIcon="@Icons.Material.Filled.Add">Mint</MudButton>
+    </MudStack>
+</MudPaper>
+
 @if (message is not null)
 {
-    <p class="muted">@message</p>
+    <MudAlert Severity="Severity.Success" Dense="true" Class="mb-4">@message</MudAlert>
 }
 
 @if (error is not null)
 {
-    <p class="error" role="alert">@error</p>
+    <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@error</MudAlert>
 }
 else if (data is null)
 {
-    <p class="muted">Loading…</p>
+    <MudProgressLinear Indeterminate="true" />
 }
 else if (data.Codes.Count == 0)
 {
-    <p class="muted">No stickers yet — mint some above.</p>
+    <MudText Typo="Typo.body2" Color="Color.Secondary">No stickers yet — mint some above.</MudText>
 }
 else
 {
-    <table>
-        <thead><tr><th>Code</th><th>Restaurant</th><th>Label</th><th></th></tr></thead>
-        <tbody>
-            @foreach (var qr in data.Codes)
-            {
-                <tr>
-                    <td><code>@qr.Code</code></td>
-                    <td>
-                        @if (qr.RestaurantId is not null)
-                        {
-                            <span>@qr.RestaurantName <span class="muted">(@qr.RestaurantSlug)</span></span>
-                        }
-                        else
-                        {
-                            <span class="muted">—</span>
-                        }
-                    </td>
-                    <td class="muted">@qr.Label</td>
-                    <td class="row-actions">
-                        @if (qr.RestaurantId is null)
-                        {
-                            <input class="bind-input" placeholder="restaurant id"
-                                   value="@bindIds.GetValueOrDefault(qr.Code)"
-                                   @oninput="e => bindIds[qr.Code] = e.Value?.ToString() ?? string.Empty" />
-                            <button class="link" disabled="@busy" @onclick="() => BindAsync(qr.Code)">Bind</button>
-                        }
-                        else
-                        {
-                            <button class="link" disabled="@busy" @onclick="() => UnbindAsync(qr.Code)">Unbind</button>
-                        }
-                        <button class="link danger" disabled="@busy" @onclick="() => DeleteAsync(qr.Code)">Delete</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <MudTable Items="data.Codes" Hover="true" Dense="true" Outlined="true" Elevation="0">
+        <HeaderContent>
+            <MudTh>Code</MudTh>
+            <MudTh>Restaurant</MudTh>
+            <MudTh>Label</MudTh>
+            <MudTh Style="text-align:right">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Code"><code>@context.Code</code></MudTd>
+            <MudTd DataLabel="Restaurant">
+                @if (context.RestaurantId is not null)
+                {
+                    <span>@context.RestaurantName <span style="color:var(--mud-palette-text-secondary)">(@context.RestaurantSlug)</span></span>
+                }
+                else
+                {
+                    <span style="color:var(--mud-palette-text-secondary)">—</span>
+                }
+            </MudTd>
+            <MudTd DataLabel="Label" Style="color:var(--mud-palette-text-secondary)">@context.Label</MudTd>
+            <MudTd DataLabel="Actions">
+                <MudStack Row="true" Spacing="1" Justify="Justify.FlexEnd" AlignItems="AlignItems.Center">
+                    @if (context.RestaurantId is null)
+                    {
+                        <MudTextField T="string" Value="@bindIds.GetValueOrDefault(context.Code)"
+                                      ValueChanged="v => bindIds[context.Code] = v ?? string.Empty" Immediate="true"
+                                      Placeholder="restaurant id" Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width:150px" />
+                        <MudButton Size="Size.Small" Disabled="busy" OnClick="() => BindAsync(context.Code)">Bind</MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Size="Size.Small" Disabled="busy" OnClick="() => UnbindAsync(context.Code)">Unbind</MudButton>
+                    }
+                    <MudButton Size="Size.Small" Color="Color.Error" Disabled="busy" OnClick="() => DeleteAsync(context.Code)">Delete</MudButton>
+                </MudStack>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
 
-    <div class="pager">
-        <button class="link" disabled="@(offset == 0 || busy)" @onclick="PrevAsync">← Prev</button>
-        <span class="muted">@(offset + 1)–@(offset + data.Codes.Count) of @data.Total</span>
-        <button class="link" disabled="@(offset + PageSize >= data.Total || busy)" @onclick="NextAsync">Next →</button>
-    </div>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="mt-3">
+        <MudButton Disabled="@(offset == 0 || busy)" OnClick="PrevAsync" StartIcon="@Icons.Material.Filled.ChevronLeft">Prev</MudButton>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@(offset + 1)–@(offset + data.Codes.Count) of @data.Total</MudText>
+        <MudButton Disabled="@(offset + PageSize >= data.Total || busy)" OnClick="NextAsync" EndIcon="@Icons.Material.Filled.ChevronRight">Next</MudButton>
+    </MudStack>
 }
 
 @code {
