@@ -2,13 +2,15 @@ using Bunit;
 using Iedora.Dashboard.Api;
 using Iedora.Dashboard.Components.Pages;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Components;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MudBlazor;
 using NSubstitute;
 
 namespace Iedora.Dashboard.Tests;
 
 [TestClass]
-public sealed class MenuJsonPageTests : BunitContext
+public sealed class MenuJsonPageTests : MudBunitContext
 {
     private static readonly Guid RestId = Guid.NewGuid();
 
@@ -22,6 +24,9 @@ public sealed class MenuJsonPageTests : BunitContext
     }
 
     private IRenderedComponent<MenuJson> RenderPage() => Render<MenuJson>(p => p.Add(x => x.Id, RestId));
+
+    private static void Click<T>(IRenderedComponent<T> scope, string text) where T : IComponent =>
+        scope.FindAll("button").First(b => b.TextContent.Contains(text)).Click();
 
     [TestMethod]
     public void Export_fills_the_editor_with_the_menu_json()
@@ -37,12 +42,13 @@ public sealed class MenuJsonPageTests : BunitContext
     [TestMethod]
     public async Task Import_replaces_from_the_editor_json_when_confirmed()
     {
-        JSInterop.Setup<bool>("confirm", _ => true).SetResult(true);
-        var api = RegisterApi();
+        var api = RegisterApi(); // register all services before the first render
         api.StaffReplaceMenus(RestId, Arg.Any<MenuImportDocument>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
+        var dialog = Render<MudDialogProvider>(); // hosts the confirm dialog
 
         var cut = RenderPage(); // export populated the editor with valid JSON
-        cut.FindAll("button.btn").First(b => b.TextContent.Contains("Import")).Click();
+        Click(cut, "Import");
+        Click(dialog, "Replace"); // confirm the message box
 
         await api.Received().StaffReplaceMenus(RestId, Arg.Any<MenuImportDocument>(), Arg.Any<CancellationToken>());
         Assert.IsTrue(cut.Markup.Contains("Menu replaced"));
@@ -51,12 +57,11 @@ public sealed class MenuJsonPageTests : BunitContext
     [TestMethod]
     public void Invalid_json_is_rejected_without_calling_the_api()
     {
-        JSInterop.Setup<bool>("confirm", _ => true).SetResult(true);
         var api = RegisterApi();
 
         var cut = RenderPage();
-        cut.Find("textarea.json").Input("this is not json");
-        cut.FindAll("button.btn").First(b => b.TextContent.Contains("Import")).Click();
+        cut.Find("textarea").Input("this is not json"); // MudTextField Immediate binds oninput
+        Click(cut, "Import"); // rejected before the confirm dialog
 
         Assert.IsTrue(cut.Markup.Contains("isn't valid JSON", StringComparison.OrdinalIgnoreCase));
         api.DidNotReceive().StaffReplaceMenus(RestId, Arg.Any<MenuImportDocument>(), Arg.Any<CancellationToken>());

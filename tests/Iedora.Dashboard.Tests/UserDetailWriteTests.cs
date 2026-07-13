@@ -2,13 +2,15 @@ using Bunit;
 using Iedora.Dashboard.Api;
 using Iedora.Dashboard.Components.Pages;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Components;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MudBlazor;
 using NSubstitute;
 
 namespace Iedora.Dashboard.Tests;
 
 [TestClass]
-public sealed class UserDetailWriteTests : BunitContext
+public sealed class UserDetailWriteTests : MudBunitContext
 {
     private static readonly Guid UserId = Guid.NewGuid();
     private static readonly Guid Family = Guid.NewGuid();
@@ -32,6 +34,9 @@ public sealed class UserDetailWriteTests : BunitContext
     private IRenderedComponent<UserDetail> RenderDetail() =>
         Render<UserDetail>(p => p.Add(x => x.Id, UserId));
 
+    private static void Click<T>(IRenderedComponent<T> scope, string text) where T : IComponent =>
+        scope.FindAll("button").First(b => b.TextContent.Trim() == text).Click();
+
     [TestMethod]
     public async Task Set_password_posts_the_typed_password()
     {
@@ -39,8 +44,8 @@ public sealed class UserDetailWriteTests : BunitContext
         api.StaffSetUserPassword(UserId, Arg.Any<SetUserPasswordRequest>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
 
         var cut = RenderDetail();
-        cut.Find(".inline-form input").Change("Temp1234!");
-        cut.Find(".inline-form").Submit();
+        cut.Find("input[type=password]").Input("Temp1234!"); // MudTextField Immediate binds oninput
+        Click(cut, "Set password");
 
         await api.Received().StaffSetUserPassword(UserId, Arg.Is<SetUserPasswordRequest>(r => r.Password == "Temp1234!"), Arg.Any<CancellationToken>());
         Assert.IsTrue(cut.Markup.Contains("must change it at next login"));
@@ -53,7 +58,7 @@ public sealed class UserDetailWriteTests : BunitContext
         api.StaffRevokeUserSession(UserId, Family, Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
 
         var cut = RenderDetail();
-        cut.Find("button.danger").Click();
+        Click(cut, "Revoke");
 
         await api.Received().StaffRevokeUserSession(UserId, Family, Arg.Any<CancellationToken>());
     }
@@ -61,12 +66,13 @@ public sealed class UserDetailWriteTests : BunitContext
     [TestMethod]
     public async Task Force_password_change_runs_when_confirmed()
     {
-        JSInterop.Setup<bool>("confirm", _ => true).SetResult(true);
-        var api = RegisterApi();
+        var api = RegisterApi(); // register all services before the first render
         api.StaffForcePasswordChange(UserId, Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
+        var dialog = Render<MudDialogProvider>();
 
         var cut = RenderDetail();
-        cut.FindAll("button.btn").First(b => b.TextContent.Contains("Force")).Click();
+        Click(cut, "Force password change");
+        Click(dialog, "Force"); // confirm the message box
 
         await api.Received().StaffForcePasswordChange(UserId, Arg.Any<CancellationToken>());
     }
@@ -74,11 +80,12 @@ public sealed class UserDetailWriteTests : BunitContext
     [TestMethod]
     public void Force_password_change_is_skipped_when_cancelled()
     {
-        JSInterop.Setup<bool>("confirm", _ => true).SetResult(false);
-        var api = RegisterApi();
+        var api = RegisterApi(); // register all services before the first render
+        var dialog = Render<MudDialogProvider>();
 
         var cut = RenderDetail();
-        cut.FindAll("button.btn").First(b => b.TextContent.Contains("Force")).Click();
+        Click(cut, "Force password change");
+        Click(dialog, "Cancel"); // dismiss the message box
 
         api.DidNotReceive().StaffForcePasswordChange(UserId, Arg.Any<CancellationToken>());
     }

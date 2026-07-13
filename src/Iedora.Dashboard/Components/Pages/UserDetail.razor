@@ -3,87 +3,90 @@
 @using Iedora.Dashboard.Api
 @attribute [Authorize]
 @inject IIedoraApiv1 Api
-@inject Microsoft.JSInterop.IJSRuntime JS
+@inject IDialogService Dialogs
 
 <PageTitle>User — iedora admin</PageTitle>
 
-<p class="muted"><a href="/users">← Users</a></p>
+<MudButton Href="/users" Variant="Variant.Text" Size="Size.Small"
+           StartIcon="@Icons.Material.Filled.ArrowBack" Class="mb-2">Users</MudButton>
 
 @if (error is not null)
 {
-    <p class="error" role="alert">@error</p>
+    <MudAlert Severity="Severity.Error" Dense="true">@error</MudAlert>
 }
 else if (data is null)
 {
-    <p class="muted">Loading…</p>
+    <MudProgressLinear Indeterminate="true" />
 }
 else
 {
-    <h1>@data.User.Email</h1>
-    <p class="muted">@data.User.Name — joined @data.User.CreatedAt.ToString("MMM d, yyyy")</p>
-    <p>Roles: <strong>@(data.User.Roles.Count == 0 ? "none" : string.Join(", ", data.User.Roles))</strong></p>
+    <MudText Typo="Typo.h4" HtmlTag="h1">@data.User.Email</MudText>
+    <MudText Typo="Typo.body2" Color="Color.Secondary">@data.User.Name — joined @data.User.CreatedAt.ToString("MMM d, yyyy")</MudText>
+    <MudText Typo="Typo.body1" Class="mt-2">Roles: <b>@(data.User.Roles.Count == 0 ? "none" : string.Join(", ", data.User.Roles))</b></MudText>
 
-    <div class="actions-bar">
-        <button class="btn" disabled="@busy" @onclick="ForcePasswordChangeAsync">Force password change</button>
-        <form class="inline-form" @onsubmit="SetPasswordAsync" @onsubmit:preventDefault>
-            <input type="password" placeholder="Temporary password" autocomplete="new-password" @bind="newPassword" />
-            <button class="btn" type="submit" disabled="@busy">Set password</button>
-        </form>
-    </div>
+    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="my-4">
+        <MudButton Variant="Variant.Outlined" Disabled="busy" OnClick="ForcePasswordChangeAsync">Force password change</MudButton>
+        <MudTextField @bind-Value="newPassword" InputType="InputType.Password" Immediate="true"
+                      Placeholder="Temporary password" autocomplete="new-password"
+                      Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width:220px" />
+        <MudButton Variant="Variant.Outlined" Disabled="busy" OnClick="SetPasswordAsync">Set password</MudButton>
+    </MudStack>
     @if (actionMessage is not null)
     {
-        <p class="muted">@actionMessage</p>
+        <MudAlert Severity="Severity.Success" Dense="true" Class="mb-4">@actionMessage</MudAlert>
     }
     @if (actionError is not null)
     {
-        <p class="error" role="alert">@actionError</p>
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@actionError</MudAlert>
     }
 
-    <h2>Tenants</h2>
+    <MudText Typo="Typo.h6" Class="mt-8 mb-2">Tenants</MudText>
     @if (data.Memberships.Count == 0)
     {
-        <p class="muted">No tenant memberships.</p>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">No tenant memberships.</MudText>
     }
     else
     {
-        <table>
-            <thead><tr><th>Tenant</th><th>Role</th></tr></thead>
-            <tbody>
-                @foreach (var m in data.Memberships)
-                {
-                    <tr><td class="muted">@m.TenantId</td><td>@m.Role</td></tr>
-                }
-            </tbody>
-        </table>
+        <MudTable Items="data.Memberships" Hover="true" Dense="true" Outlined="true" Elevation="0">
+            <HeaderContent>
+                <MudTh>Tenant</MudTh>
+                <MudTh>Role</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Tenant" Style="color:var(--mud-palette-text-secondary)">@context.TenantId</MudTd>
+                <MudTd DataLabel="Role">@context.Role</MudTd>
+            </RowTemplate>
+        </MudTable>
     }
 
-    <h2>Sessions</h2>
+    <MudText Typo="Typo.h6" Class="mt-8 mb-2">Sessions</MudText>
     @if (data.Sessions.Count == 0)
     {
-        <p class="muted">No sessions.</p>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">No sessions.</MudText>
     }
     else
     {
-        <table>
-            <thead><tr><th>Device</th><th>IP</th><th>Issued</th><th>Status</th><th></th></tr></thead>
-            <tbody>
-                @foreach (var s in data.Sessions)
-                {
-                    <tr>
-                        <td class="muted">@s.UserAgent</td>
-                        <td class="muted">@s.Ip</td>
-                        <td class="muted">@s.IssuedAt.ToString("MMM d, HH:mm")</td>
-                        <td>@(s.RevokedAt is null ? "Active" : "Revoked")</td>
-                        <td class="num">
-                            @if (s.RevokedAt is null)
-                            {
-                                <button class="link danger" disabled="@busy" @onclick="() => RevokeAsync(s.FamilyId)">Revoke</button>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <MudTable Items="data.Sessions" Hover="true" Dense="true" Outlined="true" Elevation="0">
+            <HeaderContent>
+                <MudTh>Device</MudTh>
+                <MudTh>IP</MudTh>
+                <MudTh>Issued</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align:right"></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Device" Style="color:var(--mud-palette-text-secondary)">@context.UserAgent</MudTd>
+                <MudTd DataLabel="IP" Style="color:var(--mud-palette-text-secondary)">@context.Ip</MudTd>
+                <MudTd DataLabel="Issued" Style="color:var(--mud-palette-text-secondary)">@context.IssuedAt.ToString("MMM d, HH:mm")</MudTd>
+                <MudTd DataLabel="Status">@(context.RevokedAt is null ? "Active" : "Revoked")</MudTd>
+                <MudTd Style="text-align:right">
+                    @if (context.RevokedAt is null)
+                    {
+                        <MudButton Size="Size.Small" Color="Color.Error" Disabled="busy" OnClick="() => RevokeAsync(context.FamilyId)">Revoke</MudButton>
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
     }
 }
 
@@ -148,5 +151,6 @@ else
         finally { busy = false; }
     }
 
-    private ValueTask<bool> Confirm(string message) => JS.InvokeAsync<bool>("confirm", message);
+    private async Task<bool> Confirm(string message) =>
+        await Dialogs.ShowMessageBoxAsync("Force password change?", message, yesText: "Force", cancelText: "Cancel") == true;
 }

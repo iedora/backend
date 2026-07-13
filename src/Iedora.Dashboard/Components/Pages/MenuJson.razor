@@ -5,29 +5,37 @@
 @using Iedora.Dashboard.Api
 @attribute [Authorize]
 @inject IIedoraApiv1 Api
-@inject Microsoft.JSInterop.IJSRuntime JS
+@inject IDialogService Dialogs
 
 <PageTitle>Menu JSON — iedora admin</PageTitle>
 
-<p class="muted"><a href="/restaurants/@Id">← Restaurant</a></p>
-<h1>Menu JSON</h1>
-<p class="muted">Export the live menu tree, edit it, and replace it. Importing overwrites the whole tree.</p>
+<MudButton Href="@($"/restaurants/{Id}")" Variant="Variant.Text" Size="Size.Small"
+           StartIcon="@Icons.Material.Filled.ArrowBack" Class="mb-2">Restaurant</MudButton>
+<MudText Typo="Typo.h4" HtmlTag="h1">Menu JSON</MudText>
+<MudText Typo="Typo.body2" Color="Color.Secondary" GutterBottom="true">
+    Export the live menu tree, edit it, and replace it. Importing overwrites the whole tree.
+</MudText>
 
-<div class="json-actions">
-    <button class="btn" disabled="@busy" @onclick="ExportAsync">Re-export</button>
-    <button class="btn danger" disabled="@(busy || json is null)" @onclick="ImportAsync">Import (replace)</button>
-</div>
+<MudStack Row="true" Spacing="2" Class="my-4">
+    <MudButton Variant="Variant.Outlined" Disabled="busy" OnClick="ExportAsync"
+               StartIcon="@Icons.Material.Filled.Refresh">Re-export</MudButton>
+    <MudButton Variant="Variant.Outlined" Color="Color.Error" Disabled="@(busy || json is null)" OnClick="ImportAsync"
+               StartIcon="@Icons.Material.Filled.Publish">Import (replace)</MudButton>
+</MudStack>
 
 @if (error is not null)
 {
-    <p class="error" role="alert">@error</p>
+    <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@error</MudAlert>
 }
 @if (message is not null)
 {
-    <p class="muted">@message</p>
+    <MudAlert Severity="Severity.Success" Dense="true" Class="mb-4">@message</MudAlert>
 }
 
-<textarea class="json" spellcheck="false" disabled="@(json is null)" @bind="json" @bind:event="oninput"></textarea>
+<div class="json-editor">
+    <MudTextField T="string" @bind-Value="json" Immediate="true" Disabled="@(json is null)"
+                  Lines="24" Variant="Variant.Outlined" spellcheck="false" />
+</div>
 
 @code {
     [Parameter] public Guid Id { get; set; }
@@ -89,5 +97,6 @@
         finally { busy = false; }
     }
 
-    private ValueTask<bool> Confirm(string prompt) => JS.InvokeAsync<bool>("confirm", prompt);
+    private async Task<bool> Confirm(string prompt) =>
+        await Dialogs.ShowMessageBoxAsync("Replace menu?", prompt, yesText: "Replace", cancelText: "Cancel") == true;
 }
