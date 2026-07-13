@@ -1,4 +1,0 @@
-.actions-bar { display: flex; align-items: center; gap: 1rem; margin: 1.25rem 0; flex-wrap: wrap; }
-
-.inline-form { display: flex; gap: 0.5rem; }
-.inline-form input { padding: 0.45rem 0.6rem; border: 1px solid var(--line); border-radius: 6px; }
