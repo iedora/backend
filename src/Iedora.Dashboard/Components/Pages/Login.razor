@@ -9,17 +9,22 @@
 
 <PageTitle>Sign in — iedora admin</PageTitle>
 
-<div class="login">
-    <h1>iedora admin</h1>
+<MudContainer MaxWidth="MaxWidth.ExtraSmall" Class="mt-16">
+    <MudPaper Elevation="2" Class="pa-8 rounded-lg">
+        <MudText Typo="Typo.h5" GutterBottom="true">
+            <b>iedora</b> <MudText Typo="Typo.h5" Color="Color.Primary" Inline="true"><b>admin</b></MudText>
+        </MudText>
 
-    @* LoginForm owns its own validation (EditForm + DataAnnotations); this page owns the busy/error
-       status below it and the admin-only gate in HandleSubmitAsync. *@
-    <LoginForm OnSubmit="HandleSubmitAsync" />
+        @* LoginForm owns its own validation (EditForm + DataAnnotations); this page owns the busy
+           state and the admin-only gate in HandleSubmitAsync. *@
+        <LoginForm OnSubmit="HandleSubmitAsync" Busy="busy" />
 
-    <p class="login-status @(error is not null ? "error" : "")" role="@(error is not null ? "alert" : null)">
-        @(busy ? "Signing in…" : error)
-    </p>
-</div>
+        @if (error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-4">@error</MudAlert>
+        }
+    </MudPaper>
+</MudContainer>
 
 @code {
     private string? error;
