@@ -5,31 +5,34 @@
 
 <PageTitle>Restaurant — iedora admin</PageTitle>
 
-<p class="muted"><a href="/directory">← Directory</a></p>
+<MudButton Href="/directory" Variant="Variant.Text" Size="Size.Small"
+           StartIcon="@Icons.Material.Filled.ArrowBack" Class="mb-2">Directory</MudButton>
 
 @if (error is not null)
 {
-    <p class="error" role="alert">@error</p>
+    <MudAlert Severity="Severity.Error" Dense="true">@error</MudAlert>
 }
 else if (data is null)
 {
-    <p class="muted">Loading…</p>
+    <MudProgressLinear Indeterminate="true" />
 }
 else
 {
-    <h1>@data.Restaurant.Name</h1>
-    <p class="muted">@data.Restaurant.Slug · <a href="/restaurants/@Id/menus">Edit menu JSON</a></p>
+    <MudText Typo="Typo.h4" HtmlTag="h1">@data.Restaurant.Name</MudText>
+    <MudText Typo="Typo.body2" Color="Color.Secondary" GutterBottom="true">
+        @data.Restaurant.Slug · <MudLink Href="@($"/restaurants/{Id}/menus")">Edit menu JSON</MudLink>
+    </MudText>
 
-    <div class="tiles">
-        <Tile Label="Menus" Value="data.Restaurant.Menus" />
-        <Tile Label="Items" Value="data.Restaurant.Items" />
-        <Tile Label="Views · 30d" Value="data.Restaurant.Views30d" />
-    </div>
+    <MudGrid Spacing="4" Class="mt-2">
+        <MudItem xs="6" sm="4"><Tile Label="Menus" Value="data.Restaurant.Menus" /></MudItem>
+        <MudItem xs="6" sm="4"><Tile Label="Items" Value="data.Restaurant.Items" /></MudItem>
+        <MudItem xs="6" sm="4"><Tile Label="Views · 30d" Value="data.Restaurant.Views30d" /></MudItem>
+    </MudGrid>
 
-    <h2>Views · last 14 days</h2>
+    <MudText Typo="Typo.h6" Class="mt-8 mb-2">Views · last 14 days</MudText>
     @if (data.Trend.Count == 0)
     {
-        <p class="muted">No views yet.</p>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">No views yet.</MudText>
     }
     else
     {
@@ -41,26 +44,25 @@ else
         </div>
     }
 
-    <h2>Menus</h2>
+    <MudText Typo="Typo.h6" Class="mt-8 mb-2">Menus</MudText>
     @if (data.Menus.Count == 0)
     {
-        <p class="muted">No menus.</p>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">No menus.</MudText>
     }
     else
     {
-        <table>
-            <thead><tr><th>Menu</th><th>Status</th><th class="num">Categories</th></tr></thead>
-            <tbody>
-                @foreach (var menu in data.Menus)
-                {
-                    <tr>
-                        <td>@menu.Name</td>
-                        <td>@(menu.Active ? "Active" : "Hidden")</td>
-                        <td class="num">@menu.CategoryCount</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <MudTable Items="data.Menus" Hover="true" Dense="true" Outlined="true" Elevation="0">
+            <HeaderContent>
+                <MudTh>Menu</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align:right">Categories</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Menu">@context.Name</MudTd>
+                <MudTd DataLabel="Status">@(context.Active ? "Active" : "Hidden")</MudTd>
+                <MudTd DataLabel="Categories" Style="text-align:right">@context.CategoryCount</MudTd>
+            </RowTemplate>
+        </MudTable>
     }
 }
 
