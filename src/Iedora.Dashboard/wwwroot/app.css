@@ -4,6 +4,14 @@
 /* Pre-auth pages (login, error) render outside MudLayout, so tie the page background to the theme. */
 body { background-color: var(--mud-palette-background); }
 
+/* Boot splash (index.html) + the router's Authorizing state — centers the MudBlazor spinner. */
+.app-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
 /* FocusOnNavigate targets the page h1; don't flash an outline on it. */
 h1:focus { outline: none; }
 
