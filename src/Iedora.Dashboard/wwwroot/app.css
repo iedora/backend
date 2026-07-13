@@ -95,12 +95,7 @@ button.link.danger { color: #a12020; }
 
 code { background: var(--bg); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.9em; }
 
-/* Search bar — Directory + Users */
-.search { display: flex; gap: 0.5rem; margin: 0 0 1.25rem; }
-.search input { flex: 1; max-width: 360px; padding: 0.5rem 0.7rem; border: 1px solid var(--line); border-radius: 6px; font-size: 0.95rem; }
-.search button { padding: 0.5rem 0.9rem; border: 1px solid var(--line); background: #fff; border-radius: 6px; cursor: pointer; }
-
-/* Stat tiles grid — Home + Alerts + RestaurantDetail (individual tile is Tile.razor's scoped CSS) */
+/* Stat tiles grid — still used by RestaurantDetail (Home + Alerts moved to MudGrid) */
 .tiles {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));

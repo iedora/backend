@@ -6,12 +6,9 @@
 
 <PageTitle>Directory — iedora admin</PageTitle>
 
-<h1>Restaurant directory</h1>
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">Restaurant directory</MudText>
 
-<form class="search" @onsubmit="Search" @onsubmit:preventDefault>
-    <input placeholder="Search name or slug…" @bind="_q" @bind:event="oninput" />
-    <button type="submit">Search</button>
-</form>
+<SearchBar Query="@Q" Placeholder="Search name or slug…" OnSearch="Search" />
 
 <AsyncData T="StaffDirectoryResponse" Key="@Q" Load="() => Api.StaffDirectory(Q ?? string.Empty)" Context="d">
     <RestaurantList Rows="d.Restaurants" Empty="No restaurants match." />
@@ -19,10 +16,7 @@
 
 @code {
     [Parameter, SupplyParameterFromQuery(Name = "q")] public string? Q { get; set; }
-    private string _q = "";
-
-    protected override void OnParametersSet() => _q = Q ?? "";
 
     // Reflect the search in the URL (bookmarkable/shareable); the ?q param drives the reload via Key.
-    private void Search() => Nav.NavigateTo(_q.Length == 0 ? "directory" : $"directory?q={Uri.EscapeDataString(_q)}");
+    private void Search(string q) => Nav.NavigateTo(q.Length == 0 ? "directory" : $"directory?q={Uri.EscapeDataString(q)}");
 }
