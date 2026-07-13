@@ -2,28 +2,26 @@
 
 @if (Rows.Count == 0)
 {
-    <p class="muted">@Empty</p>
+    <MudText Typo="Typo.body2" Color="Color.Secondary">@Empty</MudText>
 }
 else
 {
-    <table>
-        <thead>
-            <tr><th>Restaurant</th><th>Slug</th><th class="num">Menus</th><th class="num">Items</th><th class="num">Views · 30d</th></tr>
-        </thead>
-        <tbody>
-            <Virtualize Items="Rows" SpacerElement="tr">
-                <ItemContent Context="r">
-                    <tr>
-                        <td><a href="/restaurants/@r.Id">@r.Name</a></td>
-                        <td class="muted">@r.Slug</td>
-                        <td class="num">@r.Menus</td>
-                        <td class="num">@r.Items</td>
-                        <td class="num">@r.Views30d</td>
-                    </tr>
-                </ItemContent>
-            </Virtualize>
-        </tbody>
-    </table>
+    <MudTable Items="Rows" Hover="true" Dense="true" Outlined="true" Elevation="0">
+        <HeaderContent>
+            <MudTh>Restaurant</MudTh>
+            <MudTh>Slug</MudTh>
+            <MudTh Style="text-align:right">Menus</MudTh>
+            <MudTh Style="text-align:right">Items</MudTh>
+            <MudTh Style="text-align:right">Views · 30d</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Restaurant"><MudLink Href="@($"/restaurants/{context.Id}")">@context.Name</MudLink></MudTd>
+            <MudTd DataLabel="Slug" Style="color:var(--mud-palette-text-secondary)">@context.Slug</MudTd>
+            <MudTd DataLabel="Menus" Style="text-align:right">@context.Menus</MudTd>
+            <MudTd DataLabel="Items" Style="text-align:right">@context.Items</MudTd>
+            <MudTd DataLabel="Views · 30d" Style="text-align:right">@context.Views30d</MudTd>
+        </RowTemplate>
+    </MudTable>
 }
 
 @code {

@@ -6,45 +6,39 @@
 
 <PageTitle>Users — iedora admin</PageTitle>
 
-<h1>Users</h1>
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">Users</MudText>
 
-<form class="search" @onsubmit="Search" @onsubmit:preventDefault>
-    <input placeholder="Search email or name…" @bind="_q" @bind:event="oninput" />
-    <button type="submit">Search</button>
-</form>
+<SearchBar Query="@Q" Placeholder="Search email or name…" OnSearch="Search" />
 
 <AsyncData T="StaffUserListResponse" Key="@Q" Load="() => Api.StaffListUsers(Q ?? string.Empty, null)" Context="d">
     @if (d.Users.Count == 0)
     {
-        <p class="muted">No users match.</p>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">No users match.</MudText>
     }
     else
     {
-        <table>
-            <thead><tr><th>Email</th><th>Name</th><th>Roles</th><th>Joined</th></tr></thead>
-            <tbody>
-                @* Virtualize against the page scroll (SpacerElement=tr keeps the table valid). Small
-                   lists render fully; a large user base only materializes the visible rows. *@
-                <Virtualize Items="d.Users" SpacerElement="tr">
-                    <ItemContent Context="u">
-                        <tr>
-                            <td><a href="/users/@u.Id">@u.Email</a></td>
-                            <td>@u.Name</td>
-                            <td class="muted">@string.Join(", ", u.Roles)</td>
-                            <td class="muted">@u.CreatedAt.ToString("MMM d, yyyy")</td>
-                        </tr>
-                    </ItemContent>
-                </Virtualize>
-            </tbody>
-        </table>
+        @* Virtualize keeps a large user base to just the visible rows; Height gives it a scroll box. *@
+        <MudTable Items="d.Users" Hover="true" Dense="true" Outlined="true" Elevation="0"
+                  Virtualize="true" Height="60vh" FixedHeader="true">
+            <HeaderContent>
+                <MudTh>Email</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Roles</MudTh>
+                <MudTh>Joined</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Email"><MudLink Href="@($"/users/{context.Id}")">@context.Email</MudLink></MudTd>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="Roles" Style="color:var(--mud-palette-text-secondary)">@string.Join(", ", context.Roles)</MudTd>
+                <MudTd DataLabel="Joined" Style="color:var(--mud-palette-text-secondary)">@context.CreatedAt.ToString("MMM d, yyyy")</MudTd>
+            </RowTemplate>
+        </MudTable>
     }
 </AsyncData>
 
 @code {
     [Parameter, SupplyParameterFromQuery(Name = "q")] public string? Q { get; set; }
-    private string _q = "";
 
-    protected override void OnParametersSet() => _q = Q ?? "";
-
-    private void Search() => Nav.NavigateTo(_q.Length == 0 ? "users" : $"users?q={Uri.EscapeDataString(_q)}");
+    // The ?q param drives the reload (AsyncData.Key); Search just reflects the box into the URL.
+    private void Search(string q) => Nav.NavigateTo(q.Length == 0 ? "users" : $"users?q={Uri.EscapeDataString(q)}");
 }
