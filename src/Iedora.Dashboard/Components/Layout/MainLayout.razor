@@ -2,21 +2,35 @@
 @inject ApiAuthStateProvider AuthState
 @inject NavigationManager Nav
 
-<header class="topbar">
-    <a class="brand" href="/">iedora <span>admin</span></a>
-    <AuthorizeView>
+<MudProviders />
+
+<MudLayout>
+    <MudAppBar Elevation="1" Color="Color.Surface">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Default" Edge="Edge.Start" OnClick="ToggleDrawer" />
+        <MudLink Href="/" Underline="Underline.None">
+            <MudText Typo="Typo.h6" Color="Color.Default"><b>iedora</b> <MudText Typo="Typo.h6" Color="Color.Primary" Inline="true"><b>admin</b></MudText></MudText>
+        </MudLink>
+        <MudSpacer />
+        <AuthorizeView>
+            <MudText Typo="Typo.body2" Color="Color.Default" Class="mr-4">@context.User.Identity?.Name</MudText>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="SignOutAsync">Sign out</MudButton>
+        </AuthorizeView>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="1" ClipMode="DrawerClipMode.Always" Variant="DrawerVariant.Responsive">
         <NavMenu />
-        <div class="session">
-            <span class="who">@context.User.Identity?.Name</span>
-            <button type="button" class="link" @onclick="SignOutAsync">Sign out</button>
-        </div>
-    </AuthorizeView>
-</header>
-<main class="content">
-    @Body
-</main>
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
 @code {
+    private bool _drawerOpen = true;
+
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+
     private async Task SignOutAsync()
     {
         await AuthState.SignOutAsync();

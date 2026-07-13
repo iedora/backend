@@ -6,11 +6,15 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using MudBlazor.Services;
 using Refit;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
+
+// MudBlazor design system (dialogs, snackbar, popovers, theming).
+builder.Services.AddMudServices();
 
 // The API base URL — same for auth and data, from wwwroot/appsettings*.json (a deploy sets its own),
 // falling back to the app's own origin. Must be HTTPS cross-origin: the refresh cookie is
