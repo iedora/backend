@@ -5,42 +5,42 @@
 
 <PageTitle>Overview — iedora admin</PageTitle>
 
-<h1>Platform overview</h1>
+@* HtmlTag=h1 keeps the FocusOnNavigate target (App.razor focuses "h1") while Typo sets the size. *@
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">Platform overview</MudText>
 
 <AsyncData T="StaffOverviewResponse" Load="() => Api.StaffOverview()" Context="data">
-    <div class="tiles">
-        <Tile Label="Restaurants" Value="data.Restaurants" />
-        <Tile Label="Active menus" Value="data.ActiveMenus" />
-        <Tile Label="Items" Value="data.Items" />
-        <Tile Label="Views today" Value="data.ViewsToday" />
-        <Tile Label="Views · 30d" Value="data.Views30d" />
-        <Tile Label="QR bound" Value="data.QrBound" />
-        <Tile Label="QR unbound" Value="data.QrUnbound" />
-    </div>
+    <MudGrid Spacing="4">
+        <MudItem xs="6" sm="4" md="3"><Tile Label="Restaurants" Value="data.Restaurants" /></MudItem>
+        <MudItem xs="6" sm="4" md="3"><Tile Label="Active menus" Value="data.ActiveMenus" /></MudItem>
+        <MudItem xs="6" sm="4" md="3"><Tile Label="Items" Value="data.Items" /></MudItem>
+        <MudItem xs="6" sm="4" md="3"><Tile Label="Views today" Value="data.ViewsToday" /></MudItem>
+        <MudItem xs="6" sm="4" md="3"><Tile Label="Views · 30d" Value="data.Views30d" /></MudItem>
+        <MudItem xs="6" sm="4" md="3"><Tile Label="QR bound" Value="data.QrBound" /></MudItem>
+        <MudItem xs="6" sm="4" md="3"><Tile Label="QR unbound" Value="data.QrUnbound" /></MudItem>
+    </MudGrid>
 
-    <h2>Top restaurants by 30-day views</h2>
+    <MudText Typo="Typo.h6" Class="mt-8 mb-2">Top restaurants by 30-day views</MudText>
     @if (data.TopByViews.Count == 0)
     {
-        <p class="muted">No restaurants yet.</p>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">No restaurants yet.</MudText>
     }
     else
     {
-        <table>
-            <thead>
-                <tr><th>Restaurant</th><th>Slug</th><th class="num">Menus</th><th class="num">Items</th><th class="num">Views · 30d</th></tr>
-            </thead>
-            <tbody>
-                @foreach (var r in data.TopByViews)
-                {
-                    <tr>
-                        <td>@r.Name</td>
-                        <td class="muted">@r.Slug</td>
-                        <td class="num">@r.Menus</td>
-                        <td class="num">@r.Items</td>
-                        <td class="num">@r.Views30d</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <MudTable Items="data.TopByViews" Hover="true" Dense="true" Outlined="true" Elevation="0">
+            <HeaderContent>
+                <MudTh>Restaurant</MudTh>
+                <MudTh>Slug</MudTh>
+                <MudTh Style="text-align:right">Menus</MudTh>
+                <MudTh Style="text-align:right">Items</MudTh>
+                <MudTh Style="text-align:right">Views · 30d</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Restaurant">@context.Name</MudTd>
+                <MudTd DataLabel="Slug" Style="color:var(--mud-palette-text-secondary)">@context.Slug</MudTd>
+                <MudTd DataLabel="Menus" Style="text-align:right">@context.Menus</MudTd>
+                <MudTd DataLabel="Items" Style="text-align:right">@context.Items</MudTd>
+                <MudTd DataLabel="Views · 30d" Style="text-align:right">@context.Views30d</MudTd>
+            </RowTemplate>
+        </MudTable>
     }
 </AsyncData>

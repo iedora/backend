@@ -10,7 +10,7 @@ using Refit;
 namespace Iedora.Dashboard.Tests;
 
 [TestClass]
-public sealed class OverviewPageTests : BunitContext
+public sealed class OverviewPageTests : MudBunitContext
 {
     private IIedoraApiv1 RegisterApi()
     {

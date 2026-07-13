@@ -8,7 +8,7 @@ using NSubstitute;
 namespace Iedora.Dashboard.Tests;
 
 [TestClass]
-public sealed class StaffPagesTests : BunitContext
+public sealed class StaffPagesTests : MudBunitContext
 {
     private IIedoraApiv1 RegisterApi()
     {

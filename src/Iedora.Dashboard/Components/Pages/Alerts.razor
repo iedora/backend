@@ -5,18 +5,22 @@
 
 <PageTitle>Alerts — iedora admin</PageTitle>
 
-<h1>Needs attention</h1>
+<MudText Typo="Typo.h4" HtmlTag="h1" GutterBottom="true">Needs attention</MudText>
 
 <AsyncData T="StaffAlertsResponse" Load="() => Api.StaffAlerts()" Context="data">
-    <div class="tiles">
-        <Tile Label="Unbound QR" Value="data.UnboundQr" />
-        <Tile Label="Stale" Value="data.StaleRestaurants.Count" />
-        <Tile Label="Empty menus" Value="data.EmptyMenus.Count" />
-    </div>
+    <MudGrid Spacing="4">
+        <MudItem xs="6" sm="4" md="3"><Tile Label="Unbound QR" Value="data.UnboundQr" /></MudItem>
+        <MudItem xs="6" sm="4" md="3"><Tile Label="Stale" Value="data.StaleRestaurants.Count" /></MudItem>
+        <MudItem xs="6" sm="4" md="3"><Tile Label="Empty menus" Value="data.EmptyMenus.Count" /></MudItem>
+    </MudGrid>
 
-    <h2>Stale restaurants <span class="muted">(a week old, no recent views)</span></h2>
+    <MudText Typo="Typo.h6" Class="mt-8 mb-2">
+        Stale restaurants <MudText Typo="Typo.body2" Color="Color.Secondary" Inline="true">(a week old, no recent views)</MudText>
+    </MudText>
     <RestaurantList Rows="data.StaleRestaurants" Empty="Nothing stale." />
 
-    <h2>Empty menus <span class="muted">(no dishes yet)</span></h2>
+    <MudText Typo="Typo.h6" Class="mt-8 mb-2">
+        Empty menus <MudText Typo="Typo.body2" Color="Color.Secondary" Inline="true">(no dishes yet)</MudText>
+    </MudText>
     <RestaurantList Rows="data.EmptyMenus" Empty="Every restaurant has dishes." />
 </AsyncData>
