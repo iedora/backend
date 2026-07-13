@@ -15,12 +15,12 @@
     </MudGrid>
 
     <MudText Typo="Typo.h6" Class="mt-8 mb-2">
-        Stale restaurants <MudText Typo="Typo.body2" Color="Color.Secondary" Inline="true">(a week old, no recent views)</MudText>
+        Stale restaurants <MudText Typo="Typo.body2" Class="mud-text-secondary" Inline="true">(a week old, no recent views)</MudText>
     </MudText>
     <RestaurantList Rows="data.StaleRestaurants" Empty="Nothing stale." />
 
     <MudText Typo="Typo.h6" Class="mt-8 mb-2">
-        Empty menus <MudText Typo="Typo.body2" Color="Color.Secondary" Inline="true">(no dishes yet)</MudText>
+        Empty menus <MudText Typo="Typo.body2" Class="mud-text-secondary" Inline="true">(no dishes yet)</MudText>
     </MudText>
     <RestaurantList Rows="data.EmptyMenus" Empty="Every restaurant has dishes." />
 </AsyncData>

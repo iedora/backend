@@ -21,7 +21,7 @@ else if (data is null)
 else
 {
     <MudText Typo="Typo.h4" HtmlTag="h1">@data.User.Email</MudText>
-    <MudText Typo="Typo.body2" Color="Color.Secondary">@data.User.Name — joined @data.User.CreatedAt.ToString("MMM d, yyyy")</MudText>
+    <MudText Typo="Typo.body2" Class="mud-text-secondary">@data.User.Name — joined @data.User.CreatedAt.ToString("MMM d, yyyy")</MudText>
     <MudText Typo="Typo.body1" Class="mt-2">Roles: <b>@(data.User.Roles.Count == 0 ? "none" : string.Join(", ", data.User.Roles))</b></MudText>
 
     <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="my-4">
@@ -43,7 +43,7 @@ else
     <MudText Typo="Typo.h6" Class="mt-8 mb-2">Tenants</MudText>
     @if (data.Memberships.Count == 0)
     {
-        <MudText Typo="Typo.body2" Color="Color.Secondary">No tenant memberships.</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">No tenant memberships.</MudText>
     }
     else
     {
@@ -62,7 +62,7 @@ else
     <MudText Typo="Typo.h6" Class="mt-8 mb-2">Sessions</MudText>
     @if (data.Sessions.Count == 0)
     {
-        <MudText Typo="Typo.body2" Color="Color.Secondary">No sessions.</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">No sessions.</MudText>
     }
     else
     {

@@ -4,11 +4,11 @@
    search) set Key to the query — it reloads whenever Key changes. *@
 @if (Error is not null)
 {
-    <p class="error" role="alert">@Error</p>
+    <MudAlert Severity="Severity.Error" Dense="true">@Error</MudAlert>
 }
 else if (Value is null)
 {
-    <p class="muted">@LoadingText</p>
+    <MudProgressLinear Indeterminate="true" Class="my-4" />
 }
 else
 {
@@ -18,7 +18,6 @@ else
 @code {
     [Parameter, EditorRequired] public Func<Task<T>> Load { get; set; } = default!;
     [Parameter, EditorRequired] public RenderFragment<T> ChildContent { get; set; } = default!;
-    [Parameter] public string LoadingText { get; set; } = "Loading…";
     /// <summary>Refetch whenever this changes (e.g. a search query). Loads once on first render.</summary>
     [Parameter] public object? Key { get; set; }
 

@@ -4,8 +4,12 @@
 
 <PageTitle>Error — iedora admin</PageTitle>
 
-<div class="login">
-    <h1>Something went wrong</h1>
-    <p class="muted">An unexpected error occurred. Try again, or head back to the console.</p>
-    <a href="/">Back to the dashboard</a>
-</div>
+<MudContainer MaxWidth="MaxWidth.ExtraSmall" Class="mt-16">
+    <MudPaper Elevation="2" Class="pa-8 rounded-lg">
+        <MudText Typo="Typo.h5" GutterBottom="true">Something went wrong</MudText>
+        <MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">
+            An unexpected error occurred. Try again, or head back to the console.
+        </MudText>
+        <MudButton Href="/" Variant="Variant.Filled" Color="Color.Primary">Back to the dashboard</MudButton>
+    </MudPaper>
+</MudContainer>
