@@ -1,7 +1,9 @@
-<div class="tile">
-    <span class="tile-value">@Value</span>
-    <span class="tile-label">@Label</span>
-</div>
+@* A single stat card. MudPaper + Typo carry the look; the tile-value/tile-label classes are kept as
+   stable hooks (no styling of their own — Mud Typo does that). *@
+<MudPaper Outlined="true" Elevation="0" Class="pa-4 h-100">
+    <MudText Typo="Typo.h4" Class="tile-value">@Value</MudText>
+    <MudText Typo="Typo.overline" Class="tile-label" Style="color:var(--mud-palette-text-secondary)">@Label</MudText>
+</MudPaper>
 
 @code {
     [Parameter, EditorRequired] public string Label { get; set; } = "";
