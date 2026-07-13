@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Iedora.Dashboard.Tests;
 
 [TestClass]
-public sealed class LoginPageTests : BunitContext
+public sealed class LoginPageTests : MudBunitContext
 {
     // ── LoginForm: EditForm + DataAnnotations ────────────────────────────────
     [TestMethod]
@@ -20,8 +20,8 @@ public sealed class LoginPageTests : BunitContext
         var cut = Render<LoginForm>(p => p.Add(x => x.OnSubmit,
             EventCallback.Factory.Create<(string Email, string Password)>(this, c => captured = c)));
 
-        cut.Find("input[type=email]").Change("a@b.pt");       // InputText binds on change
-        cut.Find("input[type=password]").Change("pw");
+        cut.Find("input[type=email]").Input("a@b.pt");       // MudTextField Immediate binds on input
+        cut.Find("input[type=password]").Input("pw");
         cut.Find("form").Submit();
 
         Assert.AreEqual("a@b.pt", captured?.Email);
@@ -35,8 +35,8 @@ public sealed class LoginPageTests : BunitContext
         var cut = Render<LoginForm>(p => p.Add(x => x.OnSubmit,
             EventCallback.Factory.Create<(string, string)>(this, c => captured = c)));
 
-        cut.Find("input[type=email]").Change("not-an-email");
-        cut.Find("input[type=password]").Change("pw");
+        cut.Find("input[type=email]").Input("not-an-email");
+        cut.Find("input[type=password]").Input("pw");
         cut.Find("form").Submit();
 
         Assert.IsNull(captured, "OnValidSubmit must not fire when the email is invalid");
@@ -66,8 +66,8 @@ public sealed class LoginPageTests : BunitContext
 
     private void SignIn(IRenderedComponent<Login> cut)
     {
-        cut.Find("input[type=email]").Change("a@b.pt");
-        cut.Find("input[type=password]").Change("Sup3rSecret!");
+        cut.Find("input[type=email]").Input("a@b.pt");
+        cut.Find("input[type=password]").Input("Sup3rSecret!");
         cut.Find("form").Submit();
     }
 
